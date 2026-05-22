@@ -1,12 +1,22 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { HeaderComponent } from './components/header.component';
+import { HeroComponent } from './components/hero.component';
+import { ShowcaseComponent } from './components/showcase.component';
+import { DetailsComponent } from './components/details.component';
+import { PreOrderFormComponent } from './components/pre-order-form.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [
+    HeaderComponent,
+    HeroComponent,
+    ShowcaseComponent,
+    DetailsComponent,
+    PreOrderFormComponent
+  ],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class App {
-  protected readonly title = signal('drop-fcf');
-}
+export class App {}
+
