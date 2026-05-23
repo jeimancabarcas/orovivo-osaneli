@@ -673,7 +673,12 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       btnScript.setAttribute('data-customer-data', JSON.stringify(customerObj));
       btnScript.setAttribute('data-render-mode', 'embedded');
       
-      const redirectUrl = environment.boldRedirectUrl;
+      // Construct dynamic redirection URL for the specific order page to receive transaction state
+      let redirectUrl = window.location.origin + '/order?id=' + order.id;
+      // Bold library strictly requires the redirection URL to start with https://, so we replace http:// for local dev
+      if (redirectUrl.startsWith('http://')) {
+        redirectUrl = redirectUrl.replace('http://', 'https://');
+      }
       btnScript.setAttribute('data-redirection-url', redirectUrl);
       btnScript.setAttribute('data-origin-url', window.location.href);
       
