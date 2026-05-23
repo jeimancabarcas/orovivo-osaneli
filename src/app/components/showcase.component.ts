@@ -1,4 +1,6 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, PLATFORM_ID, AfterViewInit } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { gsap } from 'gsap';
 
 type ViewMode = 'front' | 'back' | 'collar';
 type EditionMode = 'oro_vivo' | 'edicion_secreta';
@@ -15,14 +17,18 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
       <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 lg:gap-24 items-center">
         
         <!-- Interactive Visualizer (Left Column) -->
-        <div class="w-full lg:w-1/2 flex flex-col items-center gap-8">
+        <div class="w-full lg:w-1/2 flex flex-col items-center gap-8" data-reveal>
           
           <!-- Image Frame with Dynamic Overlay Effects -->
-          <div class="relative w-full aspect-square max-w-[500px] rounded-3xl glass-effect p-6 flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden group">
+          <div 
+            class="perspective-1000 w-full aspect-square max-w-[500px] rounded-3xl glass-effect p-6 flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden group shirt-card cursor-crosshair"
+            (mousemove)="onMouseMoveCard($event)"
+            (mouseleave)="onMouseLeaveCard($event)"
+          >
             
             <!-- Texture Pattern Overlay Toggle Effect -->
             @if (showPattern() && currentView() !== 'collar') {
-              <div class="absolute inset-0 z-20 pointer-events-none opacity-40 mix-blend-overlay transition-opacity duration-500 animate-pulse">
+              <div class="absolute inset-0 z-20 pointer-events-none opacity-45 mix-blend-overlay transition-opacity duration-500 animate-pulse">
                 <!-- SVG geometric texture resembling Hat Vueltiao and Carribean waves -->
                 <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="text-gold-aged">
                   <defs>
@@ -45,7 +51,7 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
             <img 
               [src]="activeImage()" 
               [alt]="activeImageAlt()"
-              class="w-full h-full object-contain max-h-[420px] transition-all duration-700 transform group-hover:scale-105"
+              class="shirt-img w-full h-full object-contain max-h-[420px] transition-transform duration-300 transform group-hover:scale-105"
             />
 
             <!-- Limited Edition Tag Overlay -->
@@ -65,7 +71,7 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
           <div class="flex items-center gap-3 p-1.5 rounded-2xl bg-neutral-900 border border-white/5 shadow-inner">
             <button 
               (click)="setView('front')"
-              class="px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase cursor-pointer transition-all duration-300"
+              class="px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase cursor-pointer transition-all duration-300 transform active:scale-95"
               [class.bg-gold-aged]="currentView() === 'front'"
               [class.text-matte-black]="currentView() === 'front'"
               [class.text-neutral-400]="currentView() !== 'front'"
@@ -75,7 +81,7 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
             </button>
             <button 
               (click)="setView('back')"
-              class="px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase cursor-pointer transition-all duration-300"
+              class="px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase cursor-pointer transition-all duration-300 transform active:scale-95"
               [class.bg-gold-aged]="currentView() === 'back'"
               [class.text-matte-black]="currentView() === 'back'"
               [class.text-neutral-400]="currentView() !== 'back'"
@@ -85,7 +91,7 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
             </button>
             <button 
               (click)="setView('collar')"
-              class="px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase cursor-pointer transition-all duration-300 flex items-center gap-1.5"
+              class="px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase cursor-pointer transition-all duration-300 flex items-center gap-1.5 transform active:scale-95"
               [class.bg-gold-aged]="currentView() === 'collar'"
               [class.text-matte-black]="currentView() === 'collar'"
               [class.text-neutral-400]="currentView() !== 'collar'"
@@ -99,11 +105,11 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
         </div>
 
         <!-- Specifications & Details (Right Column) -->
-        <div class="w-full lg:w-1/2 flex flex-col gap-8">
+        <div class="w-full lg:w-1/2 flex flex-col gap-8" data-reveal data-delay="0.2">
           
           <div class="flex flex-col gap-3">
             <span class="text-gold-aged text-xs font-bold tracking-[0.25em] uppercase font-sans">EXPERIENCIA E INTERACTIVIDAD</span>
-            <h2 class="font-serif text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+            <h2 class="font-display text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
               Ingeniería Streetwear <br class="hidden sm:inline">y Lujo Conceptual
             </h2>
           </div>
@@ -116,7 +122,7 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
               <!-- Oro Vivo Standard -->
               <div 
                 (click)="setEdition('oro_vivo')"
-                class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 bg-neutral-900/50 hover:bg-neutral-900"
+                class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 bg-neutral-900/50 hover:bg-neutral-900 hover:border-gold-aged/50 hover:scale-[1.02] transform active:scale-95"
                 [class.border-gold-aged]="currentEdition() === 'oro_vivo'"
                 [class.border-white/5]="currentEdition() !== 'oro_vivo'"
                 [class.shadow-[0_8px_25px_rgba(197,168,84,0.15)]]="currentEdition() === 'oro_vivo'"
@@ -125,7 +131,7 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
                   <span class="w-6 h-6 rounded-full bg-[#C5A854] border border-white/20"></span>
                   <div class="flex flex-col">
                     <span class="text-sm font-bold text-white tracking-wider">ORO VIVO</span>
-                    <span class="text-xs text-neutral-400">Edición Standard Drop</span>
+                    <span class="text-xs text-neutral-400 font-serif italic">Edición Standard Drop</span>
                   </div>
                 </div>
               </div>
@@ -133,7 +139,7 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
               <!-- Edición Secreta / Black -->
               <div 
                 (click)="setEdition('edicion_secreta')"
-                class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 bg-neutral-900/50 hover:bg-neutral-900"
+                class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 bg-neutral-900/50 hover:bg-neutral-900 hover:border-gold-aged/50 hover:scale-[1.02] transform active:scale-95"
                 [class.border-gold-aged]="currentEdition() === 'edicion_secreta'"
                 [class.border-white/5]="currentEdition() !== 'edicion_secreta'"
                 [class.shadow-[0_8px_25px_rgba(197,168,84,0.15)]]="currentEdition() === 'edicion_secreta'"
@@ -145,7 +151,7 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
                       <span class="text-sm font-bold text-white tracking-wider">EDICIÓN NEGRA</span>
                       <svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 -960 960 960" width="14" fill="#C5A854"><path d="M240-80q-33 0-56.5-23.5T160-200v-400q0-33 23.5-56.5T240-680h40v-80q0-83 58.5-141.5T480-960q83 0 141.5 58.5T680-760v80h40q33 0 56.5 23.5T800-600v400q0 33-23.5 56.5T720-80H240Zm240-200q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-680h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80Z"/></svg>
                     </div>
-                    <span class="text-xs text-gold-aged font-semibold">Exclusiva para Creadores/Artistas</span>
+                    <span class="text-xs text-gold-aged font-semibold font-serif italic">Exclusiva para Artistas</span>
                   </div>
                 </div>
               </div>
@@ -208,7 +214,7 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
 
           <button 
             (click)="scrollToPreOrder()"
-            class="px-6 py-4 rounded-xl bg-gradient-to-r from-gold-aged to-gold-light hover:brightness-110 text-matte-black font-sans font-extrabold text-xs tracking-widest uppercase transition-all duration-300 text-center shadow-lg cursor-pointer"
+            class="px-6 py-4 rounded-xl bg-gradient-to-r from-gold-aged to-gold-light hover:brightness-110 text-matte-black font-sans font-extrabold text-xs tracking-widest uppercase transition-all duration-300 text-center shadow-lg cursor-pointer gold-btn-effect"
           >
             PREORDENAR ESTE DISEÑO
           </button>
@@ -220,7 +226,9 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ShowcaseComponent {
+export class ShowcaseComponent implements AfterViewInit {
+  private readonly platformId = inject(PLATFORM_ID);
+
   // Signals for state
   readonly currentView = signal<ViewMode>('front');
   readonly currentEdition = signal<EditionMode>('oro_vivo');
@@ -231,7 +239,6 @@ export class ShowcaseComponent {
     const view = this.currentView();
     const edition = this.currentEdition();
     
-    // Collar detail is unique
     if (view === 'collar') {
       return '/oro_vivo_collar.png';
     }
@@ -239,8 +246,7 @@ export class ShowcaseComponent {
     if (edition === 'oro_vivo') {
       return view === 'front' ? '/oro_vivo_front.png' : '/oro_vivo_back.png';
     } else {
-      // In matte black edition, we only show front/back as black
-      return view === 'front' ? '/oro_vivo_black.png' : '/oro_vivo_back.png'; // Black back could use normal back for simplicity or black
+      return view === 'front' ? '/oro_vivo_black.png' : '/oro_vivo_back.png';
     }
   });
 
@@ -253,20 +259,108 @@ export class ShowcaseComponent {
     return `Camiseta Osaneli ${editionText} - vista ${view === 'front' ? 'frontal' : 'trasera'}`;
   });
 
+  ngAfterViewInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      // Gentle floating baseline loop to replace CSS float
+      gsap.fromTo('.shirt-card', 
+        { y: 0 }, 
+        { y: -8, duration: 4, ease: 'sine.inOut', yoyo: true, repeat: -1 }
+      );
+    }
+  }
+
+  // Showcase image spring transition
+  private animateImageTransition(callback: () => void): void {
+    if (isPlatformBrowser(this.platformId)) {
+      gsap.to('.shirt-img', {
+        opacity: 0,
+        scale: 0.9,
+        duration: 0.2,
+        ease: 'power2.in',
+        onComplete: () => {
+          callback();
+          gsap.fromTo('.shirt-img', 
+            { opacity: 0, scale: 0.88 }, 
+            { opacity: 1, scale: 1, duration: 0.7, ease: 'back.out(1.4)' }
+          );
+        }
+      });
+    } else {
+      callback();
+    }
+  }
+
   setView(mode: ViewMode): void {
-    this.currentView.set(mode);
+    this.animateImageTransition(() => {
+      this.currentView.set(mode);
+    });
   }
 
   setEdition(mode: EditionMode): void {
-    this.currentEdition.set(mode);
-    // If black edition is selected, reset collar view to front/back since black edition also matches
-    if (this.currentView() === 'collar' && mode === 'edicion_secreta') {
-      this.currentView.set('front');
-    }
+    this.animateImageTransition(() => {
+      this.currentEdition.set(mode);
+      if (this.currentView() === 'collar' && mode === 'edicion_secreta') {
+        this.currentView.set('front');
+      }
+    });
   }
 
   togglePattern(): void {
     this.showPattern.update(p => !p);
+  }
+
+  onMouseMoveCard(event: MouseEvent): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const card = event.currentTarget as HTMLElement;
+    const bounds = card.getBoundingClientRect();
+    const mouseX = event.clientX - bounds.left;
+    const mouseY = event.clientY - bounds.top;
+    
+    // Normalize coordinates: -0.5 to 0.5
+    const xPct = (mouseX / bounds.width) - 0.5;
+    const yPct = (mouseY / bounds.height) - 0.5;
+    
+    // Tilt the card physically in 3D
+    gsap.to(card, {
+      rotateY: xPct * 16, // max 16deg tilt
+      rotateX: -yPct * 16,
+      scale: 1.015,
+      duration: 0.5,
+      ease: 'power2.out',
+      overwrite: 'auto'
+    });
+    
+    // Slide internal shirt image slightly in same direction (parallax depth layer)
+    gsap.to('.shirt-img', {
+      x: xPct * 12,
+      y: yPct * 12,
+      duration: 0.5,
+      ease: 'power2.out',
+      overwrite: 'auto'
+    });
+  }
+
+  onMouseLeaveCard(event: MouseEvent): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const card = event.currentTarget as HTMLElement;
+    
+    // Return gently to center with a beautiful spring damping bounce
+    gsap.to(card, {
+      rotateY: 0,
+      rotateX: 0,
+      scale: 1,
+      duration: 1.0,
+      ease: 'elastic.out(1, 0.65)',
+      overwrite: 'auto'
+    });
+    
+    gsap.to('.shirt-img', {
+      x: 0,
+      y: 0,
+      duration: 1.0,
+      ease: 'elastic.out(1, 0.65)',
+      overwrite: 'auto'
+    });
   }
 
   scrollToPreOrder(): void {

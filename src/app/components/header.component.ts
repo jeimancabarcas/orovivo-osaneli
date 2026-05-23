@@ -1,16 +1,25 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { PreOrderService } from '../services/pre-order.service';
 
 @Component({
   selector: 'app-header',
   imports: [],
   template: `
-    <header class="fixed top-0 left-0 w-full z-50 px-4 sm:px-8 py-4 transition-all duration-300">
-      <div class="max-w-7xl mx-auto glass-effect rounded-2xl px-6 py-3 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+    <header 
+      class="fixed top-0 left-0 w-full z-50 px-4 sm:px-8 transition-all duration-500"
+      [class.py-6]="!scrolled()"
+      [class.py-3]="scrolled()"
+    >
+      <div 
+        class="max-w-7xl mx-auto rounded-2xl px-6 py-3 flex items-center justify-between transition-all duration-500 border border-transparent"
+        [class.bg-transparent]="!scrolled()"
+        [class.glass-effect]="scrolled()"
+        [class.shadow-[0_10px_30px_rgba(0,0,0,0.5)]]="scrolled()"
+      >
         
         <!-- Brand Logo -->
         <a href="#" class="flex items-center gap-2 group">
-          <span class="font-serif text-xl sm:text-2xl font-black tracking-[0.25em] text-white group-hover:text-gold-aged transition-colors duration-300">
+          <span class="font-editorial text-2xl sm:text-3xl tracking-[0.25em] text-white group-hover:text-gold-aged transition-colors duration-300">
             OSANELI
           </span>
           <span class="w-1.5 h-1.5 rounded-full bg-gold-aged group-hover:bg-gold-light transition-colors duration-300"></span>
@@ -34,7 +43,7 @@ import { PreOrderService } from '../services/pre-order.service';
         <!-- Call to Action -->
         <button 
           (click)="scrollToPreOrder()"
-          class="px-5 py-2.5 rounded-xl bg-gold-aged hover:bg-gold-light text-matte-black font-sans font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-[0_4px_20px_rgba(197,168,84,0.25)] cursor-pointer"
+          class="px-5 py-2.5 rounded-xl bg-gold-aged hover:bg-gold-light text-matte-black font-sans font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-[0_4px_20px_rgba(197,168,84,0.25)] cursor-pointer gold-btn-effect"
         >
           SEPARAR PIEZA
         </button>
@@ -42,10 +51,20 @@ import { PreOrderService } from '../services/pre-order.service';
       </div>
     </header>
   `,
+  host: {
+    '(window:scroll)': 'onWindowScroll()'
+  },
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HeaderComponent {
   protected readonly preOrderService = inject(PreOrderService);
+  protected readonly scrolled = signal(false);
+
+  onWindowScroll(): void {
+    if (typeof window !== 'undefined') {
+      this.scrolled.set(window.scrollY > 20);
+    }
+  }
 
   scrollToPreOrder(): void {
     const el = document.getElementById('preorder-section');

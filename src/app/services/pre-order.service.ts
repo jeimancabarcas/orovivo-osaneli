@@ -7,6 +7,7 @@ export interface PreOrder {
   phone: string;
   version: 'oro_vivo' | 'edicion_secreta';
   size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
+  quantity: number;
   serialNumber: string;
   createdAt: Date;
 }
@@ -30,7 +31,7 @@ export class PreOrderService {
 
   // Derived stock count (limit 100, starts at 47 remaining for realism, decreases with every new order)
   readonly remainingInventory = computed(() => {
-    const reservedCount = this.preordersList().length;
+    const reservedCount = this.preordersList().reduce((sum, po) => sum + (po.quantity || 1), 0);
     // We start with 53 sold to make it look like active drop (47 remaining)
     const initialSold = 53;
     const currentRemaining = this.TOTAL_EDITION_LIMIT - (initialSold + reservedCount);
@@ -74,7 +75,8 @@ export class PreOrderService {
    */
   addPreOrder(data: Omit<PreOrder, 'id' | 'serialNumber' | 'createdAt'>): PreOrder {
     const currentPreorders = this.preordersList();
-    const nextIndex = 53 + currentPreorders.length + 1; // Real ticket serial starts from 54
+    const totalPreviousItems = currentPreorders.reduce((sum, po) => sum + (po.quantity || 1), 0);
+    const nextIndex = 53 + totalPreviousItems + 1; // Real ticket serial starts from 54
     
     // Generate Serial Number (e.g. OSN-ORO-054/100)
     const paddedIndex = String(nextIndex).padStart(3, '0');
