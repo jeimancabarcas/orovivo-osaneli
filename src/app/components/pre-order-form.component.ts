@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { isPlatformBrowser } from '@angular/common';
 import { PreOrderService, PreOrder } from '../services/pre-order.service';
 import { gsap } from 'gsap';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-pre-order-form',
@@ -550,7 +551,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
       
       const btnScript = document.createElement('script');
       btnScript.setAttribute('data-bold-button', 'dark-L');
-      btnScript.setAttribute('data-api-key', 'zLDLlEmrn3wSGbG-u6VojBWXnMfJyZtRICAutPNDCF0');
+      btnScript.setAttribute('data-api-key', environment.boldApiKey);
       btnScript.setAttribute('data-description', `Camiseta Osaneli Oro Vivo - ${qty}x Talla ${formValue.size} (${formValue.version === 'oro_vivo' ? 'Oro' : 'Negra'})`);
       btnScript.setAttribute('data-amount', totalAmount.toString());
       btnScript.setAttribute('data-currency', 'COP');
@@ -559,7 +560,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
       const orderId = `OSN-PEND-${qty}-${timestamp}`;
       btnScript.setAttribute('data-order-id', orderId);
       
-      const demoSecret = 'W97RSxbKflrCj4bJ7RC3Ig';
+      const demoSecret = environment.boldSecretKey;
       const integrityString = `${orderId}${totalAmount}COP${demoSecret}`;
       const signature = await this.generateSHA256(integrityString);
       btnScript.setAttribute('data-integrity-signature', signature);
@@ -576,7 +577,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
       btnScript.setAttribute('data-render-mode', 'embedded');
       
       // Enforce secure HTTPS redirection URL and keep it query-free (Bold automatically appends transaction parameters)
-      const redirectUrl = 'https://osaneli.com/payment-redirect';
+      const redirectUrl = environment.boldRedirectUrl;
       btnScript.setAttribute('data-redirection-url', redirectUrl);
       btnScript.setAttribute('data-origin-url', window.location.href);
       
