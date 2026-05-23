@@ -23,12 +23,13 @@ const firebaseApp = initializeApp(environment.firebase);
 const db = getDatabase(firebaseApp);
 
 /**
- * Webhook POST Endpoint for Bold payment events
+ * Webhook POST Endpoint for Bold payment events.
+ * Simple handler: updates the order status and merges all fields sent by Bold.
  */
 app.post('/api/bold-webhook', async (req, res) => {
-  console.log('Bold Webhook POST received:', JSON.stringify(req.body));
+  console.log('Bold Webhook received:', JSON.stringify(req.body));
   
-  // Respond immediately with 200 OK to satisfy Bold docs requirements (under 2 seconds limit)
+  // Respond immediately with 200 OK (Bold requires response under 2 seconds)
   res.status(200).json({ received: true });
   
   try {
@@ -36,111 +37,41 @@ app.post('/api/bold-webhook', async (req, res) => {
     const orderId = data?.metadata?.reference || data?.reference || req.body.reference;
     
     if (!orderId) {
-      console.warn(`Webhook of type ${type} received without orderId (metadata reference).`);
+      console.warn(`Webhook ${type}: no orderId found in payload.`);
       return;
     }
     
-    const ordersRef = ref(db, 'orders');
-    const orderRef = child(ordersRef, orderId);
-    const existingSnapshot = await get(orderRef);
+    // Map Bold event types to order statuses
+    const statusMap: Record<string, string> = {
+      'SALE_APPROVED': 'APPROVED',
+      'SALE_REJECTED': 'REJECTED',
+      'VOID_APPROVED': 'VOIDED',
+      'VOID_REJECTED': 'VOID_REJECTED'
+    };
     
-    if (type === 'SALE_APPROVED') {
-      let orderData: any = {};
-      
-      if (existingSnapshot.exists()) {
-        const existing = existingSnapshot.val();
-        if (existing.status === 'APPROVED') {
-          console.log(`Order ${orderId} already approved in database. Skipping.`);
-          return;
-        }
-        orderData = existing;
-      }
-      
-      // If we don't have orderData or details, create fallback using Bold transaction details
-      const finalOrderData = {
-        fullName: orderData.fullName || data.card?.cardholder_name || 'Comprador Bold',
-        email: orderData.email || data.payer_email || 'correo@cliente.com',
-        phone: orderData.phone || '',
-        version: orderData.version || 'oro_vivo',
-        size: orderData.size || 'M',
-        quantity: Number(orderData.quantity || 1)
-      };
-      
-      // Fetch all orders to calculate next serial index based ONLY on APPROVED ones
-      const ordersSnapshot = await get(ordersRef);
-      let totalPreviousItems = 0;
-      if (ordersSnapshot.exists()) {
-        const allOrders = ordersSnapshot.val();
-        Object.keys(allOrders).forEach((key) => {
-          const ord = allOrders[key];
-          if (ord.status === 'APPROVED') {
-            totalPreviousItems += Number(ord.quantity || 1);
-          }
-        });
-      }
-      
-      const nextIndex = totalPreviousItems + 1;
-      const paddedIndex = String(nextIndex).padStart(3, '0');
-      const serialNumber = `OSN-ORO-${paddedIndex}/100`;
-      
-      const finalOrder = {
-        ...finalOrderData,
-        id: orderId,
-        status: 'APPROVED',
-        serialNumber,
-        createdAt: orderData.createdAt || new Date().toISOString()
-      };
-      
-      // Save order to database
-      await set(orderRef, finalOrder);
-      console.log(`Successfully finalized order ${orderId} via webhook. Serial: ${serialNumber}`);
-      
-    } else if (type === 'SALE_REJECTED') {
-      if (existingSnapshot.exists()) {
-        const existing = existingSnapshot.val();
-        await set(orderRef, {
-          ...existing,
-          status: 'REJECTED'
-        });
-      } else {
-        await set(orderRef, {
-          id: orderId,
-          fullName: data.card?.cardholder_name || 'Comprador Bold',
-          email: data.payer_email || 'correo@anonimo.com',
-          phone: '',
-          version: 'oro_vivo',
-          size: 'M',
-          quantity: 1,
-          status: 'REJECTED',
-          createdAt: new Date().toISOString()
-        });
-      }
-      console.log(`Order ${orderId} marked as REJECTED via webhook.`);
-      
-    } else if (type.includes('VOID') || type.includes('CANCEL')) {
-      if (existingSnapshot.exists()) {
-        const existing = existingSnapshot.val();
-        await set(orderRef, {
-          ...existing,
-          status: 'VOIDED'
-        });
-      } else {
-        await set(orderRef, {
-          id: orderId,
-          fullName: data.card?.cardholder_name || 'Comprador Bold',
-          email: data.payer_email || 'correo@anonimo.com',
-          phone: '',
-          version: 'oro_vivo',
-          size: 'M',
-          quantity: 1,
-          status: 'VOIDED',
-          createdAt: new Date().toISOString()
-        });
-      }
-      console.log(`Order ${orderId} marked as VOIDED via webhook.`);
+    const newStatus = statusMap[type];
+    if (!newStatus) {
+      console.warn(`Webhook: unhandled event type "${type}" for order ${orderId}.`);
+      return;
     }
+    
+    const orderRef = child(ref(db, 'orders'), orderId);
+    const snapshot = await get(orderRef);
+    const existing = snapshot.exists() ? snapshot.val() : {};
+    
+    // Merge existing order data + all Bold payload fields + updated status
+    await set(orderRef, {
+      ...existing,
+      ...data,
+      id: orderId,
+      status: newStatus,
+      boldEventType: type,
+      boldUpdatedAt: new Date().toISOString()
+    });
+    
+    console.log(`Order ${orderId} updated to ${newStatus}.`);
   } catch (error) {
-    console.error('Error processing Bold webhook transaction:', error);
+    console.error('Error processing Bold webhook:', error);
   }
 });
 

@@ -674,7 +674,7 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       btnScript.setAttribute('data-render-mode', 'embedded');
       
       // Construct dynamic redirection URL for the specific order page to receive transaction state
-      let redirectUrl = window.location.origin + '/order?id=' + order.id;
+      let redirectUrl = 'https://orovivo-osaneli.vercel.app' + '/order?id=' + order.id;
       // Bold library strictly requires the redirection URL to start with https://, so we replace http:// for local dev
       if (redirectUrl.startsWith('http://')) {
         redirectUrl = redirectUrl.replace('http://', 'https://');
