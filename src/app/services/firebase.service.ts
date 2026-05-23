@@ -1,0 +1,196 @@
+import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getDatabase, ref, set, onValue, get, child, Database } from 'firebase/database';
+import { environment } from '../../environments/environment';
+
+export interface Order {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  version: 'oro_vivo' | 'edicion_secreta';
+  size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
+  quantity: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'VOIDED';
+  serialNumber?: string;
+  createdAt: Date;
+}
+
+// Retain PreOrder as a type alias for compatibility in other files if needed
+export type PreOrder = Order;
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FirebaseService {
+  private readonly platformId = inject(PLATFORM_ID);
+  private firebaseApp: FirebaseApp | null = null;
+  private db: Database | null = null;
+
+  // Internal reactive signal holding orders list synchronized with Firebase
+  private readonly ordersList = signal<Order[]>([]);
+
+  // Tracks if the first real-time packet sync with Firebase has successfully completed
+  readonly isInitialSyncCompleted = signal<boolean>(false);
+
+  constructor() {
+    this.initFirebase();
+  }
+
+  // Public readonly access to the synchronized orders
+  readonly orders = computed(() => this.ordersList());
+  
+  // Deprecated compatibility getter
+  readonly preorders = computed(() => this.ordersList());
+
+  /**
+   * Initialize Firebase safely only on client browser to be SSR friendly
+   */
+  private initFirebase(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        this.firebaseApp = initializeApp(environment.firebase);
+        this.db = getDatabase(this.firebaseApp);
+        this.syncWithFirebase();
+      } catch (error) {
+        console.warn('Firebase Realtime Database failed to initialize. Operating in offline mode.', error);
+      }
+    }
+  }
+
+  /**
+   * Subscribe to real-time updates from Firebase 'orders' node
+   */
+  private syncWithFirebase(): void {
+    if (!this.db) return;
+    const ordersRef = ref(this.db, 'orders');
+    onValue(ordersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const parsedList: Order[] = [];
+        Object.keys(data).forEach((key) => {
+          const item = data[key];
+          parsedList.push({
+            id: item.id || key,
+            fullName: item.fullName || '',
+            email: item.email || '',
+            phone: item.phone || '',
+            version: item.version || 'oro_vivo',
+            size: item.size || 'M',
+            quantity: Number(item.quantity || 1),
+            status: item.status || 'PENDING',
+            serialNumber: item.serialNumber || '',
+            createdAt: item.createdAt ? new Date(item.createdAt) : new Date()
+          });
+        });
+
+        // Maintain chronological order
+        parsedList.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+        this.ordersList.set(parsedList);
+      } else {
+        this.ordersList.set([]);
+      }
+      this.isInitialSyncCompleted.set(true);
+    }, (error) => {
+      console.error('Firebase sync listener error:', error);
+      this.isInitialSyncCompleted.set(true); // Fail-safe to unblock loader
+    });
+  }
+
+  /**
+   * Persist an order to the central database in real time
+   */
+  async saveOrder(order: Order): Promise<void> {
+    if (!this.db) {
+      console.warn('Firebase DB not initialized. Order could not be synced in real-time.');
+      return;
+    }
+    
+    try {
+      const orderRef = ref(this.db, `orders/${order.id}`);
+      await set(orderRef, {
+        ...order,
+        createdAt: order.createdAt.toISOString() // Store dates in ISO format in JSON DB
+      });
+    } catch (err) {
+      console.error('Failed to write order to Firebase:', err);
+      throw err;
+    }
+  }
+
+  /**
+   * Legacy compatibility method
+   */
+  async savePreOrder(order: Order): Promise<void> {
+    return this.saveOrder(order);
+  }
+
+  /**
+   * Save a temporary pending order draft to Firebase Realtime Database in /orders node
+   */
+  async savePendingOrder(orderId: string, formValue: any): Promise<void> {
+    if (!this.db) return;
+    try {
+      const orderRef = ref(this.db, `orders/${orderId}`);
+      await set(orderRef, {
+        id: orderId,
+        fullName: formValue.fullName,
+        email: formValue.email,
+        phone: formValue.phone,
+        version: formValue.version,
+        size: formValue.size,
+        quantity: Number(formValue.quantity || 1),
+        status: 'PENDING',
+        createdAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error('Failed to save pending order in cloud:', err);
+    }
+  }
+
+  /**
+   * Legacy compatibility method
+   */
+  async savePendingPreOrder(orderId: string, formValue: any): Promise<void> {
+    return this.savePendingOrder(orderId, formValue);
+  }
+
+  /**
+   * One-time query to fetch a single order by its unique Order ID from Firebase Realtime Database
+   */
+  async getOrderById(id: string): Promise<Order | null> {
+    if (!this.db) return null;
+    try {
+      const orderRef = ref(this.db, `orders/${id.toUpperCase()}`);
+      const snapshot = await get(orderRef);
+      if (snapshot.exists()) {
+        const item = snapshot.val();
+        return {
+          id: item.id || id,
+          fullName: item.fullName || '',
+          email: item.email || '',
+          phone: item.phone || '',
+          version: item.version || 'oro_vivo',
+          size: item.size || 'M',
+          quantity: Number(item.quantity || 1),
+          status: item.status || 'PENDING',
+          serialNumber: item.serialNumber || '',
+          createdAt: item.createdAt ? new Date(item.createdAt) : new Date()
+        };
+      }
+      return null;
+    } catch (err) {
+      console.error('Failed to query order by ID from Firebase:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Legacy compatibility method
+   */
+  async getPreOrderById(id: string): Promise<Order | null> {
+    return this.getOrderById(id);
+  }
+
+}

@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
 import { PreOrderService, PreOrder } from '../services/pre-order.service';
 import { gsap } from 'gsap';
 import { environment } from '../../environments/environment';
@@ -155,12 +156,75 @@ import { environment } from '../../environments/environment';
 
           </div>
 
+        } @else if (isSearching()) {
+          
+          <!-- Sleek Query Section -->
+          <div class="glass-effect rounded-3xl p-8 sm:p-12 shadow-2xl relative text-center">
+            <div class="flex flex-col items-center gap-3 mb-8">
+              <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">Consultar Mi Reserva</h3>
+              <p class="text-xs sm:text-sm text-neutral-400 max-w-md font-sans">
+                Ingresa el número de orden único de 6 caracteres que recibiste tras confirmar tu reserva.
+              </p>
+            </div>
+            
+            <div class="max-w-md mx-auto flex flex-col gap-6">
+              <div class="flex flex-col gap-2 text-left">
+                <label for="order-query" class="text-[10px] font-bold text-neutral-400 tracking-widest uppercase font-sans">NÚMERO DE ORDEN</label>
+                <input 
+                  type="text" 
+                  id="order-query"
+                  placeholder="OSN-XXXXXX"
+                  [value]="searchQuery()"
+                  (input)="onSearchInput($event)"
+                  (keyup.enter)="executeSearch()"
+                  class="w-full px-5 py-4 bg-matte-black/40 border border-white/5 focus:border-gold-aged/40 rounded-xl text-white font-mono text-center tracking-widest uppercase placeholder:text-neutral-700 focus:outline-none transition-all duration-300 shadow-inner"
+                />
+                @if (searchError()) {
+                  <span class="text-[10px] text-red-500 font-sans tracking-wide mt-1 select-none">{{ searchError() }}</span>
+                }
+              </div>
+              
+              <div class="flex gap-4">
+                <button 
+                  (click)="isSearching.set(false)"
+                  class="w-1/3 py-4 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer"
+                >
+                  Volver
+                </button>
+                <button 
+                  (click)="executeSearch()"
+                  [disabled]="searchLoading() || !searchQuery()"
+                  class="w-2/3 py-4 rounded-xl bg-gold-aged hover:bg-gold-light disabled:bg-neutral-800 text-matte-black disabled:text-neutral-500 font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-[0_4px_20px_rgba(197,168,84,0.15)] disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
+                >
+                  @if (searchLoading()) {
+                    <svg class="animate-spin h-4 w-4 text-matte-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Buscando...</span>
+                  } @else {
+                    <span>Consultar Estado</span>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+
         } @else {
           
           <!-- React Form Section -->
           <div class="glass-effect rounded-3xl p-8 sm:p-12 shadow-2xl relative" data-reveal>
             
             <div class="flex flex-col items-center text-center gap-3 mb-10">
+              <div class="flex justify-between items-center w-full max-w-md mx-auto mb-2 border-b border-white/5 pb-2">
+                <span class="text-xs text-neutral-500 font-sans">¿Ya tienes una reserva?</span>
+                <button 
+                  (click)="isSearching.set(true)"
+                  class="text-xs text-gold-aged font-bold font-sans tracking-wide hover:text-gold-light uppercase transition-colors duration-300 cursor-pointer"
+                >
+                  Consultar reserva →
+                </button>
+              </div>
               <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">Asegura tu Drop Exclusivo</h3>
               <p class="text-xs sm:text-sm text-neutral-400 max-w-md">
                 Ingresa tus datos para registrar tu pre-orden. No se requiere pago inmediato; recibirás un ticket holográfico y las instrucciones para concretar la entrega.
@@ -292,29 +356,21 @@ import { environment } from '../../environments/environment';
 
               <div class="h-[1px] bg-white/5 my-2"></div>
 
-              <!-- Bold Button Injection Wrapper or Placeholder -->
+              <!-- Bold Checkout Redirect Button -->
               @if (preOrderForm.valid) {
-                <div class="w-full flex flex-col items-center gap-3 py-4 px-6 rounded-2xl bg-neutral-955/60 border border-gold-aged/20 max-w-sm mx-auto select-none mt-2 animate-fade-in">
-                  <span class="text-[10px] font-sans font-semibold tracking-[0.2em] text-gold-aged uppercase flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    Datos Completados — Pagar con Bold
-                  </span>
-                  
-                  <div id="bold-pay-container" class="w-full min-h-[50px] flex flex-col items-center justify-center gap-2">
-                    <div class="animate-pulse flex items-center gap-2 text-xs text-neutral-500 font-sans">
-                      <span class="w-2.5 h-2.5 rounded-full bg-gold-aged animate-ping"></span>
-                      Inyectando pasarela Bold...
-                    </div>
-                  </div>
-
-                  <button 
-                    type="button"
-                    (click)="simulateApprovedPayment()"
-                    class="text-[10px] font-sans text-neutral-500 hover:text-gold-aged transition-colors duration-300 underline cursor-pointer mt-1"
-                  >
-                    Simular Pago Aprobado (Modo Demo)
-                  </button>
-                </div>
+                <button 
+                  type="button"
+                  (click)="submitPreOrderCheckout()"
+                  [disabled]="checkoutLoading()"
+                  class="w-full py-4.5 rounded-xl bg-gold-aged hover:bg-gold-light disabled:bg-neutral-800 text-matte-black disabled:text-neutral-500 font-sans font-extrabold tracking-widest text-sm uppercase cursor-pointer flex justify-center items-center gap-2 shadow-[0_4px_20px_rgba(197,168,84,0.2)] hover:scale-[1.02] active:scale-98 transition-all duration-300 mt-2"
+                >
+                  @if (checkoutLoading()) {
+                    <div class="w-5 h-5 border-2 border-matte-black border-t-transparent rounded-full animate-spin"></div>
+                    <span>Procesando Reserva...</span>
+                  } @else {
+                    <span>{{ proceedButtonText() }}</span>
+                  }
+                </button>
               } @else {
                 <button 
                   type="button"
@@ -340,6 +396,9 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   protected readonly preOrderService = inject(PreOrderService);
   private readonly fb = inject(FormBuilder);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly router = inject(Router);
+
+  readonly checkoutLoading = signal<boolean>(false);
 
   // Countdown timer signals
   readonly countdownText = signal<string>('3d 00h 00m 00s');
@@ -348,6 +407,12 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   // Form signals
   readonly isSubmitting = signal<boolean>(false);
   readonly selectedSize = signal<string>('M');
+
+  // Search query signals
+  readonly searchQuery = signal<string>('');
+  readonly searchError = signal<string>('');
+  readonly searchLoading = signal<boolean>(false);
+  readonly isSearching = signal<boolean>(false);
 
   // Build the react form
   readonly preOrderForm = this.fb.group({
@@ -373,6 +438,10 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     return `Completar datos para pagar — $${this.totalAmountFormatted()} COP`;
   });
 
+  readonly proceedButtonText = computed(() => {
+    return `Proceder al Pago — $${this.totalAmountFormatted()} COP`;
+  });
+
   readonly activeTicketTotalFormatted = computed(() => {
     const ticket = this.preOrderService.activeTicket();
     if (!ticket) return '';
@@ -382,20 +451,11 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.startCountdown();
-    this.checkPaymentRedirect();
-    
-    // Listen to form changes to update the Bold button and store pending data
-    this.preOrderForm.valueChanges.subscribe(() => {
-      this.onFormChanged();
-    });
   }
 
   ngOnDestroy(): void {
     if (this.timerIntervalId) {
       clearInterval(this.timerIntervalId);
-    }
-    if (this.formChangeTimeoutId) {
-      clearTimeout(this.formChangeTimeoutId);
     }
   }
 
@@ -501,171 +561,54 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Active form monitoring and automatic Bold button injection
-  private formChangeTimeoutId: any = null;
-
-  onFormChanged(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    
+  submitPreOrderCheckout(): void {
     if (this.preOrderForm.valid) {
+      this.checkoutLoading.set(true);
       const formValue = this.preOrderForm.value;
-      localStorage.setItem('osaneli_pending_preorder', JSON.stringify(formValue));
+      const orderId = this.preOrderService.generateUniqueOrderId();
       
-      if (this.formChangeTimeoutId) {
-        clearTimeout(this.formChangeTimeoutId);
-      }
-      
-      this.formChangeTimeoutId = setTimeout(() => {
-        this.injectFormBoldButton();
-      }, 400);
+      this.preOrderService.savePendingOrder(orderId, formValue)
+        .then(() => {
+          this.router.navigate(['/order'], { queryParams: { id: orderId } });
+        })
+        .catch((err) => {
+          console.error('Failed to register pending order:', err);
+        })
+        .finally(() => {
+          this.checkoutLoading.set(false);
+        });
     } else {
-      localStorage.removeItem('osaneli_pending_preorder');
+      this.markFormAsTouched();
     }
   }
 
-  async injectFormBoldButton(retries = 8): Promise<void> {
-    if (!isPlatformBrowser(this.platformId)) return;
-    
-    let libScript = document.querySelector('script[src="https://checkout.bold.co/library/boldPaymentButton.js"]') as HTMLScriptElement;
-    if (!libScript) {
-      libScript = document.createElement('script');
-      libScript.src = 'https://checkout.bold.co/library/boldPaymentButton.js';
-      document.head.appendChild(libScript);
-    }
-    
-    const tryInject = async () => {
-      const container = document.getElementById('bold-pay-container');
-      if (!container) {
-        if (retries > 0) {
-          setTimeout(tryInject, 100);
-          retries--;
-        }
-        return;
-      }
-      
-      container.innerHTML = '';
-      
-      const formValue = this.preOrderForm.value;
-      const qty = Number(formValue.quantity || 1);
-      const totalAmount = 280000 * qty;
-      
-      const btnScript = document.createElement('script');
-      btnScript.setAttribute('data-bold-button', 'dark-L');
-      btnScript.setAttribute('data-api-key', environment.boldApiKey);
-      btnScript.setAttribute('data-description', `Camiseta Osaneli Oro Vivo - ${qty}x Talla ${formValue.size} (${formValue.version === 'oro_vivo' ? 'Oro' : 'Negra'})`);
-      btnScript.setAttribute('data-amount', totalAmount.toString());
-      btnScript.setAttribute('data-currency', 'COP');
-      
-      const timestamp = Date.now();
-      const orderId = `OSN-PEND-${qty}-${timestamp}`;
-      btnScript.setAttribute('data-order-id', orderId);
-      
-      const demoSecret = environment.boldSecretKey;
-      const integrityString = `${orderId}${totalAmount}COP${demoSecret}`;
-      const signature = await this.generateSHA256(integrityString);
-      btnScript.setAttribute('data-integrity-signature', signature);
-      
-      const customerObj = {
-        email: formValue.email || '',
-        fullName: formValue.fullName || '',
-        phone: formValue.phone || '',
-        dialCode: '+57',
-        documentType: 'CC'
-      };
-      btnScript.setAttribute('data-customer-data', JSON.stringify(customerObj));
-      
-      btnScript.setAttribute('data-render-mode', 'embedded');
-      
-      // Enforce secure HTTPS redirection URL and keep it query-free (Bold automatically appends transaction parameters)
-      const redirectUrl = environment.boldRedirectUrl;
-      btnScript.setAttribute('data-redirection-url', redirectUrl);
-      btnScript.setAttribute('data-origin-url', window.location.href);
-      
-      btnScript.src = 'https://checkout.bold.co/library/boldPaymentButton.js';
-      container.appendChild(btnScript);
-    };
-    
-    setTimeout(tryInject, 100);
+  onSearchInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchQuery.set(input.value.trim().toUpperCase());
+    this.searchError.set('');
   }
 
-  checkPaymentRedirect(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+  async executeSearch(): Promise<void> {
+    const q = this.searchQuery();
+    if (!q) return;
     
-    const urlParams = new URLSearchParams(window.location.search);
-    const txStatus = urlParams.get('bold-tx-status');
-    const orderId = urlParams.get('bold-order-id');
+    this.searchLoading.set(true);
+    this.searchError.set('');
     
-    if (txStatus === 'approved' && orderId) {
-      const pendingData = localStorage.getItem('osaneli_pending_preorder');
-      if (pendingData) {
-        try {
-          const parsed = JSON.parse(pendingData);
-          
-          const officialPreOrder = this.preOrderService.addPreOrder({
-            fullName: parsed.fullName,
-            email: parsed.email,
-            phone: parsed.phone,
-            version: parsed.version,
-            size: parsed.size,
-            quantity: Number(parsed.quantity || 1)
-          });
-          
-          localStorage.removeItem('osaneli_pending_preorder');
-          
-          const cleanUrl = window.location.origin + window.location.pathname;
-          window.history.replaceState({}, document.title, cleanUrl);
-          
-          setTimeout(() => {
-            gsap.fromTo('.ticket-card', 
-              { opacity: 0, scale: 0.82, rotateX: -35, rotateY: 18 },
-              { opacity: 1, scale: 1, rotateX: 0, rotateY: 0, duration: 1.3, ease: 'back.out(1.35)' }
-            );
-          }, 50);
-        } catch (e) {
-          console.error('Error processing approved payment redirect', e);
-        }
+    try {
+      const result = await this.preOrderService.queryOrder(q);
+      if (result) {
+        this.router.navigate(['/order'], { queryParams: { id: result.id } });
+        this.isSearching.set(false);
+        this.searchQuery.set('');
+      } else {
+        this.searchError.set('No se encontró ninguna reserva activa con este número de orden. Verifica el código e intenta nuevamente.');
       }
-    }
-  }
-
-  simulateApprovedPayment(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    
-    const pendingData = localStorage.getItem('osaneli_pending_preorder');
-    if (pendingData) {
-      try {
-        const parsed = JSON.parse(pendingData);
-        
-        this.preOrderService.addPreOrder({
-          fullName: parsed.fullName,
-          email: parsed.email,
-          phone: parsed.phone,
-          version: parsed.version,
-          size: parsed.size,
-          quantity: Number(parsed.quantity || 1)
-        });
-        
-        localStorage.removeItem('osaneli_pending_preorder');
-        
-        this.preOrderForm.reset({
-          fullName: '',
-          email: '',
-          phone: '',
-          version: 'oro_vivo',
-          size: 'M',
-          quantity: 1
-        });
-        this.selectedSize.set('M');
-        
-        setTimeout(() => {
-          gsap.fromTo('.ticket-card', 
-            { opacity: 0, scale: 0.82, rotateX: -35, rotateY: 18 },
-            { opacity: 1, scale: 1, rotateX: 0, rotateY: 0, duration: 1.3, ease: 'back.out(1.35)' }
-          );
-        }, 50);
-      } catch (e) {
-        console.error('Error simulating approved payment', e);
-      }
+    } catch (err) {
+      console.error('Error querying order:', err);
+      this.searchError.set('Ocurrió un error de red al consultar tu reserva. Intenta de nuevo.');
+    } finally {
+      this.searchLoading.set(false);
     }
   }
 
@@ -674,12 +617,5 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
       const control = this.preOrderForm.get(key);
       control?.markAsTouched();
     });
-  }
-
-  private async generateSHA256(message: string): Promise<string> {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 }

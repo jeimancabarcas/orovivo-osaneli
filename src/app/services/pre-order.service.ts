@@ -1,40 +1,34 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
-
-export interface PreOrder {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  version: 'oro_vivo' | 'edicion_secreta';
-  size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
-  quantity: number;
-  serialNumber: string;
-  createdAt: Date;
-}
+import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { FirebaseService, Order } from './firebase.service';
+export type { Order } from './firebase.service';
+export type { PreOrder } from './firebase.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PreOrderService {
-  private readonly STORAGE_KEY = 'osaneli_oro_vivo_preorders';
   private readonly TOTAL_EDITION_LIMIT = 100;
   
-  // Base preorders signal
-  private readonly preordersList = signal<PreOrder[]>([]);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly firebaseService = inject(FirebaseService);
 
-  constructor() {
-    this.loadFromStorage();
-  }
+  // Derived order list bound directly to the real-time Firebase Database state
+  readonly preorders = computed(() => this.firebaseService.orders());
 
-  // Loaded preorders
-  readonly preorders = computed(() => this.preordersList());
+  // Retrieve last submitted order from current user for ticket displaying
+  readonly activeTicket = signal<Order | null>(null);
 
-  // Derived stock count (limit 100, starts at 47 remaining for realism, decreases with every new order)
+  // Derived initial sync completion state
+  readonly isInitialSyncCompleted = computed(() => this.firebaseService.isInitialSyncCompleted());
+
+  constructor() {}
+
+  // Derived stock count (limit 100, decreases with every APPROVED order in real-time database)
   readonly remainingInventory = computed(() => {
-    const reservedCount = this.preordersList().reduce((sum, po) => sum + (po.quantity || 1), 0);
-    // We start with 53 sold to make it look like active drop (47 remaining)
-    const initialSold = 53;
-    const currentRemaining = this.TOTAL_EDITION_LIMIT - (initialSold + reservedCount);
+    const approvedOrders = this.preorders().filter(po => po.status === 'APPROVED');
+    const reservedCount = approvedOrders.reduce((sum, po) => sum + (po.quantity || 1), 0);
+    const currentRemaining = this.TOTAL_EDITION_LIMIT - reservedCount;
     return currentRemaining > 0 ? currentRemaining : 0;
   });
 
@@ -44,70 +38,81 @@ export class PreOrderService {
     return Math.round(((this.TOTAL_EDITION_LIMIT - remaining) / this.TOTAL_EDITION_LIMIT) * 100);
   });
 
-  // Retrieve last submitted preorder from current user for ticket displaying
-  readonly activeTicket = signal<PreOrder | null>(null);
-
   /**
-   * Load initial data from localStorage
+   * Generates a premium, truly unique order code (e.g. OSN-H8K3X9)
    */
-  private loadFromStorage(): void {
-    if (typeof window !== 'undefined') {
-      const data = localStorage.getItem(this.STORAGE_KEY);
-      if (data) {
-        try {
-          const parsed = JSON.parse(data) as PreOrder[];
-          this.preordersList.set(parsed);
-          
-          // If there is an active local ticket, set it
-          const lastPreOrder = parsed[parsed.length - 1];
-          if (lastPreOrder) {
-            this.activeTicket.set(lastPreOrder);
-          }
-        } catch (e) {
-          console.error('Error parsing preorders from storage', e);
-        }
-      }
+  generateUniqueOrderId(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = 'OSN-';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    return code;
   }
 
   /**
-   * Register a new pre-order and return it with a unique serial number
+   * Register a new approved order and persist it to Firebase Realtime Database
    */
-  addPreOrder(data: Omit<PreOrder, 'id' | 'serialNumber' | 'createdAt'>): PreOrder {
-    const currentPreorders = this.preordersList();
-    const totalPreviousItems = currentPreorders.reduce((sum, po) => sum + (po.quantity || 1), 0);
-    const nextIndex = 53 + totalPreviousItems + 1; // Real ticket serial starts from 54
+  addPreOrder(data: Omit<Order, 'serialNumber' | 'createdAt' | 'status'>): Order {
+    const approvedOrders = this.preorders().filter(po => po.status === 'APPROVED');
+    const totalPreviousItems = approvedOrders.reduce((sum, po) => sum + (po.quantity || 1), 0);
+    const nextIndex = totalPreviousItems + 1; // Real ticket serial starts from 1 based on real orders
     
-    // Generate Serial Number (e.g. OSN-ORO-054/100)
+    // Generate Serial Number (e.g. OSN-ORO-001/100)
     const paddedIndex = String(nextIndex).padStart(3, '0');
     const serialNumber = `OSN-ORO-${paddedIndex}/100`;
+    const createdAtDate = new Date();
 
-    const newPreOrder: PreOrder = {
+    const newOrder: Order = {
       ...data,
-      id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9),
+      status: 'APPROVED',
       serialNumber,
-      createdAt: new Date()
+      createdAt: createdAtDate
     };
 
-    // Update list using signal set/update
-    const updatedList = [...currentPreorders, newPreOrder];
-    this.preordersList.set(updatedList);
-    
-    // Save to localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updatedList));
-    }
+    // Persist to Firebase Realtime Database asynchronously
+    this.firebaseService.saveOrder(newOrder).catch((err) => {
+      console.error('Asynchronous cloud sync failed for order:', err);
+    });
 
     // Set active ticket for display
-    this.activeTicket.set(newPreOrder);
+    this.activeTicket.set(newOrder);
 
-    return newPreOrder;
+    return newOrder;
   }
 
   /**
-   * Clear active ticket to allow another preorder
+   * Clear active ticket to allow another order
    */
   clearActiveTicket(): void {
     this.activeTicket.set(null);
+  }
+
+  /**
+   * Save a temporary pending order draft to Firebase Realtime Database
+   */
+  savePendingOrder(orderId: string, formValue: any): Promise<void> {
+    return this.firebaseService.savePendingOrder(orderId, formValue);
+  }
+
+  /**
+   * Legacy compatibility method
+   */
+  savePendingPreOrder(orderId: string, formValue: any): Promise<void> {
+    return this.savePendingOrder(orderId, formValue);
+  }
+
+  /**
+   * Query a single order by its unique Order ID from Firebase cloud database
+   */
+  queryOrder(orderId: string): Promise<Order | null> {
+    return this.firebaseService.getOrderById(orderId);
+  }
+
+  /**
+   * Legacy compatibility method
+   */
+  queryPreOrder(orderId: string): Promise<Order | null> {
+    return this.queryOrder(orderId);
   }
 }
