@@ -27,7 +27,7 @@ const db = getDatabase(firebaseApp);
  * Simple handler: updates the order status and merges all fields sent by Bold.
  */
 app.post('/api/bold-webhook', async (req, res) => {
-  console.log('Bold Webhook received:', JSON.stringify(req.body));
+  console.log('Bold Webhook received angular:', JSON.stringify(req.body));
   
   // Respond immediately with 200 OK (Bold requires response under 2 seconds)
   res.status(200).json({ received: true });
