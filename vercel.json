@@ -4,7 +4,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/drop-fcf/browser",
   "rewrites": [
-    { "source": "/api/bold-webhook", "destination": "/api/bold-webhook" },
     { "source": "/(.*)", "destination": "/api" }
   ],
   "functions": {
