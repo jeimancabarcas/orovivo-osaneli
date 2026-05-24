@@ -96,6 +96,13 @@ export class PreOrderService {
   }
 
   /**
+   * Update order status in Firebase Realtime Database
+   */
+  updateOrderStatus(orderId: string, status: Order['status']): Promise<void> {
+    return this.firebaseService.updateOrderStatus(orderId, status);
+  }
+
+  /**
    * Legacy compatibility method
    */
   savePendingPreOrder(orderId: string, formValue: any): Promise<void> {

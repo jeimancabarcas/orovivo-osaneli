@@ -29,7 +29,7 @@ import { gsap } from 'gsap';
         
         <!-- CASE 2: Order Not Specified / Search Form -->
         @else if (!activeOrder()) {
-          <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border border-white/5 shadow-2xl" data-reveal>
+          <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border border-white/5 shadow-2xl animate-reveal">
             <div class="w-12 h-12 rounded-full bg-gold-aged/10 flex items-center justify-center border border-gold-aged/30">
               <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="#C5A854"><path d="M784-120 532-372q-30 24-74 38t-90 14q-117 0-198.5-81.5T88-600q0-117 81.5-198.5T368-880q117 0 198.5 81.5T648-600q0 46-14 90t-38 74l252 252-64 64ZM368-292q75 0 127.5-52.5T548-472q0-75-52.5-127.5T368-652q-75 0-127.5 52.5T188-472q0 75 52.5 127.5T368-292Z"/></svg>
             </div>
@@ -89,7 +89,7 @@ import { gsap } from 'gsap';
           
           <!-- STATE A: APPROVED (Luxury Holographic Ticket) -->
           @if (order.status === 'APPROVED') {
-            <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border-2 border-gold-aged/40 shadow-[0_0_50px_rgba(197,168,84,0.15)]" data-reveal>
+            <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border-2 border-gold-aged/40 shadow-[0_0_50px_rgba(197,168,84,0.15)] animate-reveal">
               
               <div class="w-16 h-16 rounded-full bg-gold-aged/10 flex items-center justify-center border-2 border-gold-aged/50 animate-pulse">
                 <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 -960 960 960" width="32" fill="#C5A854"><path d="m382-354 278-278-56-56-222 222-114-114-56 56 170 170ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
@@ -195,10 +195,11 @@ import { gsap } from 'gsap';
               </div>
             </div>
           }
-          
-          <!-- STATE B: PENDING (Start Payment & Summary Card) -->
-          @else if (order.status === 'PENDING' || (order.status === 'REJECTED' && isRetrying())) {
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start w-full max-w-4xl" data-reveal>
+          <!-- STATE B & C: CREATED (Ready to Pay) & PENDING (Procesando Pago) -->
+          @else if (order.status === 'CREATED' || order.status === 'PENDING') {
+            
+            <!-- CREATED panel: Order Summary & Bold Payment button -->
+            <div [class.hidden]="order.status !== 'CREATED'" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start w-full max-w-4xl animate-reveal">
               
               <!-- Left Column: Order Summary -->
               <div class="glass-effect rounded-3xl p-6 sm:p-8 border border-white/5 flex flex-col gap-6">
@@ -267,8 +268,8 @@ import { gsap } from 'gsap';
                   </p>
                 </div>
 
-                <!-- Bold Button Container -->
-                <div id="bold-pay-container" class="w-full min-h-[50px] flex flex-col items-center justify-center gap-2">
+                <!-- Bold Button Container (intercepts click to transition to PENDING status) -->
+                <div id="bold-pay-container" (click)="onBoldContainerClick()" class="w-full min-h-[50px] flex flex-col items-center justify-center gap-2">
                   <div class="flex flex-col items-center gap-2">
                     <div class="w-5 h-5 border-2 border-gold-aged border-t-transparent rounded-full animate-spin"></div>
                     <span class="text-[10px] text-neutral-400 uppercase tracking-widest font-sans font-bold">Inyectando pasarela Bold...</span>
@@ -289,48 +290,146 @@ import { gsap } from 'gsap';
               </div>
               
             </div>
+
+            <!-- PENDING panel: Premium Holographic Charging Ticket (luxury styling similar to APPROVED) -->
+            <div [class.hidden]="order.status !== 'PENDING'" class="w-full animate-reveal">
+              <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border-2 border-gold-aged/40 shadow-[0_0_50px_rgba(197,168,84,0.15)]">
+                
+                <!-- Luxury Gold Loader -->
+                <div class="relative w-16 h-16 flex items-center justify-center animate-reveal">
+                  <!-- Pulsing golden outer glow -->
+                  <div class="absolute inset-0 rounded-full border border-gold-aged/30 animate-ping"></div>
+                  <!-- Rotating golden luxury ring -->
+                  <div class="w-12 h-12 rounded-full border-4 border-gold-aged/10 border-t-gold-aged animate-spin"></div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <span class="text-xs font-bold text-gold-aged tracking-[0.2em] uppercase font-sans">PAGO EN PROCESO</span>
+                  <h3 class="font-serif text-2xl sm:text-3xl font-black text-white font-bold">Procesando Tu Reserva</h3>
+                  <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto">
+                    La pasarela de pago Bold está verificando tu transacción. Esto puede tomar unos segundos. Tu ticket holográfico serializado definitivo se generará al instante.
+                  </p>
+                </div>
+
+                <!-- Ticket Visual Layout -->
+                <div class="perspective-1000 w-full max-w-md mx-auto py-2 animate-reveal">
+                  <div 
+                    class="ticket-card relative w-full rounded-2xl bg-neutral-900 border border-gold-aged/30 p-6 flex flex-col gap-6 text-left shadow-2xl overflow-hidden cursor-crosshair"
+                    (mousemove)="onMouseMoveTicket($event)"
+                    (mouseleave)="onMouseLeaveTicket($event)"
+                  >
+                    <div class="holographic-glare absolute inset-0 pointer-events-none mix-blend-color-dodge opacity-0 transition-opacity duration-300" style="background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(244, 223, 138, 0.25) 0%, rgba(197, 168, 84, 0.15) 30%, rgba(18, 42, 58, 0.3) 60%, rgba(138, 37, 37, 0.2) 100%);"></div>
+                    <div class="absolute inset-0 bg-radial-gradient from-gold-aged/5 via-transparent to-transparent pointer-events-none"></div>
+
+                    <!-- Header -->
+                    <div class="flex justify-between items-center border-b border-white/5 pb-4 relative z-10">
+                      <span class="font-editorial tracking-widest text-base text-gold-aged">OSANELI</span>
+                      <span class="font-mono text-[10px] tracking-widest text-neutral-400 font-bold uppercase">
+                        DROP 01: ORO VIVO
+                      </span>
+                    </div>
+
+                    <!-- Info Grid -->
+                    <div class="grid grid-cols-2 gap-4 text-xs font-sans relative z-10">
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">PROPIETARIO</span>
+                        <span class="text-white font-bold font-serif tracking-wide truncate">{{ order.fullName }}</span>
+                      </div>
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">EMAIL</span>
+                        <span class="text-white font-bold tracking-wide truncate">{{ order.email }}</span>
+                      </div>
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">VERSIÓN</span>
+                        <span class="text-white font-bold font-serif tracking-wide">
+                          {{ order.version === 'oro_vivo' ? 'Oro Vivo (Oro)' : 'Edición Secreta (Negra)' }}
+                        </span>
+                      </div>
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">TALLA (BOXY)</span>
+                        <span class="text-gold-aged font-extrabold tracking-widest text-sm">{{ order.size }}</span>
+                      </div>
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">CANTIDAD</span>
+                        <span class="text-white font-bold tracking-widest font-sans">{{ order.quantity }} {{ order.quantity === 1 ? 'Unidad' : 'Unidades' }}</span>
+                      </div>
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">VALOR TOTAL</span>
+                        <span class="text-gold-aged font-extrabold tracking-wide font-serif">{{ totalAmountFormatted() }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Barcode & Serial -->
+                    <div class="flex flex-col items-center gap-2 pt-4 border-t border-white/5 text-center relative z-10">
+                      <div class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gold-aged/5 border border-gold-aged/20 text-gold-aged font-sans text-[10px] font-bold tracking-widest uppercase animate-pulse">
+                        <span>ESPERANDO CONFIRMACIÓN...</span>
+                      </div>
+                      <span class="font-mono text-xs text-neutral-500 tracking-wider">
+                        ORDEN: {{ order.id }}
+                      </span>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- Payment confirmation badge pending -->
+                <div class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-gold-aged/10 border border-gold-aged/20 max-w-sm mx-auto text-gold-aged font-sans text-xs font-bold tracking-wider select-none mt-2 animate-pulse">
+                  <span>VERIFICANDO MEDIO DE PAGO EN BOLD</span>
+                </div>
+
+                <div class="text-[10px] text-neutral-500 mt-2 select-none italic animate-reveal">
+                  No recargues ni cierres esta pestaña. El ticket se actualizará automáticamente en tiempo real.
+                </div>
+              </div>
+            </div>
+            
           }
           
-          <!-- STATE C: REJECTED (Failed/Retry Block) -->
+          <!-- STATE D: REJECTED (Ruby Red Luxury Error Block) -->
           @else if (order.status === 'REJECTED') {
-            <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border-2 border-red-500/20 shadow-[0_0_40px_rgba(239,68,68,0.06)]" data-reveal>
-              <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border-2 border-red-500/30 text-red-400">
+            <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border-2 border-red-500/30 shadow-[0_0_50px_rgba(239,68,68,0.15)] animate-reveal">
+              <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border-2 border-red-500/40 text-red-500 animate-pulse">
                 <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 -960 960 960" width="32" fill="currentColor"><path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Z"/></svg>
               </div>
 
               <div class="flex flex-col gap-2">
-                <span class="text-xs font-bold text-red-400 tracking-[0.2em] uppercase font-sans">TRANSACCIÓN RECHAZADA</span>
-                <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">Pago No Procesado</h3>
+                <span class="text-xs font-bold text-red-500 tracking-[0.2em] uppercase font-sans">TRANSACCIÓN DECLINADA</span>
+                <h3 class="font-serif text-2xl sm:text-3xl font-black text-white font-bold">No Pudimos Procesar Tu Pago</h3>
                 <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto">
-                  La pasarela de pagos Bold reportó que la transacción fue denegada o cancelada. Tu reserva no se ha serializado aún.
+                  La pasarela de pago Bold reportó que la transacción fue rechazada, cancelada o no pudo completarse. Tu cupo de reserva no se ha asignado aún.
                 </p>
               </div>
 
-              <div class="w-full rounded-2xl bg-white/5 border border-white/10 p-5 text-left text-xs flex flex-col gap-3 font-sans">
-                <div class="flex justify-between items-center">
-                  <span class="text-neutral-400">Orden Asocida</span>
+              <!-- Rejection Details Breakdown -->
+              <div class="w-full rounded-2xl bg-red-500/5 border border-red-500/10 p-5 text-left text-xs flex flex-col gap-3 font-sans">
+                <div class="flex justify-between items-center pb-2 border-b border-red-500/10">
+                  <span class="text-neutral-400">Número de Orden</span>
                   <span class="text-white font-mono font-bold">{{ order.id }}</span>
                 </div>
-                <div class="flex justify-between items-center">
+                <div class="flex justify-between items-center pb-2 border-b border-red-500/10">
                   <span class="text-neutral-400">Comprador</span>
                   <span class="text-white font-bold">{{ order.fullName }}</span>
                 </div>
+                <div class="flex justify-between items-center pb-2 border-b border-red-500/10">
+                  <span class="text-neutral-400">Total Pre-Orden</span>
+                  <span class="text-red-400 font-bold font-serif">{{ totalAmountFormatted() }}</span>
+                </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-neutral-400">Monto Total</span>
-                  <span class="text-gold-aged font-bold">{{ totalAmountFormatted() }}</span>
+                  <span class="text-neutral-400">Estado en Pasarela</span>
+                  <span class="text-red-500 font-extrabold uppercase tracking-wide">RECHAZADO / CANCELADO</span>
                 </div>
               </div>
 
-              <div class="flex flex-col sm:flex-row gap-3 w-full justify-center">
+              <div class="flex flex-col sm:flex-row gap-3 w-full justify-center mt-2">
                 <button 
                   (click)="retryPayment()"
-                  class="px-6 py-3.5 rounded-xl bg-gold-aged hover:bg-gold-light text-matte-black font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer w-full sm:w-auto"
+                  class="px-6 py-3.5 rounded-xl bg-gold-aged hover:bg-gold-light text-matte-black font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer w-full sm:w-auto shadow-[0_4px_20px_rgba(197,168,84,0.2)] hover:scale-[1.02] active:scale-98"
                 >
                   Volver a Intentar Pago
                 </button>
                 <button 
                   (click)="clearActive()"
-                  class="px-6 py-3.5 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-white/10 font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer w-full sm:w-auto"
+                  class="px-6 py-3.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer w-full sm:w-auto"
                 >
                   Consultar otro código
                 </button>
@@ -338,22 +437,41 @@ import { gsap } from 'gsap';
             </div>
           }
           
-          <!-- STATE D: VOIDED (Refunded/Cancelled) -->
-          @else if (order.status === 'VOIDED') {
-            <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border-2 border-neutral-500/20 shadow-2xl" data-reveal>
-              <div class="w-16 h-16 rounded-full bg-neutral-500/10 flex items-center justify-center border-2 border-neutral-500/30 text-neutral-400">
+          <!-- STATE E: VOIDED (Grey Slate Cancelled Block) -->
+          @else if (order.status === 'VOIDED' || order.status === 'VOID_REJECTED') {
+            <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border-2 border-neutral-500/30 shadow-[0_0_40px_rgba(255,255,255,0.02)] animate-reveal">
+              <div class="w-16 h-16 rounded-full bg-neutral-500/10 flex items-center justify-center border-2 border-neutral-500/40 text-neutral-400 animate-pulse">
                 <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 -960 960 960" width="32" fill="currentColor"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm-80-440h160v-80H400v80Zm0 240h160v-80H400v80Z"/></svg>
               </div>
 
               <div class="flex flex-col gap-2">
-                <span class="text-xs font-bold text-neutral-400 tracking-[0.2em] uppercase font-sans">RESERVA ANULADA</span>
-                <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">Transacción Anulada</h3>
+                <span class="text-xs font-bold text-neutral-400 tracking-[0.2em] uppercase font-sans">PRE-ORDEN ANULADA</span>
+                <h3 class="font-serif text-2xl sm:text-3xl font-black text-white font-bold">Reserva Anulada / Reembolsada</h3>
                 <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto">
-                  Este pedido fue anulado o reembolsado a través del webhook de anulación de Bold. El ticket de preventa ya no tiene validez.
+                  Este pedido fue anulado o reembolsado oficialmente mediante la pasarela de pagos Bold. El cupo y el ticket holográfico han perdido validez.
                 </p>
               </div>
 
-              <div class="flex gap-4">
+              <!-- Anullment Details Breakdown -->
+              <div class="w-full rounded-2xl bg-white/5 border border-white/10 p-5 text-left text-xs flex flex-col gap-3 font-sans">
+                <div class="flex justify-between items-center pb-2 border-b border-white/5">
+                  <span class="text-neutral-400">Orden Asocida</span>
+                  <span class="text-white font-mono font-bold">{{ order.id }}</span>
+                </div>
+                <div class="flex justify-between items-center pb-2 border-b border-white/5">
+                  <span class="text-neutral-400">Comprador</span>
+                  <span class="text-white font-bold">{{ order.fullName }}</span>
+                </div>
+                <div class="flex justify-between items-center pb-2 border-b border-white/5">
+                  <span class="text-neutral-300 font-bold font-serif">{{ totalAmountFormatted() }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-neutral-400">Estado</span>
+                  <span class="text-neutral-500 font-extrabold uppercase tracking-wide">ANULADO / REEMBOLSADO</span>
+                </div>
+              </div>
+
+              <div class="flex gap-4 mt-2">
                 <button 
                   (click)="clearActive()"
                   class="px-6 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer"
@@ -449,13 +567,12 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
     }
   });
 
-  // Automatically trigger Bold injection when active order is PENDING or REJECTED and retrying
+  // Automatically trigger Bold injection when active order is CREATED
   private readonly boldInjectorEffect = effect(() => {
     if (!isPlatformBrowser(this.platformId)) return;
     const order = this.activeOrder();
-    const retrying = this.isRetrying();
     
-    if (order && (order.status === 'PENDING' || (order.status === 'REJECTED' && retrying))) {
+    if (order && order.status === 'CREATED') {
       setTimeout(() => {
         this.injectBoldButtonOnLanding(order);
       }, 300);
@@ -488,12 +605,10 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      this.queryParamsSubscription = this.route.queryParams.subscribe((params) => {
-        const orderId = params['id'] || params['bold-order-id'];
-        this.orderIdQuery.set(orderId ? orderId.toUpperCase() : null);
-      });
-    }
+    this.queryParamsSubscription = this.route.queryParams.subscribe((params) => {
+      const orderId = params['id'] || params['bold-order-id'];
+      this.orderIdQuery.set(orderId ? orderId.toUpperCase() : null);
+    });
   }
 
   ngOnDestroy(): void {
@@ -544,7 +659,33 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
   }
 
   retryPayment(): void {
-    this.isRetrying.set(true);
+    const order = this.activeOrder();
+    if (order) {
+      this.isRetrying.set(false);
+      this.preOrderService.updateOrderStatus(order.id, 'CREATED')
+        .then(() => {
+          console.log('Order status reset back to CREATED for retry.');
+        })
+        .catch(err => {
+          console.error('Failed to reset order status back to CREATED:', err);
+        });
+    }
+  }
+
+  onBoldContainerClick(): void {
+    const order = this.activeOrder();
+    if (order && order.status === 'CREATED') {
+      // 250ms delay to let the Bold SDK safely handle the initial click and launch overlay
+      setTimeout(() => {
+        this.preOrderService.updateOrderStatus(order.id, 'PENDING')
+          .then(() => {
+            console.log('Order status updated to PENDING (processing payment)');
+          })
+          .catch(err => {
+            console.error('Failed to update status to PENDING:', err);
+          });
+      }, 250);
+    }
   }
 
   readonly totalAmountFormatted = computed(() => {

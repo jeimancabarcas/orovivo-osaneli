@@ -12,7 +12,7 @@ export interface Order {
   version: 'oro_vivo' | 'edicion_secreta';
   size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
   quantity: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'VOIDED';
+  status: 'CREATED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'VOIDED' | 'VOID_REJECTED';
   serialNumber?: string;
   createdAt: Date;
 }
@@ -55,7 +55,10 @@ export class FirebaseService {
         this.syncWithFirebase();
       } catch (error) {
         console.warn('Firebase Realtime Database failed to initialize. Operating in offline mode.', error);
+        this.isInitialSyncCompleted.set(true); // Fail-safe for offline mode
       }
+    } else {
+      this.isInitialSyncCompleted.set(true); // Fail-safe for SSR
     }
   }
 
@@ -79,7 +82,7 @@ export class FirebaseService {
             version: item.version || 'oro_vivo',
             size: item.size || 'M',
             quantity: Number(item.quantity || 1),
-            status: item.status || 'PENDING',
+            status: item.status || 'CREATED',
             serialNumber: item.serialNumber || '',
             createdAt: item.createdAt ? new Date(item.createdAt) : new Date()
           });
@@ -141,11 +144,26 @@ export class FirebaseService {
         version: formValue.version,
         size: formValue.size,
         quantity: Number(formValue.quantity || 1),
-        status: 'PENDING',
+        status: 'CREATED',
         createdAt: new Date().toISOString()
       });
     } catch (err) {
       console.error('Failed to save pending order in cloud:', err);
+      throw err; // Re-throw to allow components to handle database failure
+    }
+  }
+
+  /**
+   * Update the status of an order quickly and cleanly
+   */
+  async updateOrderStatus(orderId: string, status: Order['status']): Promise<void> {
+    if (!this.db) return;
+    try {
+      const statusRef = ref(this.db, `orders/${orderId}/status`);
+      await set(statusRef, status);
+    } catch (err) {
+      console.error('Failed to update order status in Firebase:', err);
+      throw err;
     }
   }
 
@@ -174,7 +192,7 @@ export class FirebaseService {
           version: item.version || 'oro_vivo',
           size: item.size || 'M',
           quantity: Number(item.quantity || 1),
-          status: item.status || 'PENDING',
+          status: item.status || 'CREATED',
           serialNumber: item.serialNumber || '',
           createdAt: item.createdAt ? new Date(item.createdAt) : new Date()
         };
