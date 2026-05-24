@@ -29,19 +29,16 @@ const db = getDatabase(firebaseApp);
 app.post('/api/bold-webhook', async (req, res) => {
   console.log('Bold Webhook received angular:', JSON.stringify(req.body));
   
-  // Respond immediately with 200 OK (Bold requires response under 2 seconds)
-  res.status(200).json({ received: true });
-  
   try {
     const { type, data } = req.body;
     const orderId = data?.metadata?.reference || data?.reference || req.body.reference;
     
     if (!orderId) {
       console.warn(`Webhook ${type}: no orderId found in payload.`);
-      return;
+      // Respondemos 400 porque el payload no es válido para nosotros
+      return res.status(400).json({ error: 'No orderId found' });
     }
     
-    // Map Bold event types to order statuses
     const statusMap: Record<string, string> = {
       'SALE_APPROVED': 'APPROVED',
       'SALE_REJECTED': 'REJECTED',
@@ -52,14 +49,13 @@ app.post('/api/bold-webhook', async (req, res) => {
     const newStatus = statusMap[type];
     if (!newStatus) {
       console.warn(`Webhook: unhandled event type "${type}" for order ${orderId}.`);
-      return;
+      return res.status(200).json({ received: true, message: 'Unhandled event' });
     }
     
     const orderRef = child(ref(db, 'orders'), orderId);
     const snapshot = await get(orderRef);
     const existing = snapshot.exists() ? snapshot.val() : {};
     
-    // Merge existing order data + all Bold payload fields + updated status
     await set(orderRef, {
       ...existing,
       ...data,
@@ -70,8 +66,14 @@ app.post('/api/bold-webhook', async (req, res) => {
     });
     
     console.log(`Order ${orderId} updated to ${newStatus}.`);
+    
+    // CORRECCIÓN: Responder AQUÍ, cuando todo terminó con éxito
+    return res.status(200).json({ received: true });
+
   } catch (error) {
     console.error('Error processing Bold webhook:', error);
+    // Respondemos con un error 500 para que Bold sepa que falló y reintente si es necesario
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
