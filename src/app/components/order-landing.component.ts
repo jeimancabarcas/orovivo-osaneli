@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, O
 import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Title, Meta } from '@angular/platform-browser';
 import { PreOrderService, Order } from '../services/pre-order.service';
 import { environment } from '../../environments/environment';
 import { gsap } from 'gsap';
@@ -499,6 +500,8 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly preOrderService = inject(PreOrderService);
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
 
   // States
   readonly orderIdQuery = signal<string | null>(null);
@@ -547,6 +550,59 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
   });
 
   private queryParamsSubscription: any = null;
+
+  // Side-effect to automatically update SEO tags based on the active order
+  private readonly seoEffect = effect(() => {
+    const order = this.activeOrder();
+    const queryId = this.orderIdQuery();
+    
+    if (order) {
+      const titleText = `Reserva ${order.id} | OSANELI ORO VIVO`;
+      const statusText = order.status === 'APPROVED' ? 'Aprobado y Confirmado' : 
+                         order.status === 'PENDING' ? 'Procesando Pago' : 
+                         order.status === 'REJECTED' ? 'Rechazado' : 'Creado';
+      const descText = `Consulta el estado de tu pre-orden de la camiseta 'ORO VIVO' de Osaneli (Código: ${order.id}). Estado: ${statusText}.`;
+      this.titleService.setTitle(titleText);
+      this.metaService.updateTag({ name: 'description', content: descText });
+      
+      this.metaService.updateTag({ property: 'og:title', content: titleText });
+      this.metaService.updateTag({ property: 'og:description', content: descText });
+      this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+      this.metaService.updateTag({ property: 'og:url', content: `https://orovivo.osaneli.com/order?id=${order.id}` });
+      
+      this.metaService.updateTag({ name: 'twitter:title', content: titleText });
+      this.metaService.updateTag({ name: 'twitter:description', content: descText });
+      this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+    } else if (queryId) {
+      const titleText = `Buscando Reserva ${queryId} | OSANELI ORO VIVO`;
+      const descText = `Buscando los detalles y estado del pedido con código ${queryId} en la base de datos de preventa de Osaneli.`;
+      this.titleService.setTitle(titleText);
+      this.metaService.updateTag({ name: 'description', content: descText });
+      
+      this.metaService.updateTag({ property: 'og:title', content: titleText });
+      this.metaService.updateTag({ property: 'og:description', content: descText });
+      this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+      this.metaService.updateTag({ property: 'og:url', content: `https://orovivo.osaneli.com/order?id=${queryId}` });
+      
+      this.metaService.updateTag({ name: 'twitter:title', content: titleText });
+      this.metaService.updateTag({ name: 'twitter:description', content: descText });
+      this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+    } else {
+      const titleText = 'Consultar Reserva | OSANELI ORO VIVO';
+      const descText = 'Ingresa tu código único para consultar el estado de tu preventa premium u obtener tu ticket holográfico 3D de Osaneli.';
+      this.titleService.setTitle(titleText);
+      this.metaService.updateTag({ name: 'description', content: descText });
+      
+      this.metaService.updateTag({ property: 'og:title', content: titleText });
+      this.metaService.updateTag({ property: 'og:description', content: descText });
+      this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+      this.metaService.updateTag({ property: 'og:url', content: 'https://orovivo.osaneli.com/order' });
+      
+      this.metaService.updateTag({ name: 'twitter:title', content: titleText });
+      this.metaService.updateTag({ name: 'twitter:description', content: descText });
+      this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+    }
+  });
 
   // Side-effect to clean URL parameters and trigger GSAP entry animations reactively
   private readonly ticketAnimationEffect = effect(() => {
