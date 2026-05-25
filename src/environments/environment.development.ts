@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
-  boldApiKey: 'zLDLlEmrn3wSGbG-u6VojBWXnMfJyZtRICAutPNDCF0', // Reemplazar por llave de Sandbox/Pruebas si se desea usar el entorno de pruebas de Bold
-  boldSecretKey: 'W97RSxbKflrCj4bJ7RC3Ig', // Reemplazar por secreto de Sandbox/Pruebas correspondiente
+  boldApiKey: 'zLDLlEmrn3wSGbG-u6VojBWXnMfJyZtRICAutPNDCF0',
+  boldSecretKey: 'W97RSxbKflrCj4bJ7RC3Ig',
   preSaleEndDate: '2026-05-30T00:00:00-05:00',
   firebase: {
     apiKey: "AIzaSyDC5zTjrdT7DNEzZj3Z7Sg9pKCBBv-oOR4",
