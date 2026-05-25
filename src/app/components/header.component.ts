@@ -18,11 +18,8 @@ import { PreOrderService } from '../services/pre-order.service';
       >
         
         <!-- Brand Logo -->
-        <a href="#" class="flex items-center gap-2 group">
-          <span class="font-editorial text-2xl sm:text-3xl tracking-[0.25em] text-white group-hover:text-gold-aged transition-colors duration-300">
-            OSANELI
-          </span>
-          <span class="w-1.5 h-1.5 rounded-full bg-gold-aged group-hover:bg-gold-light transition-colors duration-300"></span>
+        <a href="#" class="flex items-center group">
+          <img src="/logo.png" alt="OSANELI" class="h-6 sm:h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105 invert" />
         </a>
 
         <!-- Hype Live Status -->

@@ -80,7 +80,7 @@ import { environment } from '../../environments/environment';
 
                 <!-- Ticket Header -->
                 <div class="flex justify-between items-center border-b border-white/5 pb-4 relative z-10">
-                  <span class="font-editorial tracking-widest text-base text-gold-aged">OSANELI</span>
+                  <img src="/logo.png" alt="OSANELI" class="h-4 w-auto object-contain brightness-90 invert" />
                   <span class="font-mono text-[10px] tracking-widest text-neutral-400 font-bold uppercase">
                     DROP 01: ORO VIVO
                   </span>
