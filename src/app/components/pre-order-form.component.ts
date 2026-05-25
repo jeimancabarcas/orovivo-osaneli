@@ -401,7 +401,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   readonly checkoutLoading = signal<boolean>(false);
 
   // Countdown timer signals
-  readonly countdownText = signal<string>('3d 00h 00m 00s');
+  readonly countdownText = signal<string>('--d --h --m --s');
   private timerIntervalId: any = null;
 
   // Form signals
@@ -470,8 +470,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   }
 
   private startCountdown(): void {
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + 3);
+    const targetDate = new Date(environment.preSaleEndDate);
 
     const updateTimer = () => {
       const now = new Date().getTime();
@@ -494,7 +493,9 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     };
 
     updateTimer();
-    this.timerIntervalId = setInterval(updateTimer, 1000);
+    if (isPlatformBrowser(this.platformId)) {
+      this.timerIntervalId = setInterval(updateTimer, 1000);
+    }
   }
 
   // Confirmed ticket GSAP 3D Interactive Tilt & Shimmer

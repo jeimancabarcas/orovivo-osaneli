@@ -175,7 +175,7 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
                 <div class="flex flex-col gap-2">
                   <h3 class="text-sm font-bold tracking-widest text-white font-serif uppercase">Estructura Boxy Streetwear</h3>
                   <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed">
-                    Un corte con hombros caídos y longitud ligeramente recortada que crea una caída estructurada inigualable. El textil pesado premium de 280g le confiere cuerpo a la prenda, luciendo como una pieza de alta sastrería urbana.
+                    Un corte con hombros caídos y longitud ligeramente recortada que crea una caída estructurada inigualable. El textil pesado premium de 333g le confiere cuerpo a la prenda, luciendo como una pieza de alta sastrería urbana.
                   </p>
                 </div>
               }
