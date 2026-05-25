@@ -567,12 +567,14 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       
       this.metaService.updateTag({ property: 'og:title', content: titleText });
       this.metaService.updateTag({ property: 'og:description', content: descText });
-      this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+      this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/meta-crop-og.png' });
+      this.metaService.updateTag({ property: 'og:image:width', content: '1200' });
+      this.metaService.updateTag({ property: 'og:image:height', content: '630' });
       this.metaService.updateTag({ property: 'og:url', content: `https://orovivo.osaneli.com/order?id=${order.id}` });
       
       this.metaService.updateTag({ name: 'twitter:title', content: titleText });
       this.metaService.updateTag({ name: 'twitter:description', content: descText });
-      this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+      this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/meta-crop-twitter.png' });
     } else if (queryId) {
       const titleText = `Buscando Reserva ${queryId} | OSANELI ORO VIVO`;
       const descText = `Buscando los detalles y estado del pedido con código ${queryId} en la base de datos de preventa de Osaneli.`;
@@ -581,12 +583,14 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       
       this.metaService.updateTag({ property: 'og:title', content: titleText });
       this.metaService.updateTag({ property: 'og:description', content: descText });
-      this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+      this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/meta-crop-og.png' });
+      this.metaService.updateTag({ property: 'og:image:width', content: '1200' });
+      this.metaService.updateTag({ property: 'og:image:height', content: '630' });
       this.metaService.updateTag({ property: 'og:url', content: `https://orovivo.osaneli.com/order?id=${queryId}` });
       
       this.metaService.updateTag({ name: 'twitter:title', content: titleText });
       this.metaService.updateTag({ name: 'twitter:description', content: descText });
-      this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+      this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/meta-crop-twitter.png' });
     } else {
       const titleText = 'Consultar Reserva | OSANELI ORO VIVO';
       const descText = 'Ingresa tu código único para consultar el estado de tu preventa premium u obtener tu ticket holográfico 3D de Osaneli.';
@@ -595,12 +599,14 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       
       this.metaService.updateTag({ property: 'og:title', content: titleText });
       this.metaService.updateTag({ property: 'og:description', content: descText });
-      this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+      this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/meta-crop-og.png' });
+      this.metaService.updateTag({ property: 'og:image:width', content: '1200' });
+      this.metaService.updateTag({ property: 'og:image:height', content: '630' });
       this.metaService.updateTag({ property: 'og:url', content: 'https://orovivo.osaneli.com/order' });
       
       this.metaService.updateTag({ name: 'twitter:title', content: titleText });
       this.metaService.updateTag({ name: 'twitter:description', content: descText });
-      this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+      this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/meta-crop-twitter.png' });
     }
   });
 

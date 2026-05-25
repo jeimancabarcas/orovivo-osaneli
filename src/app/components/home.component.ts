@@ -44,7 +44,9 @@ export class HomeComponent implements AfterViewInit, OnInit {
     // Open Graph / Facebook
     this.metaService.updateTag({ property: 'og:title', content: 'OSANELI | ORO VIVO - Edición Limitada Streetwear' });
     this.metaService.updateTag({ property: 'og:description', content: "No es una camiseta de fútbol. Es una declaración de identidad. Adquiere en preventa exclusiva la camiseta 'ORO VIVO' de Osaneli. Corte boxy, tejido de alta densidad (333g), lujo y herencia colombiana." });
-    this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+    this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/meta-crop-og.png' });
+    this.metaService.updateTag({ property: 'og:image:width', content: '1200' });
+    this.metaService.updateTag({ property: 'og:image:height', content: '630' });
     this.metaService.updateTag({ property: 'og:url', content: 'https://orovivo.osaneli.com/' });
     this.metaService.updateTag({ property: 'og:type', content: 'website' });
 
@@ -52,7 +54,7 @@ export class HomeComponent implements AfterViewInit, OnInit {
     this.metaService.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
     this.metaService.updateTag({ name: 'twitter:title', content: 'OSANELI | ORO VIVO - Edición Limitada Streetwear' });
     this.metaService.updateTag({ name: 'twitter:description', content: "No es una camiseta de fútbol. Es una declaración de identidad. Adquiere en preventa exclusiva la camiseta 'ORO VIVO' de Osaneli. Corte boxy, tejido de alta densidad (333g), lujo y herencia colombiana." });
-    this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/oro_vivo_front.png' });
+    this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/meta-crop-twitter.png' });
   }
 
   ngAfterViewInit(): void {
