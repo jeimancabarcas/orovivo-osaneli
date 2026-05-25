@@ -753,7 +753,7 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
   readonly totalAmountFormatted = computed(() => {
     const order = this.activeOrder();
     if (!order) return '';
-    const total = order.quantity * 280000;
+    const total = order.quantity * environment.productPrice;
     return `$${total.toLocaleString('es-CO')} COP`;
   });
 
@@ -851,7 +851,7 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       container.innerHTML = '';
       
       const qty = Number(order.quantity || 1);
-      const totalAmount = 280000 * qty;
+      const totalAmount = environment.productPrice * qty;
       
       const btnScript = document.createElement('script');
       btnScript.setAttribute('data-bold-button', 'dark-L');

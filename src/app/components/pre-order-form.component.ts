@@ -426,7 +426,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
 
   readonly totalAmountFormatted = computed(() => {
     const qty = Number(this.preOrderForm.get('quantity')?.value || 1);
-    const total = qty * 280000;
+    const total = qty * environment.productPrice;
     return total.toLocaleString('es-CO');
   });
 
@@ -445,7 +445,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   readonly activeTicketTotalFormatted = computed(() => {
     const ticket = this.preOrderService.activeTicket();
     if (!ticket) return '';
-    const total = ticket.quantity * 280000;
+    const total = ticket.quantity * environment.productPrice;
     return `$${total.toLocaleString('es-CO')} COP`;
   });
 
