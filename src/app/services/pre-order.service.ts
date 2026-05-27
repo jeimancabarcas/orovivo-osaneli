@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FirebaseService, Order } from './firebase.service';
+import { environment } from '../../environments/environment';
 export type { Order } from './firebase.service';
 export type { PreOrder } from './firebase.service';
 
@@ -8,7 +9,8 @@ export type { PreOrder } from './firebase.service';
   providedIn: 'root'
 })
 export class PreOrderService {
-  private readonly TOTAL_EDITION_LIMIT = 100;
+  private readonly TOTAL_EDITION_LIMIT = environment.dropLimit;
+  readonly totalLimit = this.TOTAL_EDITION_LIMIT;
   
   private readonly platformId = inject(PLATFORM_ID);
   private readonly firebaseService = inject(FirebaseService);
@@ -60,7 +62,7 @@ export class PreOrderService {
     
     // Generate Serial Number (e.g. OSN-ORO-001/100)
     const paddedIndex = String(nextIndex).padStart(3, '0');
-    const serialNumber = `OSN-ORO-${paddedIndex}/100`;
+    const serialNumber = `OSN-ORO-${paddedIndex}/${this.TOTAL_EDITION_LIMIT}`;
     const createdAtDate = new Date();
 
     const newOrder: Order = {

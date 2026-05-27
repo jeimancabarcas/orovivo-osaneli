@@ -33,7 +33,7 @@ import { PreOrderService } from '../services/pre-order.service';
           </div>
           <span class="text-neutral-600">|</span>
           <span class="text-gold-aged font-bold">
-            {{ 100 - preOrderService.remainingInventory() }}/100 RESERVADOS
+            {{ preOrderService.totalLimit - preOrderService.remainingInventory() }}/{{ preOrderService.totalLimit }} RESERVADOS
           </span>
         </div>
 

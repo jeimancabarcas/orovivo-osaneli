@@ -32,7 +32,7 @@ import { environment } from '../../environments/environment';
           <!-- Stock level indicator -->
           <div class="flex flex-col gap-2 w-full md:w-1/2">
             <div class="flex justify-between text-xs font-bold text-neutral-400 tracking-wider">
-              <span>EDICIÓN LIMITADA: 100 PIEZAS</span>
+              <span>EDICIÓN LIMITADA: {{ preOrderService.totalLimit }} PIEZAS</span>
               <span class="text-gold-aged">{{ preOrderService.remainingInventory() }} UNIDADES RESTANTES</span>
             </div>
             
