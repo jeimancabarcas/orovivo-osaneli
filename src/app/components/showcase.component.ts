@@ -239,14 +239,16 @@ export class ShowcaseComponent implements AfterViewInit {
     const view = this.currentView();
     const edition = this.currentEdition();
     
-    if (view === 'collar') {
-      return '/oro_vivo_collar.png';
-    }
-
     if (edition === 'oro_vivo') {
+      if (view === 'collar') {
+        return '/oro_vivo_collar.png';
+      }
       return view === 'front' ? '/oro_vivo_front.png' : '/oro_vivo_back.png';
     } else {
-      return view === 'front' ? '/oro_vivo_black.png' : '/oro_vivo_back.png';
+      if (view === 'collar') {
+        return '/oro_vivo_black_collar.jpeg';
+      }
+      return view === 'front' ? '/oro_vivo_black_front.jpeg' : '/oro_vivo_black_back.jpeg';
     }
   });
 
@@ -255,7 +257,9 @@ export class ShowcaseComponent implements AfterViewInit {
     const edition = this.currentEdition();
     const editionText = edition === 'oro_vivo' ? 'Oro Vivo' : 'Edición Negra';
     
-    if (view === 'collar') return 'Detalle de cuello oculto SOMOS ORO de Osaneli';
+    if (view === 'collar') {
+      return `Detalle de cuello oculto SOMOS ORO de Osaneli - ${editionText}`;
+    }
     return `Camiseta Osaneli ${editionText} - vista ${view === 'front' ? 'frontal' : 'trasera'}`;
   });
 
@@ -299,9 +303,6 @@ export class ShowcaseComponent implements AfterViewInit {
   setEdition(mode: EditionMode): void {
     this.animateImageTransition(() => {
       this.currentEdition.set(mode);
-      if (this.currentView() === 'collar' && mode === 'edicion_secreta') {
-        this.currentView.set('front');
-      }
     });
   }
 
