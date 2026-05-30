@@ -285,17 +285,7 @@ import { gsap } from 'gsap';
                   </div>
                 </div>
 
-                <div class="w-full border-t border-white/5 pt-4 flex flex-col gap-3">
-                  <span class="text-[9px] text-neutral-500 uppercase tracking-widest block select-none">¿Pruebas internas en desarrollo?</span>
-                  
-                  <button 
-                    (click)="simulateApprovedPaymentOnLanding()"
-                    class="w-full py-3.5 rounded-xl border border-gold-aged/30 hover:border-gold-aged/70 bg-gold-aged/5 hover:bg-gold-aged/10 text-gold-aged font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer flex justify-center items-center gap-1.5"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16" fill="currentColor"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
-                    Simular Pago Aprobado (Demo)
-                  </button>
-                </div>
+
               </div>
               
             </div>
@@ -900,25 +890,7 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
     setTimeout(tryInject, 100);
   }
 
-  simulateApprovedPaymentOnLanding(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    const order = this.activeOrder();
-    if (!order) return;
-    
-    // Register simulated approved order
-    this.preOrderService.addPreOrder({
-      id: order.id,
-      fullName: order.fullName,
-      email: order.email,
-      phone: order.phone,
-      address: order.address || '',
-      version: order.version,
-      size: order.size,
-      quantity: order.quantity
-    });
-    
-    // The syncer effect automatically catches this in preorders list and transitions state!
-  }
+
 
   private async generateSHA256OnLanding(message: string): Promise<string> {
     const msgBuffer = new TextEncoder().encode(message);
