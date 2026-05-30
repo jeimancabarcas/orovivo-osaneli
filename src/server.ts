@@ -395,17 +395,20 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
  * Simple handler: updates the order status and merges all fields sent by Bold.
  */
 app.post('/api/bold-webhook', async (req, res) => {
-  console.log('Bold Webhook received angular:', JSON.stringify(req.body));
+  console.log('[Webhook] ===================================================');
+  console.log('[Webhook] Recepción de evento de Bold iniciada.');
+  console.log('[Webhook] Cuerpo del payload:', JSON.stringify(req.body, null, 2));
   
   try {
     const { type, data } = req.body;
     const orderId = data?.metadata?.reference || data?.reference || req.body.reference;
     
     if (!orderId) {
-      console.warn(`Webhook ${type}: no orderId found in payload.`);
-      // Respondemos 400 porque el payload no es válido para nosotros
+      console.warn(`[Webhook WARNING] Evento "${type}": No se encontró referencia/orderId en el payload.`);
       return res.status(400).json({ error: 'No orderId found' });
     }
+    
+    console.log(`[Webhook] ID de Pedido identificado: "${orderId}" para el evento tipo: "${type}"`);
     
     const statusMap: Record<string, string> = {
       'SALE_APPROVED': 'APPROVED',
@@ -416,13 +419,21 @@ app.post('/api/bold-webhook', async (req, res) => {
     
     const newStatus = statusMap[type];
     if (!newStatus) {
-      console.warn(`Webhook: unhandled event type "${type}" for order ${orderId}.`);
+      console.warn(`[Webhook WARNING] Evento tipo "${type}" no está mapeado en el servidor para el pedido "${orderId}". Omisión del cambio.`);
       return res.status(200).json({ received: true, message: 'Unhandled event' });
     }
     
+    console.log(`[Webhook] Mapeo de estado para evento "${type}" -> Nuevo Estado: "${newStatus}"`);
+    
+    console.log(`[Webhook] Consultando existencia del pedido "${orderId}" en Firebase...`);
     const orderRef = child(ref(db, 'orders'), orderId);
     const snapshot = await get(orderRef);
     const existing = snapshot.exists() ? snapshot.val() : {};
+    
+    console.log(`[Webhook] ¿El pedido existe previamente en base de datos? ${snapshot.exists() ? 'SÍ' : 'NO'}`);
+    if (snapshot.exists()) {
+      console.log('[Webhook] Datos existentes en Firebase:', JSON.stringify(existing, null, 2));
+    }
     
     const updatedOrder = {
       ...existing,
@@ -433,20 +444,23 @@ app.post('/api/bold-webhook', async (req, res) => {
       boldUpdatedAt: new Date().toISOString()
     };
 
+    console.log(`[Webhook] Escribiendo datos actualizados en Firebase para el pedido "${orderId}"...`);
     await set(orderRef, updatedOrder);
+    console.log(`[Webhook SUCCESS] Pedido "${orderId}" guardado con éxito en Firebase. Nuevo estado: "${newStatus}".`);
     
-    console.log(`Order ${orderId} updated to ${newStatus}.`);
-    
+    console.log(`[Webhook] Iniciando disparo de correo electrónico de notificación para "${updatedOrder.email}"...`);
     // Disparar envío de correo asíncronamente en segundo plano
     sendOrderEmail(updatedOrder, newStatus).catch(err => {
-      console.error(`Failed to trigger email from Bold webhook for order ${orderId}:`, err);
+      console.error(`[Webhook ERROR] Falla al enviar correo desde Bold webhook para el pedido "${orderId}":`, err);
     });
     
-    // Responder con éxito
+    console.log('[Webhook] Finalizado procesamiento de webhook con éxito. Retornando 200 OK.');
+    console.log('[Webhook] ===================================================');
     return res.status(200).json({ received: true });
 
   } catch (error) {
-    console.error('Error processing Bold webhook:', error);
+    console.error(`[Webhook ERROR] Error crítico procesando Webhook de Bold:`, error);
+    console.log('[Webhook] ===================================================');
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
