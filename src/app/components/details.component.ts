@@ -45,9 +45,9 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
             <div class="w-12 h-12 rounded-xl bg-gold-aged/10 flex items-center justify-center border border-gold-aged/20">
               <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="#C5A854"><path d="M120-120v-80h720v80H120Zm0-160v-440h720v440H120Zm80-80h560v-280H200v280Z"/></svg>
             </div>
-            <h3 class="text-lg font-bold font-serif tracking-wider text-white">Algodón Pesado (333g/m²)</h3>
+            <h3 class="text-lg font-bold font-serif tracking-wider text-white">Tejido Híbrido Premium (333g/m²)</h3>
             <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed">
-              Un tejido supremo de 333 gramos que se siente sumamente robusto, denso y ultra-premium. Proporciona una silueta rígida de caída pesada que no se adhiere al cuerpo.
+              Una composición exclusiva de algodón y poliéster con 7% de expandex. Esta mezcla selecta ofrece la frescura del algodón, la alta resistencia y durabilidad del poliéster, y la flexibilidad estructural del expandex para una silueta rígida de caída impecable.
             </p>
           </div>
 
