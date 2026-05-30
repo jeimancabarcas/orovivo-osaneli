@@ -102,11 +102,10 @@ html {
   left: 125%;
 }
 
-/* GSAP Reveal Base Styles */
+/* GSAP Reveal Base Styles (Disabled) */
 [data-reveal] {
-  opacity: 0;
-  transform: translateY(20px);
-  will-change: transform, opacity;
+  opacity: 1;
+  transform: none;
 }
 
 @keyframes revealFadeUp {
