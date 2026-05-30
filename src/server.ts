@@ -32,6 +32,9 @@ const transporter = nodemailer.createTransport({
     user: process.env['SMTP_USER'] || 'admin@osaneli.com',
     pass: process.env['SMTP_PASS'] || 'Osaneli01+',
   },
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 20000,
   tls: {
     rejectUnauthorized: false
   }
@@ -321,6 +324,12 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
                 <div class="ticket-value">${totalFormatted}</div>
               </td>
             </tr>
+            <tr>
+              <td colspan="2" class="ticket-cell" style="width: 100%;">
+                <div class="ticket-label">Dirección de Envío</div>
+                <div class="ticket-value" style="color: #e2e8f0; font-size: 13px;">${order.address || 'No especificada'}</div>
+              </td>
+            </tr>
             ${isApproved && order.serialNumber ? `
               <tr>
                 <td colspan="2">
@@ -378,7 +387,7 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
     bcc: 'admin@osaneli.com',
     subject: subject,
     html: htmlContent,
-    text: `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\nPieza: ${productName}\nTalla: ${order.size}\nCantidad: ${order.quantity}\nTotal: ${totalFormatted}\n\nVer detalles y gestionar: ${paymentLink}`
+    text: `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\nPieza: ${productName}\nTalla: ${order.size}\nCantidad: ${order.quantity}\nTotal: ${totalFormatted}\nDirección de Envío: ${order.address || 'No especificada'}\n\nVer detalles y gestionar: ${paymentLink}`
   };
 
   try {
@@ -401,14 +410,17 @@ app.post('/api/bold-webhook', async (req, res) => {
   
   try {
     const { type, data } = req.body;
-    const orderId = data?.metadata?.reference || data?.reference || req.body.reference;
+    let orderId = data?.metadata?.reference || data?.reference || req.body.reference || req.body.orderId || req.body.order_id || data?.order_id || data?.orderId;
     
     if (!orderId) {
       console.warn(`[Webhook WARNING] Evento "${type}": No se encontró referencia/orderId en el payload.`);
       return res.status(400).json({ error: 'No orderId found' });
     }
     
-    console.log(`[Webhook] ID de Pedido identificado: "${orderId}" para el evento tipo: "${type}"`);
+    // Normalizar a mayúsculas y quitar espacios para evitar fallas de case-sensitivity en Firebase
+    orderId = String(orderId).trim().toUpperCase();
+    
+    console.log(`[Webhook] ID de Pedido identificado y normalizado: "${orderId}" para el evento tipo: "${type}"`);
     
     const statusMap: Record<string, string> = {
       'SALE_APPROVED': 'APPROVED',
@@ -438,6 +450,15 @@ app.post('/api/bold-webhook', async (req, res) => {
     const updatedOrder = {
       ...existing,
       ...data,
+      fullName: existing.fullName || data?.customer?.fullName || data?.customer_data?.fullName || '',
+      email: existing.email || data?.customer?.email || data?.customer_data?.email || '',
+      phone: existing.phone || data?.customer?.phone || data?.customer_data?.phone || '',
+      address: existing.address || data?.customer?.address || data?.customer_data?.address || '',
+      version: existing.version || 'oro_vivo',
+      size: existing.size || 'M',
+      quantity: Number(existing.quantity || data?.quantity || 1),
+      serialNumber: existing.serialNumber || '',
+      
       id: orderId,
       status: newStatus,
       boldEventType: type,
@@ -448,13 +469,23 @@ app.post('/api/bold-webhook', async (req, res) => {
     await set(orderRef, updatedOrder);
     console.log(`[Webhook SUCCESS] Pedido "${orderId}" guardado con éxito en Firebase. Nuevo estado: "${newStatus}".`);
     
-    console.log(`[Webhook] Iniciando disparo de correo electrónico de notificación para "${updatedOrder.email}"...`);
-    // Disparar envío de correo asíncronamente en segundo plano
-    sendOrderEmail(updatedOrder, newStatus).catch(err => {
-      console.error(`[Webhook ERROR] Falla al enviar correo desde Bold webhook para el pedido "${orderId}":`, err);
+    // Disparar trigger de notificación al endpoint de forma asíncrona en segundo plano sin bloquear con await
+    const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+    const host = req.headers.host;
+    const notifyUrl = `${protocol}://${host}/api/notify-order`;
+    
+    console.log(`[Webhook] Disparando trigger de correo asíncrono en segundo plano a ${notifyUrl}...`);
+    fetch(notifyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ orderId, status: newStatus })
+    }).catch(err => {
+      console.error(`[Webhook ERROR] Falla al disparar trigger de correo en segundo plano para el pedido "${orderId}":`, err);
     });
     
-    console.log('[Webhook] Finalizado procesamiento de webhook con éxito. Retornando 200 OK.');
+    console.log('[Webhook] Finalizado procesamiento de webhook con éxito. Retornando 200 OK de una.');
     console.log('[Webhook] ===================================================');
     return res.status(200).json({ received: true });
 

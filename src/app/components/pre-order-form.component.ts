@@ -321,6 +321,22 @@ import { environment } from '../../environments/environment';
 
               </div>
 
+              <!-- Shipping Address -->
+              <div class="flex flex-col gap-2">
+                <label for="address" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Dirección de Envío (Calle, Ciudad, Departamento)</label>
+                <input 
+                  type="text" 
+                  id="address" 
+                  formControlName="address"
+                  placeholder="Ej: Calle 10 # 5-20, Apto 301, Cartagena, Bolívar"
+                  class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white placeholder-neutral-600 focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner"
+                  [class.border-red-500]="isFieldInvalid('address')"
+                />
+                @if (isFieldInvalid('address')) {
+                  <span class="text-[10px] text-red-400 font-semibold tracking-wide">La dirección de envío es requerida</span>
+                }
+              </div>
+
               <!-- Row 3: Size selection -->
               <div class="flex flex-col gap-3">
                 <label class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Selecciona tu Talla (Corte Boxy Streetwear)</label>
@@ -419,6 +435,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     fullName: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', [Validators.required]],
+    address: ['', [Validators.required]],
     version: ['oro_vivo', [Validators.required]],
     size: ['M', [Validators.required]],
     quantity: [1, [Validators.required, Validators.min(1), Validators.max(5)]]

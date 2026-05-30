@@ -150,6 +150,10 @@ import { gsap } from 'gsap';
                       <span class="text-[10px] text-neutral-500 uppercase tracking-wider">VALOR TOTAL</span>
                       <span class="text-gold-aged font-extrabold tracking-wide font-serif">{{ totalAmountFormatted() }}</span>
                     </div>
+                    <div class="flex flex-col gap-0.5 col-span-2">
+                      <span class="text-[10px] text-neutral-500 uppercase tracking-wider">DIRECCIÓN DE ENVÍO</span>
+                      <span class="text-neutral-300 font-medium tracking-wide truncate" [title]="order.address">{{ order.address || 'No especificada' }}</span>
+                    </div>
                   </div>
 
                   <!-- Barcode & Serial -->
@@ -227,6 +231,10 @@ import { gsap } from 'gsap';
                   <div class="flex justify-between items-center text-xs">
                     <span class="text-neutral-400 font-sans">Cantidad</span>
                     <span class="text-white font-sans font-bold">{{ order.quantity }} {{ order.quantity === 1 ? 'unidad' : 'unidades' }}</span>
+                  </div>
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-neutral-400 font-sans">Dirección de Envío</span>
+                    <span class="text-white font-sans font-medium truncate max-w-[180px]" [title]="order.address">{{ order.address || 'No especificada' }}</span>
                   </div>
                   <div class="flex justify-between items-center text-xs">
                     <span class="text-neutral-400 font-sans">Código de Orden</span>
@@ -903,6 +911,7 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       fullName: order.fullName,
       email: order.email,
       phone: order.phone,
+      address: order.address || '',
       version: order.version,
       size: order.size,
       quantity: order.quantity

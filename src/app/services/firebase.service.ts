@@ -9,6 +9,7 @@ export interface Order {
   fullName: string;
   email: string;
   phone: string;
+  address: string;
   version: 'oro_vivo' | 'edicion_secreta';
   size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
   quantity: number;
@@ -79,6 +80,7 @@ export class FirebaseService {
             fullName: item.fullName || '',
             email: item.email || '',
             phone: item.phone || '',
+            address: item.address || '',
             version: item.version || 'oro_vivo',
             size: item.size || 'M',
             quantity: Number(item.quantity || 1),
@@ -144,6 +146,7 @@ export class FirebaseService {
         fullName: formValue.fullName,
         email: formValue.email,
         phone: formValue.phone,
+        address: formValue.address,
         version: formValue.version,
         size: formValue.size,
         quantity: Number(formValue.quantity || 1),
@@ -218,6 +221,7 @@ export class FirebaseService {
           fullName: item.fullName || '',
           email: item.email || '',
           phone: item.phone || '',
+          address: item.address || '',
           version: item.version || 'oro_vivo',
           size: item.size || 'M',
           quantity: Number(item.quantity || 1),
