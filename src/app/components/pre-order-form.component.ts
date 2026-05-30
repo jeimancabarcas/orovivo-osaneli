@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
@@ -441,8 +442,14 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     quantity: [1, [Validators.required, Validators.min(1), Validators.max(5)]]
   });
 
+  // Form value signal to track form changes dynamically
+  readonly formValue = toSignal(this.preOrderForm.valueChanges, {
+    initialValue: this.preOrderForm.value
+  });
+
   readonly totalAmountFormatted = computed(() => {
-    const qty = Number(this.preOrderForm.get('quantity')?.value || 1);
+    const value = this.formValue();
+    const qty = Number(value?.quantity || 1);
     const total = qty * environment.productPrice;
     return total.toLocaleString('es-CO');
   });
