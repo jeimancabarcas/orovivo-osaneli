@@ -116,6 +116,9 @@ export class FirebaseService {
         ...order,
         createdAt: order.createdAt.toISOString() // Store dates in ISO format in JSON DB
       });
+      this.notifyServerOfStatusChange(order.id, order.status).catch(err => {
+        console.error('Failed to notify server of status change:', err);
+      });
     } catch (err) {
       console.error('Failed to write order to Firebase:', err);
       throw err;
@@ -147,6 +150,9 @@ export class FirebaseService {
         status: 'CREATED',
         createdAt: new Date().toISOString()
       });
+      this.notifyServerOfStatusChange(orderId, 'CREATED').catch(err => {
+        console.error('Failed to notify server of order creation:', err);
+      });
     } catch (err) {
       console.error('Failed to save pending order in cloud:', err);
       throw err; // Re-throw to allow components to handle database failure
@@ -161,9 +167,32 @@ export class FirebaseService {
     try {
       const statusRef = ref(this.db, `orders/${orderId}/status`);
       await set(statusRef, status);
+      this.notifyServerOfStatusChange(orderId, status).catch(err => {
+        console.error('Failed to notify server of status change:', err);
+      });
     } catch (err) {
       console.error('Failed to update order status in Firebase:', err);
       throw err;
+    }
+  }
+
+  /**
+   * Notify the backend server about an order status change to trigger transaction email.
+   */
+  private async notifyServerOfStatusChange(orderId: string, status: Order['status']): Promise<void> {
+    try {
+      const response = await fetch('/api/notify-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ orderId, status })
+      });
+      if (!response.ok) {
+        console.warn(`Failed to notify server of status change for order ${orderId}. Status: ${response.status}`);
+      }
+    } catch (err) {
+      console.warn(`Error sending order status notification to server:`, err);
     }
   }
 
