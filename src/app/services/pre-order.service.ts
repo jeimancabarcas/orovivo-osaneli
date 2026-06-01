@@ -28,7 +28,7 @@ export class PreOrderService {
 
   // Derived stock count (limit 100, decreases with every APPROVED order in real-time database)
   readonly remainingInventory = computed(() => {
-    const approvedOrders = this.preorders().filter(po => po.status === 'APPROVED');
+    const approvedOrders = this.preorders().filter(po => po.status === 'APPROVED' && po.id?.toUpperCase().startsWith('OSN'));
     const reservedCount = approvedOrders.reduce((sum, po) => sum + (po.quantity || 1), 0);
     const currentRemaining = this.TOTAL_EDITION_LIMIT - reservedCount;
     return currentRemaining > 0 ? currentRemaining : 0;
@@ -56,7 +56,7 @@ export class PreOrderService {
    * Register a new approved order and persist it to Firebase Realtime Database
    */
   addPreOrder(data: Omit<Order, 'serialNumber' | 'createdAt' | 'status'>): Order {
-    const approvedOrders = this.preorders().filter(po => po.status === 'APPROVED');
+    const approvedOrders = this.preorders().filter(po => po.status === 'APPROVED' && po.id?.toUpperCase().startsWith('OSN'));
     const totalPreviousItems = approvedOrders.reduce((sum, po) => sum + (po.quantity || 1), 0);
     const nextIndex = totalPreviousItems + 1; // Real ticket serial starts from 1 based on real orders
     
