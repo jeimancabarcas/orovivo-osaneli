@@ -258,9 +258,18 @@ import { gsap } from 'gsap';
                   Para completar tu reserva, presiona el botón de pago seguro de Bold a la derecha. Tu pieza se garantizará con número de serie tan pronto se confirme la venta.
                 </div>
 
-                <div class="flex justify-between items-center text-[10px] text-neutral-500 pt-1">
-                  <button (click)="clearActive()" class="hover:text-gold-aged transition-colors duration-200">← Consultar otro código</button>
-                  <button (click)="goToHome()" class="hover:text-gold-aged transition-colors duration-200">Volver a Tienda</button>
+                <div class="w-full flex flex-col gap-3 pt-3 border-t border-white/5">
+                  <div class="flex justify-between items-center text-[10px] text-neutral-500">
+                    <button (click)="clearActive()" class="hover:text-gold-aged transition-colors duration-200">← Consultar otro código</button>
+                    <button (click)="goToHome()" class="hover:text-gold-aged transition-colors duration-200">Volver a Tienda</button>
+                  </div>
+                  <button 
+                    (click)="editActiveOrder()" 
+                    class="w-full py-2.5 rounded-xl border border-gold-aged/20 hover:border-gold-aged/50 bg-gold-aged/5 hover:bg-gold-aged/10 text-gold-aged text-[10px] font-sans font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer flex justify-center items-center gap-1.5"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 -960 960 960" width="14" fill="currentColor"><path d="M200-200h57l359-359-57-57-359 359v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
+                    Modificar datos de esta reserva
+                  </button>
                 </div>
               </div>
 
@@ -679,6 +688,12 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
 
   goToHome(): void {
     this.router.navigate(['/']);
+  }
+
+  editActiveOrder(): void {
+    const order = this.activeOrder();
+    if (!order) return;
+    this.router.navigate(['/'], { queryParams: { edit: order.id } });
   }
 
   clearActive(): void {

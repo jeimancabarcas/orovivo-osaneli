@@ -153,9 +153,7 @@ export class FirebaseService {
         status: 'CREATED',
         createdAt: new Date().toISOString()
       });
-      this.notifyServerOfStatusChange(orderId, 'CREATED').catch(err => {
-        console.error('Failed to notify server of order creation:', err);
-      });
+      // Email skipped upon creation as requested by user
     } catch (err) {
       console.error('Failed to save pending order in cloud:', err);
       throw err; // Re-throw to allow components to handle database failure
@@ -168,8 +166,19 @@ export class FirebaseService {
   async updateOrderStatus(orderId: string, status: Order['status']): Promise<void> {
     if (!this.db) return;
     try {
+      // Query the order first to inspect its current properties
+      const order = await this.getOrderById(orderId);
+      const serialNumber = order?.serialNumber;
+      
       const statusRef = ref(this.db, `orders/${orderId}/status`);
       await set(statusRef, status);
+      
+      // Do not notify server if the status is CREATED, or if the status is VOIDED but the order has no serial number
+      if (status === 'CREATED' || (status === 'VOIDED' && !serialNumber)) {
+        console.log(`[Client Info] Skipping server notification for order ${orderId} with status ${status} (No serial number).`);
+        return;
+      }
+      
       this.notifyServerOfStatusChange(orderId, status).catch(err => {
         console.error('Failed to notify server of status change:', err);
       });

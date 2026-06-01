@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, O
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { isPlatformBrowser } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { PreOrderService, PreOrder } from '../services/pre-order.service';
 import { gsap } from 'gsap';
 import { environment } from '../../environments/environment';
@@ -216,6 +216,22 @@ import { environment } from '../../environments/environment';
           <!-- React Form Section -->
           <div class="glass-effect rounded-3xl p-8 sm:p-12 shadow-2xl relative" data-reveal>
             
+            @if (editingOrderId()) {
+              <div class="flex items-center justify-between p-4 mb-6 rounded-xl bg-gold-aged/10 border border-gold-aged/30 text-gold-aged text-xs font-sans font-bold tracking-wide uppercase select-none animate-reveal">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-gold-aged animate-pulse"></span>
+                  <span>Modificando Reserva Activa: {{ editingOrderId() }}</span>
+                </div>
+                <button 
+                  type="button"
+                  (click)="cancelEditing()" 
+                  class="text-[10px] text-neutral-400 hover:text-red-400 font-bold uppercase transition-colors duration-200 cursor-pointer"
+                >
+                  Cancelar Edición ✕
+                </button>
+              </div>
+            }
+
             <div class="flex flex-col items-center text-center gap-3 mb-10">
               <div class="flex justify-between items-center w-full max-w-md mx-auto mb-2 border-b border-white/5 pb-2">
                 <span class="text-xs text-neutral-500 font-sans">¿Ya tienes una reserva?</span>
@@ -414,6 +430,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly checkoutLoading = signal<boolean>(false);
 
@@ -424,6 +441,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   // Form signals
   readonly isSubmitting = signal<boolean>(false);
   readonly selectedSize = signal<string>('M');
+  readonly editingOrderId = signal<string | null>(null);
 
   // Search query signals
   readonly searchQuery = signal<string>('');
@@ -475,6 +493,49 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.startCountdown();
+
+    // Listen for reservation editing trigger in URL query parameters
+    this.route.queryParams.subscribe(params => {
+      const editId = params['edit'];
+      if (editId) {
+        this.preOrderService.queryOrder(editId).then(order => {
+          if (order && order.status === 'CREATED') {
+            this.editingOrderId.set(order.id);
+            // Populate the form fields with existing order details
+            this.preOrderForm.patchValue({
+              fullName: order.fullName,
+              email: order.email,
+              phone: order.phone,
+              address: order.address,
+              version: order.version,
+              size: order.size,
+              quantity: order.quantity
+            });
+            this.selectedSize.set(order.size);
+
+            // Gently scroll to the preorder section
+            setTimeout(() => {
+              const el = document.getElementById('preorder-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+          }
+        }).catch(err => {
+          console.error('Failed to load reservation for editing:', err);
+        });
+      }
+    });
+  }
+
+  cancelEditing(): void {
+    this.editingOrderId.set(null);
+    this.preOrderForm.reset({
+      version: 'oro_vivo',
+      size: 'M',
+      quantity: 1
+    });
+    this.selectedSize.set('M');
+    // Navigate back to home page without query params to clean URL
+    this.router.navigate(['/']);
   }
 
   ngOnDestroy(): void {
@@ -590,10 +651,14 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     if (this.preOrderForm.valid) {
       this.checkoutLoading.set(true);
       const formValue = this.preOrderForm.value;
-      const orderId = this.preOrderService.generateUniqueOrderId();
+      const orderId = this.editingOrderId() || this.preOrderService.generateUniqueOrderId();
       
       this.preOrderService.savePendingOrder(orderId, formValue)
         .then(() => {
+          if (isPlatformBrowser(this.platformId)) {
+            localStorage.setItem('osn_active_created_order_id', orderId);
+          }
+          this.editingOrderId.set(null);
           this.router.navigate(['/order'], { queryParams: { id: orderId } });
         })
         .catch((err) => {

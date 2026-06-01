@@ -44,6 +44,18 @@ const transporter = nodemailer.createTransport({
  * Envía un correo electrónico transaccional responsivo y de altísima calidad visual (dark lux).
  */
 async function sendOrderEmail(order: any, status: string): Promise<void> {
+  // Do not send emails for orders in CREATED status as requested by the user
+  if (status === 'CREATED') {
+    console.log(`[Email Skipped] No emails are sent for order ${order.id} in CREATED status.`);
+    return;
+  }
+
+  // Do not send emails for VOIDED orders if they were never approved (i.e. no serial number assigned)
+  if (status === 'VOIDED' && !order.serialNumber) {
+    console.log(`[Email Skipped] No cancellation emails are sent for order ${order.id} because it was never approved (no serial number).`);
+    return;
+  }
+
   const isApproved = status === 'APPROVED';
   const isRejected = status === 'REJECTED';
   const isCreated = status === 'CREATED';
