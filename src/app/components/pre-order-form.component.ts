@@ -288,8 +288,8 @@ import { environment } from '../../environments/environment';
 
               </div>
 
-              <!-- Row 2: Phone, Version and Quantity Selection -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Row 2: Phone and Quantity Selection -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 <!-- Phone -->
                 <div class="flex flex-col gap-2">
@@ -305,19 +305,6 @@ import { environment } from '../../environments/environment';
                   @if (isFieldInvalid('phone')) {
                     <span class="text-[10px] text-red-400 font-semibold tracking-wide">El teléfono es requerido</span>
                   }
-                </div>
-
-                <!-- Version Selection -->
-                <div class="flex flex-col gap-2">
-                  <label for="version" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Edición de Camiseta</label>
-                  <select 
-                    id="version" 
-                    formControlName="version"
-                    class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm cursor-pointer shadow-inner appearance-none font-serif"
-                  >
-                    <option value="oro_vivo">ORO VIVO — Oro (Standard)</option>
-                    <option value="edicion_secreta">EDICIÓN SECRETA — Negra (Influencer)</option>
-                  </select>
                 </div>
 
                 <!-- Quantity Selection -->
@@ -336,6 +323,163 @@ import { environment } from '../../environments/environment';
                   </select>
                 </div>
 
+              </div>
+
+              <!-- Version Selection (Interactive Preview Cards & Dynamic Previewer) -->
+              <div class="flex flex-col gap-3">
+                <label class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Edición de Camiseta</label>
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                  
+                  <!-- Left side: Interactive Selection Cards (3/5 width) -->
+                  <div class="lg:col-span-3 flex flex-col gap-4">
+                    
+                    <!-- Card 1: Oro Vivo -->
+                    <div 
+                      (click)="setVersion('oro_vivo')"
+                      class="relative p-4 rounded-2xl border-2 flex items-center justify-between gap-4 cursor-pointer transition-all duration-300 bg-neutral-900/50 hover:bg-neutral-900 hover:border-gold-aged/50 hover:scale-[1.01] transform active:scale-98"
+                      [class.border-gold-aged]="formValue().version === 'oro_vivo'"
+                      [class.border-white/5]="formValue().version !== 'oro_vivo'"
+                      [class.shadow-[0_8px_25px_rgba(197,168,84,0.15)]]="formValue().version === 'oro_vivo'"
+                    >
+                      <div class="flex items-center gap-4">
+                        <!-- Image Preview Frame -->
+                        <div class="w-16 h-16 rounded-xl bg-black/40 border border-white/5 p-1 flex items-center justify-center overflow-hidden">
+                          <img 
+                            src="/oro_vivo_front.png" 
+                            alt="Edición Oro Vivo" 
+                            class="max-w-full max-h-full object-contain transition-transform duration-300 hover:scale-110"
+                          />
+                        </div>
+                        <div class="flex flex-col">
+                          <span class="text-sm font-bold text-white tracking-wider">ORO VIVO</span>
+                          <span class="text-[11px] text-neutral-400 font-serif italic">Edición Standard Drop</span>
+                        </div>
+                      </div>
+                      <!-- Selection Indicator -->
+                      <div 
+                        class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors duration-300"
+                        [class.border-gold-aged]="formValue().version === 'oro_vivo'"
+                        [class.bg-gold-aged]="formValue().version === 'oro_vivo'"
+                        [class.border-white/20]="formValue().version !== 'oro_vivo'"
+                      >
+                        @if (formValue().version === 'oro_vivo') {
+                          <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="#111111" class="font-bold"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Card 2: Edición Negra -->
+                    <div 
+                      (click)="setVersion('edicion_secreta')"
+                      class="relative p-4 rounded-2xl border-2 flex items-center justify-between gap-4 cursor-pointer transition-all duration-300 bg-neutral-900/50 hover:bg-neutral-900 hover:border-gold-aged/50 hover:scale-[1.01] transform active:scale-98"
+                      [class.border-gold-aged]="formValue().version === 'edicion_secreta'"
+                      [class.border-white/5]="formValue().version !== 'edicion_secreta'"
+                      [class.shadow-[0_8px_25px_rgba(197,168,84,0.15)]]="formValue().version === 'edicion_secreta'"
+                    >
+                      <div class="flex items-center gap-4">
+                        <!-- Image Preview Frame -->
+                        <div class="w-16 h-16 rounded-xl bg-black/40 border border-white/5 p-1 flex items-center justify-center overflow-hidden">
+                          <img 
+                            src="/oro_vivo_black_front.jpeg" 
+                            alt="Edición Negra" 
+                            class="max-w-full max-h-full object-contain transition-transform duration-300 hover:scale-110"
+                          />
+                        </div>
+                        <div class="flex flex-col">
+                          <div class="flex items-center gap-1.5">
+                            <span class="text-sm font-bold text-white tracking-wider">EDICIÓN NEGRA</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="#C5A854"><path d="M240-80q-33 0-56.5-23.5T160-200v-400q0-33 23.5-56.5T240-680h40v-80q0-83 58.5-141.5T480-960q83 0 141.5 58.5T680-760v80h40q33 0 56.5 23.5T800-600v400q0 33-23.5 56.5T720-80H240Zm240-200q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-680h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80Z"/></svg>
+                          </div>
+                          <span class="text-[11px] text-gold-aged font-semibold font-serif italic">Exclusiva para Artistas</span>
+                        </div>
+                      </div>
+                      <!-- Selection Indicator -->
+                      <div 
+                        class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors duration-300"
+                        [class.border-gold-aged]="formValue().version === 'edicion_secreta'"
+                        [class.bg-gold-aged]="formValue().version === 'edicion_secreta'"
+                        [class.border-white/20]="formValue().version !== 'edicion_secreta'"
+                      >
+                        @if (formValue().version === 'edicion_secreta') {
+                          <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="#111111" class="font-bold"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>
+                        }
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <!-- Right side: The Interactive Preview Container (2/5 width) -->
+                  <div class="lg:col-span-2 glass-effect rounded-2xl p-4 border border-white/5 flex flex-col items-center gap-3 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(197,168,84,0.02),transparent_70%)] pointer-events-none"></div>
+                    
+                    <!-- Header -->
+                    <div class="w-full flex justify-between items-center border-b border-white/5 pb-2 relative z-10">
+                      <span class="text-[10px] font-bold text-neutral-400 tracking-wider uppercase">VISTA PREVIA</span>
+                      <span class="text-[10px] font-bold text-gold-aged tracking-wider uppercase font-serif">
+                        {{ formValue().version === 'oro_vivo' ? 'Oro Vivo' : 'Edición Negra' }}
+                      </span>
+                    </div>
+
+                    <!-- Image Display Box (Expandable) -->
+                    <div 
+                      (click)="openFullScreenPreview()"
+                      class="relative w-full h-36 flex items-center justify-center bg-black/40 rounded-xl border border-white/5 overflow-hidden p-1.5 z-10 group/preview cursor-zoom-in"
+                      title="Haz clic para ver en pantalla completa"
+                    >
+                      <img 
+                        [src]="previewImage()" 
+                        [alt]="previewImageAlt()"
+                        class="form-preview-img max-w-full max-h-full object-contain transition-all duration-300"
+                      />
+                      
+                      <!-- Hover Overlay -->
+                      <div class="absolute inset-0 bg-matte-black/50 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
+                        <span class="text-[9px] font-bold text-gold-aged tracking-wider uppercase bg-matte-black/95 px-2 py-1 rounded border border-gold-aged/30 flex items-center gap-1 shadow-lg">
+                          <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-200q75 0 127.5-52.5T560-380q0-75-52.5-127.5T380-560q-75 0-127.5 52.5T200-380q0 75 52.5 127.5T380-200Z"/></svg>
+                          Ver Detalle
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- View Selectors (Frente, Dorso, Cuello) -->
+                    <div class="flex items-center gap-1 p-1 rounded-xl bg-matte-black/60 border border-white/5 z-10 w-full justify-around">
+                      <button 
+                        type="button"
+                        (click)="setPreviewView('front')"
+                        class="px-2 py-1.5 rounded-lg text-[9px] font-bold tracking-widest uppercase cursor-pointer transition-all duration-200 flex-1 text-center"
+                        [class.bg-gold-aged]="selectedPreviewView() === 'front'"
+                        [class.text-matte-black]="selectedPreviewView() === 'front'"
+                        [class.text-neutral-400]="selectedPreviewView() !== 'front'"
+                        [class.hover:text-white]="selectedPreviewView() !== 'front'"
+                      >
+                        Frente
+                      </button>
+                      <button 
+                        type="button"
+                        (click)="setPreviewView('back')"
+                        class="px-2 py-1.5 rounded-lg text-[9px] font-bold tracking-widest uppercase cursor-pointer transition-all duration-200 flex-1 text-center"
+                        [class.bg-gold-aged]="selectedPreviewView() === 'back'"
+                        [class.text-matte-black]="selectedPreviewView() === 'back'"
+                        [class.text-neutral-400]="selectedPreviewView() !== 'back'"
+                        [class.hover:text-white]="selectedPreviewView() !== 'back'"
+                      >
+                        Dorso
+                      </button>
+                      <button 
+                        type="button"
+                        (click)="setPreviewView('collar')"
+                        class="px-2 py-1.5 rounded-lg text-[9px] font-bold tracking-widest uppercase cursor-pointer transition-all duration-200 flex-1 text-center"
+                        [class.bg-gold-aged]="selectedPreviewView() === 'collar'"
+                        [class.text-matte-black]="selectedPreviewView() === 'collar'"
+                        [class.text-neutral-400]="selectedPreviewView() !== 'collar'"
+                        [class.hover:text-white]="selectedPreviewView() !== 'collar'"
+                      >
+                        Cuello
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
               </div>
 
               <!-- Shipping Address -->
@@ -449,6 +593,10 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   readonly searchLoading = signal<boolean>(false);
   readonly isSearching = signal<boolean>(false);
 
+  // Preview signals & computed state
+  readonly selectedPreviewView = signal<'front' | 'back' | 'collar'>('front');
+  readonly showFullScreenPreview = signal<boolean>(false);
+
   // Build the react form
   readonly preOrderForm = this.fb.group({
     fullName: ['', [Validators.required]],
@@ -463,6 +611,29 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   // Form value signal to track form changes dynamically
   readonly formValue = toSignal(this.preOrderForm.valueChanges, {
     initialValue: this.preOrderForm.value
+  });
+
+  readonly selectedVersion = computed(() => {
+    return this.formValue()?.version || 'oro_vivo';
+  });
+
+  readonly previewImage = computed(() => {
+    const version = this.selectedVersion();
+    const view = this.selectedPreviewView();
+    if (version === 'oro_vivo') {
+      if (view === 'collar') return '/oro_vivo_collar.png';
+      return view === 'front' ? '/oro_vivo_front.png' : '/oro_vivo_back.png';
+    } else {
+      if (view === 'collar') return '/oro_vivo_black_collar.jpeg';
+      return view === 'front' ? '/oro_vivo_black_front.jpeg' : '/oro_vivo_black_back.jpeg';
+    }
+  });
+
+  readonly previewImageAlt = computed(() => {
+    const version = this.selectedVersion();
+    const view = this.selectedPreviewView();
+    const versionText = version === 'oro_vivo' ? 'Oro Vivo' : 'Edición Negra';
+    return `Previsualización de la camiseta Osaneli ${versionText} - vista ${view === 'front' ? 'frontal' : view === 'back' ? 'trasera' : 'cuello'}`;
   });
 
   readonly totalAmountFormatted = computed(() => {
@@ -699,6 +870,90 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
       this.searchError.set('Ocurrió un error de red al consultar tu reserva. Intenta de nuevo.');
     } finally {
       this.searchLoading.set(false);
+    }
+  }
+
+  setPreviewView(view: 'front' | 'back' | 'collar'): void {
+    if (isPlatformBrowser(this.platformId)) {
+      gsap.to(['.form-preview-img', '.modal-preview-img'], {
+        opacity: 0,
+        scale: 0.95,
+        duration: 0.15,
+        ease: 'power2.in',
+        onComplete: () => {
+          this.selectedPreviewView.set(view);
+          gsap.to(['.form-preview-img', '.modal-preview-img'], {
+            opacity: 1,
+            scale: 1,
+            duration: 0.3,
+            ease: 'power2.out'
+          });
+        }
+      });
+    } else {
+      this.selectedPreviewView.set(view);
+    }
+  }
+
+  setVersion(version: 'oro_vivo' | 'edicion_secreta'): void {
+    if (this.preOrderForm.get('version')?.value === version) return;
+    
+    if (isPlatformBrowser(this.platformId)) {
+      gsap.to('.form-preview-img', {
+        opacity: 0,
+        scale: 0.95,
+        duration: 0.15,
+        ease: 'power2.in',
+        onComplete: () => {
+          this.preOrderForm.patchValue({ version });
+          this.selectedPreviewView.set('front');
+          gsap.to('.form-preview-img', {
+            opacity: 1,
+            scale: 1,
+            duration: 0.3,
+            ease: 'power2.out'
+          });
+        }
+      });
+    } else {
+      this.preOrderForm.patchValue({ version });
+      this.selectedPreviewView.set('front');
+    }
+  }
+
+  openFullScreenPreview(): void {
+    this.showFullScreenPreview.set(true);
+    setTimeout(() => {
+      if (isPlatformBrowser(this.platformId)) {
+        gsap.fromTo('.animate-scale-up', 
+          { scale: 0.85, opacity: 0 }, 
+          { scale: 1, opacity: 1, duration: 0.35, ease: 'back.out(1.2)' }
+        );
+        gsap.fromTo('.animate-fade-in',
+          { opacity: 0 },
+          { opacity: 1, duration: 0.25 }
+        );
+      }
+    }, 10);
+  }
+
+  closeFullScreenPreview(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      gsap.to('.animate-scale-up', {
+        scale: 0.9,
+        opacity: 0,
+        duration: 0.2,
+        ease: 'power2.in',
+        onComplete: () => {
+          this.showFullScreenPreview.set(false);
+        }
+      });
+      gsap.to('.animate-fade-in', {
+        opacity: 0,
+        duration: 0.2
+      });
+    } else {
+      this.showFullScreenPreview.set(false);
     }
   }
 
