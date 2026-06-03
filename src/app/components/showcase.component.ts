@@ -149,9 +149,8 @@ type EditionMode = 'oro_vivo' | 'edicion_secreta';
                   <div class="flex flex-col">
                     <div class="flex items-center gap-1.5">
                       <span class="text-sm font-bold text-white tracking-wider">EDICIÓN NEGRA</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 -960 960 960" width="14" fill="#C5A854"><path d="M240-80q-33 0-56.5-23.5T160-200v-400q0-33 23.5-56.5T240-680h40v-80q0-83 58.5-141.5T480-960q83 0 141.5 58.5T680-760v80h40q33 0 56.5 23.5T800-600v400q0 33-23.5 56.5T720-80H240Zm240-200q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-680h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80Z"/></svg>
                     </div>
-                    <span class="text-xs text-gold-aged font-semibold font-serif italic">Exclusiva para Artistas</span>
+                    <span class="text-xs text-gold-aged font-semibold font-serif italic">Preferida por Artistas & Influencers</span>
                   </div>
                 </div>
               </div>
