@@ -351,12 +351,16 @@ type TabMode = 'dashboard' | 'orders';
                             }
                           </td>
                           <td class="p-4 text-center">
-                            <button 
-                              (click)="selectOrder(ord)"
-                              class="px-3 py-1.5 rounded-lg border border-white/10 hover:border-gold-aged bg-white/5 hover:bg-gold-aged hover:text-matte-black font-sans font-bold text-[10px] tracking-wider uppercase transition-all duration-200 cursor-pointer"
-                            >
-                              Gestionar
-                            </button>
+                            @if (ord.status === 'APPROVED') {
+                              <button 
+                                (click)="selectOrder(ord)"
+                                class="px-3 py-1.5 rounded-lg border border-white/10 hover:border-gold-aged bg-white/5 hover:bg-gold-aged hover:text-matte-black font-sans font-bold text-[10px] tracking-wider uppercase transition-all duration-200 cursor-pointer"
+                              >
+                                Gestionar
+                              </button>
+                            } @else {
+                              <span class="text-neutral-500 italic text-[10px] select-none">-</span>
+                            }
                           </td>
                         </tr>
                       } @empty {
@@ -945,6 +949,7 @@ export class BackofficeComponent implements OnInit {
   }
 
   selectOrder(order: Order): void {
+    if (order.status !== 'APPROVED') return;
     this.selectedOrder.set(order);
     this.emailSuccess.set(false);
     this.emailError.set('');
