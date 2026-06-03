@@ -4,8 +4,9 @@ export const environment = {
   boldSecretKey: 'W97RSxbKflrCj4bJ7RC3Ig',
   boldRedirectUrl: 'https://orovivo.osaneli.com/payment-redirect',
   preSaleEndDate: '2026-05-30T00:00:00-05:00',
-  productPrice: 280000,
+  productPrice: 170000,
   dropLimit: 100,
+  adminPass: '123456',
   firebase: {
     apiKey: "AIzaSyDC5zTjrdT7DNEzZj3Z7Sg9pKCBBv-oOR4",
     authDomain: "osaneli-oro-vivo.firebaseapp.com",

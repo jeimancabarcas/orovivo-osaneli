@@ -183,11 +183,50 @@ import { gsap } from 'gsap';
                 </div>
               </div>
 
-              <!-- Payment confirmation badge -->
-              <div class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-green-500/10 border border-green-500/25 max-w-sm mx-auto text-green-400 font-sans text-xs font-bold tracking-wider select-none mt-2">
-                <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor" class="shrink-0"><path d="m382-354 278-278-56-56-222 222-114-114-56 56 170 170ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Z"/></svg>
-                <span>COMPROBANTE PAGADO VIA BOLD</span>
-              </div>
+              <!-- Payment confirmation badge or Shipped Tracking Details -->
+              @if (order.isShipped) {
+                <!-- Tracker badge: gold style -->
+                <div class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-gold-aged/10 border border-gold-aged/30 max-w-sm mx-auto text-gold-aged font-sans text-xs font-bold tracking-wider select-none mt-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor" class="shrink-0"><path d="M240-160q-33 0-56.5-23.5T160-240v-200h80v200h480v-200h80v200q0 33-23.5 56.5T720-160H240Zm240-160L280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200Z"/></svg>
+                  <span>✓ PEDIDO DESPACHADO</span>
+                </div>
+
+                <!-- Elegant Tracking Details Card -->
+                <div class="w-full max-w-md mx-auto p-6 rounded-2xl bg-white/[0.02] border border-gold-aged/20 flex flex-col gap-3.5 text-left font-sans text-xs mt-2 relative overflow-hidden">
+                  <div class="absolute top-0 right-0 w-24 h-24 bg-gold-aged/5 rounded-full blur-2xl pointer-events-none"></div>
+                  
+                  <div class="flex justify-between items-center pb-2.5 border-b border-white/5">
+                    <span class="text-neutral-400">Transportadora</span>
+                    <span class="text-white font-bold tracking-wide">{{ order.carrier || 'No especificada' }}</span>
+                  </div>
+                  
+                  <div class="flex justify-between items-center pb-2.5 border-b border-white/5">
+                    <span class="text-neutral-400">Número de Guía</span>
+                    @if (order.trackingNumber) {
+                      @if (getCarrierTrackingUrl(order.carrier, order.trackingNumber); as trackingUrl) {
+                        <a [href]="trackingUrl" target="_blank" class="text-gold-aged hover:text-gold-light font-mono font-bold tracking-wider underline flex items-center gap-1">
+                          {{ order.trackingNumber }}
+                          <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-244-56-56 372-372H560v-80h280v280h-80v-144L388-364Z"/></svg>
+                        </a>
+                      } @else {
+                        <span class="text-white font-mono font-bold tracking-wider">{{ order.trackingNumber }}</span>
+                      }
+                    } @else {
+                      <span class="text-neutral-500 italic">No disponible</span>
+                    }
+                  </div>
+                  
+                  <div class="flex justify-between items-center">
+                    <span class="text-neutral-400">Fecha de Despacho</span>
+                    <span class="text-white font-medium">{{ formatShippingDate(order.shippedAt) || 'Recién despachado' }}</span>
+                  </div>
+                </div>
+              } @else {
+                <div class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-green-500/10 border border-green-500/25 max-w-sm mx-auto text-green-400 font-sans text-xs font-bold tracking-wider select-none mt-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor" class="shrink-0"><path d="m382-354 278-278-56-56-222 222-114-114-56 56 170 170ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Z"/></svg>
+                  <span>COMPROBANTE PAGADO VIA BOLD</span>
+                </div>
+              }
 
               <div class="flex gap-4 mt-2">
                 <button 
@@ -394,10 +433,50 @@ import { gsap } from 'gsap';
                   </div>
                 </div>
 
-                <!-- Payment confirmation badge pending -->
-                <div class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-gold-aged/10 border border-gold-aged/20 max-w-sm mx-auto text-gold-aged font-sans text-xs font-bold tracking-wider select-none mt-2 animate-pulse">
-                  <span>VERIFICANDO MEDIO DE PAGO EN BOLD</span>
-                </div>
+                <!-- Payment confirmation badge pending or Shipped Tracking Details -->
+                @if (order.isShipped) {
+                  <!-- Tracker badge: gold style -->
+                  <div class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-gold-aged/10 border border-gold-aged/30 max-w-sm mx-auto text-gold-aged font-sans text-xs font-bold tracking-wider select-none mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor" class="shrink-0"><path d="M240-160q-33 0-56.5-23.5T160-240v-200h80v200h480v-200h80v200q0 33-23.5 56.5T720-160H240Zm240-160L280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200Z"/></svg>
+                    <span>✓ PEDIDO DESPACHADO</span>
+                  </div>
+
+                  <!-- Elegant Tracking Details Card -->
+                  <div class="w-full max-w-md mx-auto p-6 rounded-2xl bg-white/[0.02] border border-gold-aged/20 flex flex-col gap-3.5 text-left font-sans text-xs mt-2 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-gold-aged/5 rounded-full blur-2xl pointer-events-none"></div>
+                    
+                    <div class="flex justify-between items-center pb-2.5 border-b border-white/5">
+                      <span class="text-neutral-400">Transportadora</span>
+                      <span class="text-white font-bold tracking-wide">{{ order.carrier || 'No especificada' }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center pb-2.5 border-b border-white/5">
+                      <span class="text-neutral-400">Número de Guía</span>
+                      @if (order.trackingNumber) {
+                        @if (getCarrierTrackingUrl(order.carrier, order.trackingNumber); as trackingUrl) {
+                          <a [href]="trackingUrl" target="_blank" class="text-gold-aged hover:text-gold-light font-mono font-bold tracking-wider underline flex items-center gap-1">
+                            {{ order.trackingNumber }}
+                            <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-244-56-56 372-372H560v-80h280v280h-80v-144L388-364Z"/></svg>
+                          </a>
+                        } @else {
+                          <span class="text-white font-mono font-bold tracking-wider">{{ order.trackingNumber }}</span>
+                        }
+                      } @else {
+                        <span class="text-neutral-500 italic">No disponible</span>
+                      }
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                      <span class="text-neutral-400">Fecha de Despacho</span>
+                      <span class="text-white font-medium">{{ formatShippingDate(order.shippedAt) || 'Recién despachado' }}</span>
+                    </div>
+                  </div>
+                } @else {
+                  <!-- Payment confirmation badge pending -->
+                  <div class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-gold-aged/10 border border-gold-aged/20 max-w-sm mx-auto text-gold-aged font-sans text-xs font-bold tracking-wider select-none mt-2 animate-pulse">
+                    <span>VERIFICANDO MEDIO DE PAGO EN BOLD</span>
+                  </div>
+                }
 
                 <div class="text-[10px] text-neutral-500 mt-2 select-none italic animate-reveal">
                   No recargues ni cierres esta pestaña. El ticket se actualizará automáticamente en tiempo real.
@@ -783,6 +862,40 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
     const total = order.quantity * environment.productPrice;
     return `$${total.toLocaleString('es-CO')} COP`;
   });
+
+  getCarrierTrackingUrl(carrier: string | undefined, trackingNumber: string | undefined): string {
+    const c = (carrier || '').toLowerCase();
+    const guide = trackingNumber || '';
+    if (c.includes('servientrega')) {
+      return `https://www.servientrega.com/wps/portal/portal-nacional/transacciones/rastreo-envios?id=${guide}`;
+    }
+    if (c.includes('coordinadora')) {
+      return `https://www.coordinadora.com/portafolio-de-servicios/servicios-en-linea/rastreo-de-guias/?guia=${guide}`;
+    }
+    if (c.includes('interrapidisimo') || c.includes('inter')) {
+      return `https://www.interrapidisimo.com/sigue-tu-envio/?guia=${guide}`;
+    }
+    if (c.includes('envia') || c.includes('envía')) {
+      return `https://envia.co/`;
+    }
+    return '';
+  }
+
+  formatShippingDate(shippedAt: string | undefined): string {
+    if (!shippedAt) return '';
+    try {
+      const date = new Date(shippedAt);
+      return date.toLocaleDateString('es-CO', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return shippedAt;
+    }
+  }
 
   private cleanUrlParams(): void {
     const cleanUrl = window.location.origin + window.location.pathname + `?id=${this.activeOrder()?.id}`;

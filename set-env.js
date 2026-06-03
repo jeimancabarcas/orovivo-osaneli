@@ -44,6 +44,7 @@ const config = {
   preSaleEndDate: getEnv('PRE_SALE_END_DATE', '2026-05-30T00:00:00-05:00'),
   productPrice: Number(getEnv('PRODUCT_PRICE', '280000')),
   dropLimit: Number(getEnv('DROP_LIMIT', '100')),
+  adminPass: getEnv('OSANELI_ADMIN_PASS', 'OsaneliAdmin2026'),
   firebase: {
     apiKey: getEnv('FIREBASE_API_KEY', 'AIzaSyDC5zTjrdT7DNEzZj3Z7Sg9pKCBBv-oOR4'),
     authDomain: getEnv('FIREBASE_AUTH_DOMAIN', 'osaneli-oro-vivo.firebaseapp.com'),
@@ -65,6 +66,7 @@ const environmentFileContentProd = `export const environment = {
   preSaleEndDate: '${config.preSaleEndDate}',
   productPrice: ${config.productPrice},
   dropLimit: ${config.dropLimit},
+  adminPass: '${config.adminPass}',
   firebase: {
     apiKey: "${config.firebase.apiKey}",
     authDomain: "${config.firebase.authDomain}",
@@ -87,6 +89,7 @@ const environmentFileContentDev = `export const environment = {
   preSaleEndDate: '${config.preSaleEndDate}',
   productPrice: ${config.productPrice},
   dropLimit: ${config.dropLimit},
+  adminPass: '${config.adminPass}',
   firebase: {
     apiKey: "${config.firebase.apiKey}",
     authDomain: "${config.firebase.authDomain}",

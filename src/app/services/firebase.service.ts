@@ -17,6 +17,11 @@ export interface Order {
   status: 'CREATED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'VOIDED' | 'VOID_REJECTED';
   serialNumber?: string;
   createdAt: Date;
+  isShipped?: boolean;
+  shippedAt?: string;
+  trackingNumber?: string;
+  carrier?: string;
+  adminNotes?: string;
 }
 
 // Retain PreOrder as a type alias for compatibility in other files if needed
@@ -88,7 +93,12 @@ export class FirebaseService {
             quantity: Number(item.quantity || 1),
             status: item.status || 'CREATED',
             serialNumber: item.serialNumber || '',
-            createdAt: item.createdAt ? new Date(item.createdAt) : new Date()
+            createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+            isShipped: !!item.isShipped,
+            shippedAt: item.shippedAt || '',
+            trackingNumber: item.trackingNumber || '',
+            carrier: item.carrier || '',
+            adminNotes: item.adminNotes || ''
           });
         });
 
@@ -236,16 +246,48 @@ export class FirebaseService {
           address: item.address || '',
           version: item.version || 'oro_vivo',
           size: item.size || 'M',
+          gender: item.gender || 'Unisex',
           quantity: Number(item.quantity || 1),
           status: item.status || 'CREATED',
           serialNumber: item.serialNumber || '',
-          createdAt: item.createdAt ? new Date(item.createdAt) : new Date()
+          createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+          isShipped: !!item.isShipped,
+          shippedAt: item.shippedAt || '',
+          trackingNumber: item.trackingNumber || '',
+          carrier: item.carrier || '',
+          adminNotes: item.adminNotes || ''
         };
       }
       return null;
     } catch (err) {
       console.error('Failed to query order by ID from Firebase:', err);
       return null;
+    }
+  }
+
+  /**
+   * Update specific fields of an order manually
+   */
+  async updateOrderFields(orderId: string, updates: Partial<Order>): Promise<void> {
+    if (!this.db) return;
+    try {
+      const order = await this.getOrderById(orderId);
+      if (!order) throw new Error(`Order ${orderId} not found`);
+
+      const mergedOrder = {
+        ...order,
+        ...updates,
+        createdAt: order.createdAt // Keep original Date object
+      };
+
+      const orderRef = ref(this.db, `orders/${orderId.toUpperCase()}`);
+      await set(orderRef, {
+        ...mergedOrder,
+        createdAt: mergedOrder.createdAt.toISOString()
+      });
+    } catch (err) {
+      console.error(`Failed to update fields for order ${orderId}:`, err);
+      throw err;
     }
   }
 

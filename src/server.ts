@@ -41,6 +41,27 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
+ * Returns tracking URL based on carrier name and guide number.
+ */
+function getCarrierTrackingUrl(carrier: string, trackingNumber: string): string {
+  const c = (carrier || '').toLowerCase();
+  const guide = trackingNumber || '';
+  if (c.includes('servientrega')) {
+    return `https://www.servientrega.com/wps/portal/portal-nacional/transacciones/rastreo-envios?id=${guide}`;
+  }
+  if (c.includes('coordinadora')) {
+    return `https://www.coordinadora.com/portafolio-de-servicios/servicios-en-linea/rastreo-de-guias/?guia=${guide}`;
+  }
+  if (c.includes('interrapidisimo') || c.includes('inter')) {
+    return `https://www.interrapidisimo.com/sigue-tu-envio/?guia=${guide}`;
+  }
+  if (c.includes('envia') || c.includes('envía')) {
+    return `https://envia.co/`;
+  }
+  return `https://orovivo.osaneli.com/order?id=${guide}`;
+}
+
+/**
  * Envía un correo electrónico transaccional responsivo y de altísima calidad visual (dark lux).
  */
 async function sendOrderEmail(order: any, status: string): Promise<void> {
@@ -60,6 +81,7 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
   const isRejected = status === 'REJECTED';
   const isCreated = status === 'CREATED';
   const isVoided = status === 'VOIDED';
+  const isShipped = status === 'SHIPPED';
 
   let subject = '';
   let statusText = '';
@@ -86,6 +108,11 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
     statusText = 'RESERVA ANULADA';
     statusColor = '#6B7280';
     previewText = 'Lamentamos informarte que tu reserva ha sido cancelada.';
+  } else if (isShipped) {
+    subject = `¡Pedido Despachado! Tu Reserva ${order.id} está en camino - OSANELI`;
+    statusText = 'PEDIDO DESPACHADO';
+    statusColor = '#C5A854';
+    previewText = '¡Excelentes noticias! Tu pieza de OSANELI ha sido entregada a la transportadora.';
   } else {
     subject = `Actualización de tu Reserva ${order.id} - OSANELI`;
     statusText = `ESTADO: ${status}`;
@@ -294,7 +321,14 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
           </p>
         ` : ''}
 
-        ${!isCreated && !isApproved && !isRejected && !isVoided ? `
+        ${isShipped ? `
+          <h1 class="title">Tu Pedido está en Camino</h1>
+          <p class="intro-text">
+            ¡Hola, <strong>${order.fullName}</strong>! Nos complace informarte que tu pedido del <strong>Drop 01: Oro Vivo</strong> de OSANELI ha sido despachado a la transportadora. Tu número de guía de seguimiento y detalles de entrega están disponibles abajo.
+          </p>
+        ` : ''}
+
+        ${!isCreated && !isApproved && !isRejected && !isVoided && !isShipped ? `
           <h1 class="title">Actualización de tu Reserva</h1>
           <p class="intro-text">
             ¡Hola, <strong>${order.fullName}</strong>! El estado de tu reserva con el código <strong>${order.id}</strong> ha cambiado a: <strong>${status}</strong>.
@@ -360,6 +394,18 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
                 </td>
               </tr>
             ` : ''}
+            ${isShipped && order.trackingNumber ? `
+              <tr>
+                <td colspan="2">
+                  <div class="divider"></div>
+                  <div class="ticket-label">Detalles de Envío</div>
+                  <div class="ticket-value" style="color: #ffffff; font-size: 13px;">
+                    Transportadora: <strong>${order.carrier || 'No especificada'}</strong><br>
+                    Número de Guía: <strong style="color: #C5A854; font-family: monospace;">${order.trackingNumber}</strong>
+                  </div>
+                </td>
+              </tr>
+            ` : ''}
           </table>
         </div>
 
@@ -369,8 +415,12 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
             <a href="${paymentLink}" class="btn">Proceder al Pago Seguro</a>
           ` : ''}
 
-          ${isApproved ? `
+          ${isApproved && !isShipped ? `
             <a href="${paymentLink}" class="btn">Ver mi Ticket de Lujo</a>
+          ` : ''}
+
+          ${isShipped && order.trackingNumber ? `
+            <a href="${getCarrierTrackingUrl(order.carrier, order.trackingNumber)}" target="_blank" class="btn">Rastrear Mi Envío</a>
           ` : ''}
 
           ${isRejected ? `
@@ -381,7 +431,7 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
             <a href="https://orovivo.osaneli.com" class="btn">Volver al Inicio</a>
           ` : ''}
 
-          ${!isCreated && !isApproved && !isRejected && !isVoided ? `
+          ${!isCreated && !isApproved && !isRejected && !isVoided && !isShipped ? `
             <a href="${paymentLink}" class="btn">Ver Detalles de Reserva</a>
           ` : ''}
         </div>
@@ -408,7 +458,9 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
     bcc: 'admin@osaneli.com',
     subject: subject,
     html: htmlContent,
-    text: `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\nPieza: ${productName}\nGénero: ${order.gender || 'Unisex'}\nTalla: ${order.size}\nCantidad: ${order.quantity}\nTotal: ${totalFormatted}\nDirección de Envío: ${order.address || 'No especificada'}\n\nVer detalles y gestionar: ${paymentLink}`
+    text: isShipped 
+      ? `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\nPieza: ${productName}\nGénero: ${order.gender || 'Unisex'}\nTalla: ${order.size}\nCantidad: ${order.quantity}\nTotal: ${totalFormatted}\nTransportadora: ${order.carrier || 'No especificada'}\nNúmero de Guía: ${order.trackingNumber}\nRastrear envío: ${getCarrierTrackingUrl(order.carrier, order.trackingNumber)}`
+      : `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\nPieza: ${productName}\nGénero: ${order.gender || 'Unisex'}\nTalla: ${order.size}\nCantidad: ${order.quantity}\nTotal: ${totalFormatted}\nDirección de Envío: ${order.address || 'No especificada'}\n\nVer detalles y gestionar: ${paymentLink}`
   };
 
   try {
@@ -542,6 +594,74 @@ app.post('/api/notify-order', async (req, res) => {
     return res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error notifying order status change:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Admin Panel Authentication Endpoint
+ */
+app.post('/api/admin/auth', (req, res) => {
+  try {
+    const { password } = req.body;
+    const adminPass = process.env['OSANELI_ADMIN_PASS'] || (environment as any).adminPass;
+    
+    if (password === adminPass) {
+      // Create session signature token
+      const token = Buffer.from('OSANELI-ADMIN-SESSION-' + Date.now()).toString('base64');
+      return res.status(200).json({ success: true, token });
+    }
+    return res.status(401).json({ success: false, error: 'Contraseña de administrador incorrecta' });
+  } catch (error) {
+    console.error('Admin authentication error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Endpoint to manually trigger the shipment email notification
+ */
+app.post('/api/admin/notify-shipment', async (req, res) => {
+  try {
+    // Validate session token
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No autorizado. Token inexistente.' });
+    }
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = Buffer.from(token, 'base64').toString('ascii');
+      if (!decoded.startsWith('OSANELI-ADMIN-SESSION-')) {
+        return res.status(401).json({ error: 'Sesión inválida o expirada.' });
+      }
+    } catch (e) {
+      return res.status(401).json({ error: 'Token malformado.' });
+    }
+
+    const { orderId } = req.body;
+    if (!orderId) {
+      return res.status(400).json({ error: 'Falta el ID de orden' });
+    }
+
+    const orderRef = child(ref(db, 'orders'), orderId);
+    const snapshot = await get(orderRef);
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: 'Orden no encontrada en base de datos.' });
+    }
+
+    const order = snapshot.val();
+    order.id = order.id || orderId;
+
+    if (!order.isShipped) {
+      return res.status(400).json({ error: 'El pedido no se encuentra despachado en la base de datos.' });
+    }
+
+    // Trigger email shipment notification
+    await sendOrderEmail(order, 'SHIPPED');
+
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error sending manually triggered shipment email:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
