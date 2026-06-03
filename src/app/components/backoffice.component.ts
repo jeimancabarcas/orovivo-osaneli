@@ -351,16 +351,29 @@ type TabMode = 'dashboard' | 'orders';
                             }
                           </td>
                           <td class="p-4 text-center">
-                            @if (ord.status === 'APPROVED') {
-                              <button 
-                                (click)="selectOrder(ord)"
-                                class="px-3 py-1.5 rounded-lg border border-white/10 hover:border-gold-aged bg-white/5 hover:bg-gold-aged hover:text-matte-black font-sans font-bold text-[10px] tracking-wider uppercase transition-all duration-200 cursor-pointer"
-                              >
-                                Gestionar
-                              </button>
-                            } @else {
-                              <span class="text-neutral-500 italic text-[10px] select-none">-</span>
-                            }
+                            <div class="flex items-center justify-center gap-2">
+                              @if (ord.status === 'APPROVED') {
+                                <button 
+                                  (click)="selectOrder(ord)"
+                                  class="px-3 py-1.5 rounded-lg border border-white/10 hover:border-gold-aged bg-white/5 hover:bg-gold-aged hover:text-matte-black font-sans font-bold text-[10px] tracking-wider uppercase transition-all duration-200 cursor-pointer"
+                                >
+                                  Gestionar
+                                </button>
+                              } @else if (ord.status === 'CREATED' || ord.status === 'PENDING') {
+                                <a 
+                                  [href]="getWhatsAppLink(ord)" 
+                                  target="_blank"
+                                  class="p-2 rounded-lg border border-green-500/20 hover:border-green-500/60 bg-green-500/10 hover:bg-green-500/20 text-green-400 hover:text-green-300 flex items-center justify-center transition-all duration-200 cursor-pointer"
+                                  title="Contactar por WhatsApp"
+                                >
+                                  <span class="material-symbols-outlined select-none text-[15px] leading-none">
+                                    chat
+                                  </span>
+                                </a>
+                              } @else {
+                                <span class="text-neutral-500 italic text-[10px] select-none">-</span>
+                              }
+                            </div>
                           </td>
                         </tr>
                       } @empty {
@@ -946,6 +959,27 @@ export class BackofficeComponent implements OnInit {
   calculateTotal(qty: number): string {
     const total = qty * environment.productPrice;
     return total.toLocaleString('es-CO');
+  }
+
+  getWhatsAppLink(order: Order): string {
+    let phone = (order.phone || '').trim();
+    phone = phone.replace(/\D/g, '');
+    if (phone.length === 10 && !phone.startsWith('57')) {
+      phone = '57' + phone;
+    }
+
+    // Dynamic checkout URL construction using origin matching
+    let originUrl = 'https://orovivo.osaneli.com';
+    if (typeof window !== 'undefined' && window.location && window.location.origin) {
+      originUrl = window.location.origin;
+    }
+    const checkoutLink = `${originUrl}/order?id=${order.id}`;
+
+    const part1 = '%C2%A1Hola!%20%F0%9F%91%8B%20Te%20escribimos%20de%20Osaneli.%0A%0ANotamos%20que%20te%20interesaste%20en%20nuestra%20camiseta%20de%20la%20colecci%C3%B3n%20Oro%20Vivo%20%F0%9F%87%A8%F0%9F%87%B4%E2%9C%A8%20para%20apoyar%20a%20la%20Selecci%C3%B3n%2C%20pero%20no%20alcanzaste%20a%20completar%20tu%20pago.%0A%0APuedes%20completar%20tu%20pago%20ingresando%20al%20siguiente%20enlace%3A%0A';
+    const part2 = '%0A%0AQueremos%20asegurarnos%20de%20que%20no%20te%20quedes%20sin%20la%20tuya%2C%20ya%20que%20las%20unidades%20de%20este%20drop%20son%20limitadas%20y%20el%20pr%C3%B3ximo%20partido%20est%C3%A1%20cerca.%20%E2%9A%BD%F0%9F%94%A5%0A%0A%C2%BFTuviste%20alg%C3%BAn%20problema%20con%20la%20plataforma%3F';
+
+    const fullText = part1 + encodeURIComponent(checkoutLink) + part2;
+    return `https://api.whatsapp.com/send?phone=${phone}&text=${fullText}`;
   }
 
   selectOrder(order: Order): void {
