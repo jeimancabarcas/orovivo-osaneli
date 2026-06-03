@@ -322,18 +322,27 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
                 <div class="ticket-value">${productName}</div>
               </td>
               <td class="ticket-cell">
-                <div class="ticket-label">Talla (Boxy Fit)</div>
-                <div class="ticket-value" style="color: #C5A854;">${order.size}</div>
+                <div class="ticket-label">Género</div>
+                <div class="ticket-value" style="text-transform: uppercase;">${order.gender || 'Unisex'}</div>
               </td>
             </tr>
             <tr>
               <td class="ticket-cell">
+                <div class="ticket-label">Talla (Boxy Fit)</div>
+                <div class="ticket-value" style="color: #C5A854;">${order.size}</div>
+              </td>
+              <td class="ticket-cell">
                 <div class="ticket-label">Cantidad</div>
                 <div class="ticket-value">${order.quantity} ${order.quantity === 1 ? 'unidad' : 'unidades'}</div>
               </td>
+            </tr>
+            <tr>
               <td class="ticket-cell">
                 <div class="ticket-label">Valor Total</div>
-                <div class="ticket-value">${totalFormatted}</div>
+                <div class="ticket-value" style="color: #C5A854; font-weight: 800;">${totalFormatted}</div>
+              </td>
+              <td class="ticket-cell">
+                <!-- Spacer -->
               </td>
             </tr>
             <tr>
@@ -399,7 +408,7 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
     bcc: 'admin@osaneli.com',
     subject: subject,
     html: htmlContent,
-    text: `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\nPieza: ${productName}\nTalla: ${order.size}\nCantidad: ${order.quantity}\nTotal: ${totalFormatted}\nDirección de Envío: ${order.address || 'No especificada'}\n\nVer detalles y gestionar: ${paymentLink}`
+    text: `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\nPieza: ${productName}\nGénero: ${order.gender || 'Unisex'}\nTalla: ${order.size}\nCantidad: ${order.quantity}\nTotal: ${totalFormatted}\nDirección de Envío: ${order.address || 'No especificada'}\n\nVer detalles y gestionar: ${paymentLink}`
   };
 
   try {

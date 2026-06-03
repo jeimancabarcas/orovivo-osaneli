@@ -139,6 +139,10 @@ import { gsap } from 'gsap';
                       </span>
                     </div>
                     <div class="flex flex-col gap-0.5">
+                      <span class="text-[10px] text-neutral-500 uppercase tracking-wider">GÉNERO</span>
+                      <span class="text-white font-bold tracking-wide uppercase">{{ order.gender || 'Unisex' }}</span>
+                    </div>
+                    <div class="flex flex-col gap-0.5">
                       <span class="text-[10px] text-neutral-500 uppercase tracking-wider">TALLA (BOXY)</span>
                       <span class="text-gold-aged font-extrabold tracking-widest text-sm">{{ order.size }}</span>
                     </div>
@@ -150,6 +154,7 @@ import { gsap } from 'gsap';
                       <span class="text-[10px] text-neutral-500 uppercase tracking-wider">VALOR TOTAL</span>
                       <span class="text-gold-aged font-extrabold tracking-wide font-serif">{{ totalAmountFormatted() }}</span>
                     </div>
+                    <div></div> <!-- Spacer -->
                     <div class="flex flex-col gap-0.5 col-span-2">
                       <span class="text-[10px] text-neutral-500 uppercase tracking-wider">DIRECCIÓN DE ENVÍO</span>
                       <span class="text-neutral-300 font-medium tracking-wide truncate" [title]="order.address">{{ order.address || 'No especificada' }}</span>
@@ -227,6 +232,10 @@ import { gsap } from 'gsap';
                   <div class="flex justify-between items-center text-xs">
                     <span class="text-neutral-400 font-sans">Talla Asignada</span>
                     <span class="text-gold-aged font-extrabold text-sm tracking-wider">{{ order.size }}</span>
+                  </div>
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-neutral-400 font-sans">Género</span>
+                    <span class="text-white font-sans font-semibold">{{ order.gender || 'Unisex' }}</span>
                   </div>
                   <div class="flex justify-between items-center text-xs">
                     <span class="text-neutral-400 font-sans">Cantidad</span>
@@ -354,6 +363,10 @@ import { gsap } from 'gsap';
                         </span>
                       </div>
                       <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">GÉNERO</span>
+                        <span class="text-white font-bold tracking-wide uppercase">{{ order.gender || 'Unisex' }}</span>
+                      </div>
+                      <div class="flex flex-col gap-0.5">
                         <span class="text-[10px] text-neutral-500 uppercase tracking-wider">TALLA (BOXY)</span>
                         <span class="text-gold-aged font-extrabold tracking-widest text-sm">{{ order.size }}</span>
                       </div>
@@ -365,6 +378,7 @@ import { gsap } from 'gsap';
                         <span class="text-[10px] text-neutral-500 uppercase tracking-wider">VALOR TOTAL</span>
                         <span class="text-gold-aged font-extrabold tracking-wide font-serif">{{ totalAmountFormatted() }}</span>
                       </div>
+                      <div></div> <!-- Spacer -->
                     </div>
 
                     <!-- Barcode & Serial -->

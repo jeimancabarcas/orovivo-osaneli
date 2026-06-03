@@ -104,6 +104,10 @@ import { environment } from '../../environments/environment';
                     </span>
                   </div>
                   <div class="flex flex-col gap-0.5">
+                    <span class="text-[10px] text-neutral-500 uppercase tracking-wider">GÉNERO</span>
+                    <span class="text-white font-bold tracking-wide uppercase">{{ ticket.gender || 'Unisex' }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
                     <span class="text-[10px] text-neutral-500 uppercase tracking-wider">TALLA (BOXY)</span>
                     <span class="text-gold-aged font-extrabold tracking-widest text-sm">{{ ticket.size }}</span>
                   </div>
@@ -115,6 +119,7 @@ import { environment } from '../../environments/environment';
                     <span class="text-[10px] text-neutral-500 uppercase tracking-wider">VALOR TOTAL</span>
                     <span class="text-gold-aged font-extrabold tracking-wide font-serif">{{ activeTicketTotalFormatted() }}</span>
                   </div>
+                  <div></div> <!-- Spacer -->
                 </div>
 
                 <!-- Holographic Barcode & Serial -->
@@ -498,6 +503,29 @@ import { environment } from '../../environments/environment';
                 }
               </div>
 
+              <!-- Gender Selection -->
+              <div class="flex flex-col gap-3">
+                <label class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Selecciona tu Género</label>
+                <div class="flex flex-wrap gap-3">
+                  @for (g of ['Hombre', 'Mujer', 'Unisex']; track g) {
+                    <button 
+                      type="button"
+                      (click)="setGender(g)"
+                      class="px-5 h-12 rounded-xl border font-bold text-sm tracking-wider cursor-pointer flex items-center justify-center transition-all duration-200 active:scale-90 hover:scale-105 shadow-sm min-w-[90px]"
+                      [class.border-gold-aged]="selectedGender() === g"
+                      [class.bg-gold-aged]="selectedGender() === g"
+                      [class.text-matte-black]="selectedGender() === g"
+                      [class.border-white/10]="selectedGender() !== g"
+                      [class.text-neutral-400]="selectedGender() !== g"
+                      [class.hover:text-white]="selectedGender() !== g"
+                      [class.hover:border-white/30]="selectedGender() !== g"
+                    >
+                      {{ g }}
+                    </button>
+                  }
+                </div>
+              </div>
+
               <!-- Row 3: Size selection -->
               <div class="flex flex-col gap-3">
                 <label class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Selecciona tu Talla (Corte Boxy Streetwear)</label>
@@ -585,6 +613,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   // Form signals
   readonly isSubmitting = signal<boolean>(false);
   readonly selectedSize = signal<string>('M');
+  readonly selectedGender = signal<string>('Unisex');
   readonly editingOrderId = signal<string | null>(null);
 
   // Search query signals
@@ -605,6 +634,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     address: ['', [Validators.required]],
     version: ['oro_vivo', [Validators.required]],
     size: ['M', [Validators.required]],
+    gender: ['Unisex', [Validators.required]],
     quantity: [1, [Validators.required, Validators.min(1), Validators.max(5)]]
   });
 
@@ -680,9 +710,11 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
               address: order.address,
               version: order.version,
               size: order.size,
+              gender: order.gender || 'Unisex',
               quantity: order.quantity
             });
             this.selectedSize.set(order.size);
+            this.selectedGender.set(order.gender || 'Unisex');
 
             // Gently scroll to the preorder section
             setTimeout(() => {
@@ -702,9 +734,11 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     this.preOrderForm.reset({
       version: 'oro_vivo',
       size: 'M',
+      gender: 'Unisex',
       quantity: 1
     });
     this.selectedSize.set('M');
+    this.selectedGender.set('Unisex');
     // Navigate back to home page without query params to clean URL
     this.router.navigate(['/']);
   }
@@ -718,6 +752,11 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   setSize(size: string): void {
     this.selectedSize.set(size);
     this.preOrderForm.patchValue({ size });
+  }
+
+  setGender(gender: string): void {
+    this.selectedGender.set(gender);
+    this.preOrderForm.patchValue({ gender });
   }
 
   isFieldInvalid(fieldName: string): boolean {

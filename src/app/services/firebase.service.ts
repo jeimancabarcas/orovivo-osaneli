@@ -12,6 +12,7 @@ export interface Order {
   address: string;
   version: 'oro_vivo' | 'edicion_secreta';
   size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
+  gender?: string;
   quantity: number;
   status: 'CREATED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'VOIDED' | 'VOID_REJECTED';
   serialNumber?: string;
@@ -83,6 +84,7 @@ export class FirebaseService {
             address: item.address || '',
             version: item.version || 'oro_vivo',
             size: item.size || 'M',
+            gender: item.gender || 'Unisex',
             quantity: Number(item.quantity || 1),
             status: item.status || 'CREATED',
             serialNumber: item.serialNumber || '',
@@ -149,6 +151,7 @@ export class FirebaseService {
         address: formValue.address,
         version: formValue.version,
         size: formValue.size,
+        gender: formValue.gender || 'Unisex',
         quantity: Number(formValue.quantity || 1),
         status: 'CREATED',
         createdAt: new Date().toISOString()
