@@ -122,7 +122,7 @@ type TabMode = 'dashboard' | 'orders';
                 <div class="glass-effect rounded-2xl p-6 border border-white/5 shadow flex flex-col gap-2 relative overflow-hidden">
                   <div class="absolute inset-0 bg-gradient-to-br from-gold-aged/5 to-transparent pointer-events-none"></div>
                   <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">PRENDAS RESERVADAS</span>
-                  <span class="text-2xl sm:text-3xl font-serif font-black text-gold-aged leading-none">{{ stats().totalItemsSold }} / 100 U.</span>
+                  <span class="text-2xl sm:text-3xl font-serif font-black text-gold-aged leading-none">{{ stats().totalItemsSold }} / {{ dropLimit }} U.</span>
                   <span class="text-[10px] text-neutral-500 italic mt-2">Volumen de stock real comprado</span>
                 </div>
 
@@ -131,7 +131,7 @@ type TabMode = 'dashboard' | 'orders';
                   <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none"></div>
                   <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">STOCK DISPONIBLE</span>
                   <span class="text-2xl sm:text-3xl font-serif font-black text-white leading-none">{{ stats().remainingStock }} Piezas</span>
-                  <span class="text-[10px] text-neutral-500 italic mt-2">Límite oficial: 100 piezas (Filtro OSN)</span>
+                  <span class="text-[10px] text-neutral-500 italic mt-2">Límite oficial: {{ dropLimit }} piezas (Filtro OSN)</span>
                 </div>
 
                 <!-- Card: Pending/Created Drafts -->
@@ -307,8 +307,17 @@ type TabMode = 'dashboard' | 'orders';
                           </td>
                           <td class="p-4">
                             <div class="flex flex-col gap-0.5">
-                              <span class="font-bold text-white uppercase">{{ ord.version === 'oro_vivo' ? 'Oro Vivo' : 'Edición Negra' }}</span>
-                              <span class="text-[10px] text-neutral-400">Talla: {{ ord.size }} | Género: {{ ord.gender || 'Unisex' }}</span>
+                              @if (ord.items && ord.items.length > 1) {
+                                <span class="font-bold text-gold-aged uppercase">Varios Artículos</span>
+                                <span class="text-[10px] text-neutral-400 whitespace-nowrap">
+                                  @for (it of ord.items; track $index) {
+                                    {{ it.quantity }}x {{ it.version === 'oro_vivo' ? 'Oro' : 'Negra' }} ({{ it.size }}){{ !$last ? ', ' : '' }}
+                                  }
+                                </span>
+                              } @else {
+                                <span class="font-bold text-white uppercase">{{ ord.version === 'oro_vivo' ? 'Oro Vivo' : 'Edición Negra' }}</span>
+                                <span class="text-[10px] text-neutral-400">Talla: {{ ord.size }} | Género: {{ ord.gender || 'Unisex' }}</span>
+                              }
                             </div>
                           </td>
                           <td class="p-4 text-center font-bold text-white">
@@ -366,7 +375,7 @@ type TabMode = 'dashboard' | 'orders';
                                   class="p-2 rounded-lg border border-green-500/20 hover:border-green-500/60 bg-green-500/10 hover:bg-green-500/20 text-green-400 hover:text-green-300 flex items-center justify-center transition-all duration-200 cursor-pointer"
                                   title="Contactar por WhatsApp"
                                 >
-                                  <span class="material-symbols-outlined select-none text-[15px] leading-none">
+                                  <span class="material-symbols-outlined select-none text-[18px] leading-none">
                                     chat
                                   </span>
                                 </a>
@@ -566,45 +575,68 @@ type TabMode = 'dashboard' | 'orders';
               />
             </div>
 
-            <div class="grid grid-cols-3 gap-4">
-              <div class="flex flex-col gap-1.5">
-                <label for="version" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Edición</label>
-                <select 
-                  id="version"
-                  formControlName="version"
-                  class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs cursor-pointer"
-                >
-                  <option value="oro_vivo">Oro Vivo</option>
-                  <option value="edicion_secreta">Edición Negra</option>
-                </select>
+            @if (ord.items && ord.items.length > 1) {
+              <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-3 text-xs">
+                <span class="text-[10px] font-bold text-gold-aged tracking-wider uppercase block">Artículos en el Pedido (Multi-ítem)</span>
+                <div class="divide-y divide-white/5">
+                  @for (it of ord.items; track $index) {
+                    <div class="py-2.5 flex justify-between items-start">
+                      <div class="flex flex-col gap-0.5">
+                        <span class="font-bold text-white uppercase">{{ it.version === 'oro_vivo' ? 'Oro Vivo' : 'Edición Negra' }}</span>
+                        <span class="text-[10px] text-neutral-400">Talla: {{ it.size }} | Género: {{ it.gender || 'Unisex' }}</span>
+                        @if (it.serialNumbers && it.serialNumbers.length > 0) {
+                          <span class="text-[10px] text-gold-aged font-mono">Serials: {{ it.serialNumbers.join(' | ') }}</span>
+                        }
+                      </div>
+                      <div class="text-right">
+                        <span class="font-bold text-white">x{{ it.quantity }}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
               </div>
-              <div class="flex flex-col gap-1.5">
-                <label for="size" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Talla</label>
-                <select 
-                  id="size"
-                  formControlName="size"
-                  class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs cursor-pointer font-serif"
-                >
-                  <option value="S">S</option>
-                  <option value="M">M</option>
-                  <option value="L">L</option>
-                  <option value="XL">XL</option>
-                  <option value="XXL">XXL</option>
-                </select>
+            } @else {
+              <!-- Single item fields -->
+              <div class="grid grid-cols-3 gap-4">
+                <div class="flex flex-col gap-1.5">
+                  <label for="version" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Edición</label>
+                  <select 
+                    id="version"
+                    formControlName="version"
+                    class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs cursor-pointer"
+                  >
+                    <option value="oro_vivo">Oro Vivo</option>
+                    <option value="edicion_secreta">Edición Negra</option>
+                  </select>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="size" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Talla</label>
+                  <select 
+                    id="size"
+                    formControlName="size"
+                    class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs cursor-pointer font-serif"
+                  >
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="XXL">XXL</option>
+                  </select>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="gender" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Género</label>
+                  <select 
+                    id="gender"
+                    formControlName="gender"
+                    class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs cursor-pointer"
+                  >
+                    <option value="Hombre">Hombre</option>
+                    <option value="Mujer">Mujer</option>
+                    <option value="Unisex">Unisex</option>
+                  </select>
+                </div>
               </div>
-              <div class="flex flex-col gap-1.5">
-                <label for="gender" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Género</label>
-                <select 
-                  id="gender"
-                  formControlName="gender"
-                  class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs cursor-pointer"
-                >
-                  <option value="Hombre">Hombre</option>
-                  <option value="Mujer">Mujer</option>
-                  <option value="Unisex">Unisex</option>
-                </select>
-              </div>
-            </div>
+            }
 
             <!-- Notes -->
             <div class="flex flex-col gap-1.5">
@@ -682,6 +714,7 @@ type TabMode = 'dashboard' | 'orders';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BackofficeComponent implements OnInit {
+  readonly dropLimit = environment.dropLimit;
   private readonly firebaseService = inject(FirebaseService);
   private readonly fb = inject(FormBuilder);
   private readonly platformId = inject(PLATFORM_ID);
@@ -818,41 +851,49 @@ export class BackofficeComponent implements OnInit {
     // Only count approved orders starting with "OSN" for inventory metrics
     const approvedOsnOrders = orders.filter(o => o.status === 'APPROVED' && o.id.toUpperCase().startsWith('OSN'));
     
-    // Total income
-    const totalItemsSold = approvedOsnOrders.reduce((sum, o) => sum + (o.quantity || 1), 0);
+    // Total units sold across all items in approved orders
+    let totalItemsSold = 0;
+    let oroVivo = 0;
+    let edicionSecreta = 0;
+    
+    const sizes: Record<string, number> = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
+    const genders: Record<string, number> = { Hombre: 0, Mujer: 0, Unisex: 0 };
+    
+    approvedOsnOrders.forEach(o => {
+      const items = o.items || [];
+      items.forEach(it => {
+        const qty = Number(it.quantity || 1);
+        totalItemsSold += qty;
+        
+        if (it.version === 'oro_vivo') {
+          oroVivo += qty;
+        } else {
+          edicionSecreta += qty;
+        }
+        
+        const sz = it.size || 'M';
+        if (sizes[sz] !== undefined) {
+          sizes[sz] += qty;
+        }
+        
+        const g = it.gender || 'Unisex';
+        if (genders[g] !== undefined) {
+          genders[g] += qty;
+        }
+      });
+    });
+    
     const totalSales = totalItemsSold * environment.productPrice;
     
     // Total drafts (borradores)
     const totalDrafts = orders.filter(o => o.status === 'CREATED' || o.status === 'PENDING').length;
-
-    // Versions breakdown
-    const oroVivo = approvedOsnOrders.filter(o => o.version === 'oro_vivo').reduce((sum, o) => sum + (o.quantity || 1), 0);
-    const edicionSecreta = approvedOsnOrders.filter(o => o.version === 'edicion_secreta').reduce((sum, o) => sum + (o.quantity || 1), 0);
-    
-    // Sizes breakdown
-    const sizes: Record<string, number> = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
-    approvedOsnOrders.forEach(o => {
-      const sz = o.size || 'M';
-      if (sizes[sz] !== undefined) {
-        sizes[sz] += (o.quantity || 1);
-      }
-    });
-
-    // Genders breakdown
-    const genders: Record<string, number> = { Hombre: 0, Mujer: 0, Unisex: 0 };
-    approvedOsnOrders.forEach(o => {
-      const g = o.gender || 'Unisex';
-      if (genders[g] !== undefined) {
-        genders[g] += (o.quantity || 1);
-      }
-    });
 
     const pct = (val: number) => totalItemsSold > 0 ? Math.round((val / totalItemsSold) * 100) : 0;
 
     return {
       totalSalesFormatted: totalSales.toLocaleString('es-CO'),
       totalItemsSold,
-      remainingStock: Math.max(0, 100 - totalItemsSold),
+      remainingStock: Math.max(0, environment.dropLimit - totalItemsSold),
       totalDrafts,
       editions: {
         oroVivo,
@@ -975,11 +1016,9 @@ export class BackofficeComponent implements OnInit {
     }
     const checkoutLink = `${originUrl}/order?id=${order.id}`;
 
-    const part1 = '%C2%A1Hola!%20%F0%9F%91%8B%20Te%20escribimos%20de%20Osaneli.%0A%0ANotamos%20que%20te%20interesaste%20en%20nuestra%20camiseta%20de%20la%20colecci%C3%B3n%20Oro%20Vivo%20%F0%9F%87%A8%F0%9F%87%B4%E2%9C%A8%20para%20apoyar%20a%20la%20Selecci%C3%B3n%2C%20pero%20no%20alcanzaste%20a%20completar%20tu%20pago.%0A%0APuedes%20completar%20tu%20pago%20ingresando%20al%20siguiente%20enlace%3A%0A';
-    const part2 = '%0A%0AQueremos%20asegurarnos%20de%20que%20no%20te%20quedes%20sin%20la%20tuya%2C%20ya%20que%20las%20unidades%20de%20este%20drop%20son%20limitadas%20y%20el%20pr%C3%B3ximo%20partido%20est%C3%A1%20cerca.%20%E2%9A%BD%F0%9F%94%A5%0A%0A%C2%BFTuviste%20alg%C3%BAn%20problema%20con%20la%20plataforma%3F';
+    const text = `¡Hola! 👋 Te escribimos de Osaneli.\n\nNotamos que te interesaste en nuestra camiseta de la colección Oro Vivo 🇨🇴✨ para apoyar a la Selección, pero no alcanzaste a completar tu pago.\n\nPuedes completar tu pago ingresando al siguiente enlace:\n${checkoutLink}\n\nQueremos asegurarnos de que no te quedes sin la tuya, ya que las unidades de este drop son limitadas y el próximo partido está cerca. ⚽🔥\n\n¿Tuviste algún problema con la plataforma?`;
 
-    const fullText = part1 + encodeURIComponent(checkoutLink) + part2;
-    return `https://api.whatsapp.com/send?phone=${phone}&text=${fullText}`;
+    return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`;
   }
 
   selectOrder(order: Order): void {

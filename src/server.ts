@@ -120,11 +120,40 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
     previewText = `Tu reserva ha cambiado al estado ${status}.`;
   }
 
-  const productName = order.version === 'oro_vivo' ? 'Oro Vivo (Oro)' : 'Edición Secreta (Negra)';
   const productPrice = Number(process.env['PRODUCT_PRICE']) || environment.productPrice || 280000;
   const totalAmount = order.quantity * productPrice;
   const totalFormatted = `$${totalAmount.toLocaleString('es-CO')} COP`;
   const paymentLink = `https://orovivo.osaneli.com/order?id=${order.id}`;
+
+  let itemsHtml = '';
+  const orderItems = Array.isArray(order.items) ? order.items : [
+    {
+      version: order.version || 'oro_vivo',
+      size: order.size || 'M',
+      gender: order.gender || 'Unisex',
+      quantity: order.quantity || 1,
+      serialNumbers: order.serialNumber ? [order.serialNumber] : []
+    }
+  ];
+  
+  orderItems.forEach((it: any) => {
+    const versionLabel = it.version === 'oro_vivo' ? 'Oro Vivo' : 'Edición Negra';
+    const serialsLabel = it.serialNumbers && it.serialNumbers.length > 0 ? `<br><span style="font-size: 11px; color: #C5A854; font-family: monospace;">Serial: ${it.serialNumbers.join(' | ')}</span>` : '';
+    itemsHtml += `
+      <tr>
+        <td colspan="2" class="ticket-cell" style="width: 100%; border-bottom: 1px solid rgba(255,255,255,0.02); padding: 12px 0;">
+          <div style="float: left;">
+            <div class="ticket-value" style="font-weight: bold; color: #ffffff;">${versionLabel} (${it.size} / ${it.gender})</div>
+            ${isApproved ? serialsLabel : ''}
+          </div>
+          <div style="float: right; text-align: right; padding-top: 4px;">
+            <span class="ticket-value" style="color: #C5A854; font-weight: 800;">x${it.quantity}</span>
+          </div>
+          <div style="clear: both;"></div>
+        </td>
+      </tr>
+    `;
+  });
 
   const htmlContent = `
 <!DOCTYPE html>
@@ -339,7 +368,7 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
         <div class="ticket">
           <div class="ticket-title">Resumen de Reserva</div>
           
-          <table class="ticket-table">
+          <table class="ticket-table" style="width: 100%;">
             <tr>
               <td class="ticket-cell">
                 <div class="ticket-label">Código de Orden</div>
@@ -351,53 +380,26 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
               </td>
             </tr>
             <tr>
-              <td class="ticket-cell">
-                <div class="ticket-label">Pieza</div>
-                <div class="ticket-value">${productName}</div>
-              </td>
-              <td class="ticket-cell">
-                <div class="ticket-label">Género</div>
-                <div class="ticket-value" style="text-transform: uppercase;">${order.gender || 'Unisex'}</div>
+              <td colspan="2">
+                <div class="divider" style="margin: 15px 0;"></div>
+                <div class="ticket-label" style="margin-bottom: 8px;">Prendas Reservadas</div>
               </td>
             </tr>
+            ${itemsHtml}
             <tr>
-              <td class="ticket-cell">
-                <div class="ticket-label">Talla (Boxy Fit)</div>
-                <div class="ticket-value" style="color: #C5A854;">${order.size}</div>
-              </td>
-              <td class="ticket-cell">
-                <div class="ticket-label">Cantidad</div>
-                <div class="ticket-value">${order.quantity} ${order.quantity === 1 ? 'unidad' : 'unidades'}</div>
-              </td>
-            </tr>
-            <tr>
-              <td class="ticket-cell">
-                <div class="ticket-label">Valor Total</div>
-                <div class="ticket-value" style="color: #C5A854; font-weight: 800;">${totalFormatted}</div>
-              </td>
-              <td class="ticket-cell">
-                <!-- Spacer -->
-              </td>
-            </tr>
-            <tr>
-              <td colspan="2" class="ticket-cell" style="width: 100%;">
+              <td class="ticket-cell" style="padding-top: 15px;">
                 <div class="ticket-label">Dirección de Envío</div>
                 <div class="ticket-value" style="color: #e2e8f0; font-size: 13px;">${order.address || 'No especificada'}</div>
               </td>
+              <td class="ticket-cell" style="padding-top: 15px; text-align: right;">
+                <div class="ticket-label">Valor Total</div>
+                <div class="ticket-value" style="color: #C5A854; font-weight: 800; font-size: 16px;">${totalFormatted}</div>
+              </td>
             </tr>
-            ${isApproved && order.serialNumber ? `
-              <tr>
-                <td colspan="2">
-                  <div class="divider"></div>
-                  <div class="ticket-label">Número de Serie Exclusivo</div>
-                  <div class="ticket-value serial">${order.serialNumber}</div>
-                </td>
-              </tr>
-            ` : ''}
             ${isShipped && order.trackingNumber ? `
               <tr>
                 <td colspan="2">
-                  <div class="divider"></div>
+                  <div class="divider" style="margin: 15px 0;"></div>
                   <div class="ticket-label">Detalles de Envío</div>
                   <div class="ticket-value" style="color: #ffffff; font-size: 13px;">
                     Transportadora: <strong>${order.carrier || 'No especificada'}</strong><br>
@@ -452,15 +454,24 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
 </html>
   `;
 
+  let itemsTxt = '';
+  orderItems.forEach((it: any) => {
+    const versionLabel = it.version === 'oro_vivo' ? 'Oro Vivo' : 'Edición Negra';
+    const serials = it.serialNumbers && it.serialNumbers.length > 0 ? ` [Serial: ${it.serialNumbers.join(' | ')}]` : '';
+    itemsTxt += `- ${it.quantity}x ${versionLabel} (${it.size} / ${it.gender})${serials}\n`;
+  });
+  
+  const textContent = isShipped 
+    ? `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\n\nPrendas:\n${itemsTxt}\nTotal: ${totalFormatted}\nTransportadora: ${order.carrier || 'No especificada'}\nNúmero de Guía: ${order.trackingNumber}\nRastrear envío: ${getCarrierTrackingUrl(order.carrier, order.trackingNumber)}`
+    : `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\n\nPrendas:\n${itemsTxt}\nTotal: ${totalFormatted}\nDirección de Envío: ${order.address || 'No especificada'}\n\nVer detalles y gestionar: ${paymentLink}`;
+
   const mailOptions = {
     from: process.env['SMTP_FROM'] || '"OSANELI" <admin@osaneli.com>',
     to: order.email,
     bcc: 'admin@osaneli.com',
     subject: subject,
     html: htmlContent,
-    text: isShipped 
-      ? `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\nPieza: ${productName}\nGénero: ${order.gender || 'Unisex'}\nTalla: ${order.size}\nCantidad: ${order.quantity}\nTotal: ${totalFormatted}\nTransportadora: ${order.carrier || 'No especificada'}\nNúmero de Guía: ${order.trackingNumber}\nRastrear envío: ${getCarrierTrackingUrl(order.carrier, order.trackingNumber)}`
-      : `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\nPieza: ${productName}\nGénero: ${order.gender || 'Unisex'}\nTalla: ${order.size}\nCantidad: ${order.quantity}\nTotal: ${totalFormatted}\nDirección de Envío: ${order.address || 'No especificada'}\n\nVer detalles y gestionar: ${paymentLink}`
+    text: textContent
   };
 
   try {
@@ -520,6 +531,79 @@ app.post('/api/bold-webhook', async (req, res) => {
       console.log('[Webhook] Datos existentes en Firebase:', JSON.stringify(existing, null, 2));
     }
     
+    // Parse order items (ensure format consistency)
+    const items = Array.isArray(existing.items)
+      ? existing.items
+      : [
+          {
+            version: existing.version || 'oro_vivo',
+            size: existing.size || 'M',
+            gender: existing.gender || 'Unisex',
+            quantity: Number(existing.quantity || 1)
+          }
+        ];
+
+    let assignedFirstOroVivoSerial = existing.serialNumber || '';
+    let updatedItems = items;
+
+    if (newStatus === 'APPROVED' && (!existing.serialNumber || existing.serialNumber === 'OSN-CONFIRMED' || (existing.items && existing.items.some((it: any) => it.version === 'oro_vivo' && (!it.serialNumbers || it.serialNumbers.length === 0))))) {
+      console.log(`[Webhook] Generando seriales únicos correlativos para el pedido ${orderId}...`);
+      // Fetch all orders to count already approved quantities
+      const ordersRef = ref(db, 'orders');
+      const allOrdersSnapshot = await get(ordersRef);
+      const allOrders = allOrdersSnapshot.exists() ? allOrdersSnapshot.val() : {};
+      
+      let nextIndex = 1;
+      for (const key in allOrders) {
+        if (key !== orderId) {
+          const o = allOrders[key];
+          if (o.status === 'APPROVED' && key.toUpperCase().startsWith('OSN')) {
+            if (o.items && o.items.length > 0) {
+              nextIndex += o.items.reduce((sum: number, it: any) => sum + (it.quantity || 1), 0);
+            } else {
+              nextIndex += (o.quantity || 1);
+            }
+          }
+        }
+      }
+
+      const limit = environment.dropLimit || 100;
+
+      // Assign serial numbers to each item in items
+      updatedItems = items.map((it: any) => {
+        if (it.version === 'oro_vivo') {
+          // If they already have correct number of serialNumbers, keep them
+          if (it.serialNumbers && it.serialNumbers.length === it.quantity) {
+            if (!assignedFirstOroVivoSerial && it.serialNumbers.length > 0) {
+              assignedFirstOroVivoSerial = it.serialNumbers[0];
+            }
+            return it;
+          }
+          const serialNumbers: string[] = [];
+          for (let i = 0; i < it.quantity; i++) {
+            const index = nextIndex++;
+            const paddedIndex = String(index).padStart(3, '0');
+            const serial = `OSN-ORO-${paddedIndex}/${limit}`;
+            serialNumbers.push(serial);
+            if (!assignedFirstOroVivoSerial) {
+              assignedFirstOroVivoSerial = serial;
+            }
+          }
+          return {
+            ...it,
+            serialNumbers
+          };
+        } else {
+          return {
+            ...it,
+            serialNumbers: []
+          };
+        }
+      });
+    }
+
+    const serialNumber = assignedFirstOroVivoSerial || (newStatus === 'APPROVED' ? 'OSN-CONFIRMED' : '');
+
     const updatedOrder = {
       ...existing,
       ...data,
@@ -527,10 +611,12 @@ app.post('/api/bold-webhook', async (req, res) => {
       email: existing.email || data?.customer?.email || data?.customer_data?.email || '',
       phone: existing.phone || data?.customer?.phone || data?.customer_data?.phone || '',
       address: existing.address || data?.customer?.address || data?.customer_data?.address || '',
-      version: existing.version || 'oro_vivo',
-      size: existing.size || 'M',
-      quantity: Number(existing.quantity || data?.quantity || 1),
-      serialNumber: existing.serialNumber || '',
+      version: updatedItems[0]?.version || existing.version || 'oro_vivo',
+      size: updatedItems[0]?.size || existing.size || 'M',
+      gender: updatedItems[0]?.gender || existing.gender || 'Unisex',
+      quantity: Number(existing.quantity || data?.quantity || updatedItems.reduce((sum: number, it: any) => sum + (it.quantity || 1), 0) || 1),
+      serialNumber: serialNumber,
+      items: updatedItems,
       
       id: orderId,
       status: newStatus,

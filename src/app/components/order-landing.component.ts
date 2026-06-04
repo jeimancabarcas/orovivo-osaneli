@@ -1,87 +1,93 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { PreOrderService, Order } from '../services/pre-order.service';
-import { environment } from '../../environments/environment';
+import { OrderItem } from '../services/firebase.service';
 import { gsap } from 'gsap';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-order-landing',
-  imports: [FormsModule],
+  imports: [CommonModule],
   template: `
-    <section class="relative min-h-[90vh] py-24 sm:py-32 px-4 sm:px-8 bg-gradient-to-b from-[#0A1721] to-[#111111] overflow-hidden flex items-center justify-center">
+    <section class="min-h-screen py-16 sm:py-24 px-4 sm:px-8 bg-gradient-to-b from-[#0A1721] to-[#111111] overflow-hidden text-neutral-100 flex flex-col items-center justify-center relative">
       
-      <!-- Ambient Lights and Waves -->
-      <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-gold-aged/20 to-transparent"></div>
-      <div class="absolute top-[20%] left-[-10%] w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-gold-aged/5 rounded-full blur-[100px] sm:blur-[160px] pointer-events-none select-none"></div>
-      <div class="absolute bottom-[10%] right-[-10%] w-[300px] sm:w-[450px] h-[300px] sm:h-[450px] bg-gold-aged/5 rounded-full blur-[90px] sm:blur-[140px] pointer-events-none select-none"></div>
+      <!-- Ambient light behind ticket -->
+      <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] rounded-full bg-gold-aged/5 blur-[120px] pointer-events-none"></div>
 
-      <div class="max-w-4xl mx-auto w-full relative z-10">
+      <div class="max-w-4xl mx-auto w-full relative z-10 text-center">
         
-        <!-- CASE 1: Loading State -->
+        <!-- Header logo -->
+        <div class="mb-10 flex flex-col items-center gap-2 select-none animate-reveal">
+          <img src="/logo.png" alt="OSANELI" class="h-6 w-auto object-contain brightness-95 invert" />
+          <span class="text-[9px] font-bold text-gold-aged tracking-[0.3em] uppercase font-sans">Preventa Oficial FCF</span>
+        </div>
+
+        <!-- CASE 1: Loading state -->
         @if (isLoading()) {
-          <div class="glass-effect rounded-3xl p-12 text-center flex flex-col items-center gap-4 max-w-md mx-auto shadow-lg">
-            <div class="w-12 h-12 border-2 border-gold-aged border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-xs font-bold text-neutral-400 tracking-widest uppercase">Cargando pedido...</span>
-          </div>
-        } 
-        
-        <!-- CASE 2: Order Not Specified / Search Form -->
-        @else if (!activeOrder()) {
-          <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border border-white/5 shadow-2xl animate-reveal">
-            <div class="w-12 h-12 rounded-full bg-gold-aged/10 flex items-center justify-center border border-gold-aged/30">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="#C5A854"><path d="M784-120 532-372q-30 24-74 38t-90 14q-117 0-198.5-81.5T88-600q0-117 81.5-198.5T368-880q117 0 198.5 81.5T648-600q0 46-14 90t-38 74l252 252-64 64ZM368-292q75 0 127.5-52.5T548-472q0-75-52.5-127.5T368-652q-75 0-127.5 52.5T188-472q0 75 52.5 127.5T368-292Z"/></svg>
+          <div class="min-h-[40vh] flex flex-col items-center justify-center gap-4 animate-reveal">
+            <div class="relative w-14 h-14 flex items-center justify-center">
+              <div class="absolute inset-0 rounded-full border border-gold-aged/20 animate-ping"></div>
+              <div class="w-10 h-10 rounded-full border-4 border-gold-aged/10 border-t-gold-aged animate-spin"></div>
             </div>
-            
-            <div class="flex flex-col gap-2">
-              <span class="text-[10px] font-bold text-gold-aged tracking-[0.2em] uppercase">CONSULTA TU PEDIDO</span>
-              <h2 class="font-serif text-2xl sm:text-3xl font-black text-white">Ingresa tu Código de Reserva</h2>
-              <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto">
-                Introduce el código único de 6 caracteres que se te asignó al iniciar tu preventa para revisar su estado o proceder con el pago de Bold.
+            <span class="text-xs text-neutral-400 uppercase tracking-widest font-sans font-bold">Cargando reserva...</span>
+          </div>
+        }
+
+        <!-- CASE 2: No Order active (Display Search Code Form) -->
+        @else if (!activeOrder()) {
+          
+          <div class="glass-effect rounded-3xl p-8 sm:p-12 shadow-2xl max-w-md mx-auto border border-white/5 animate-reveal">
+            <div class="flex flex-col items-center gap-3 mb-8">
+              <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">Rastrear Mi Reserva</h3>
+              <p class="text-xs sm:text-sm text-neutral-400 max-w-sm leading-relaxed font-sans">
+                Consulta los comprobantes de pago, seriales holográficos y estado logístico del envío ingresando tu código de 6 caracteres.
               </p>
             </div>
 
-            <!-- Lookup Field Container -->
-            <div class="w-full flex flex-col gap-3 mt-4">
-              <div class="relative w-full">
+            <div class="flex flex-col gap-6">
+              <div class="flex flex-col gap-2 text-left">
+                <label for="order-id" class="text-[10px] font-bold text-neutral-400 tracking-widest uppercase font-sans">Código de Reserva</label>
                 <input 
                   type="text" 
+                  id="order-id"
+                  placeholder="OSN-XXXXXX"
                   [value]="searchQuery()"
                   (input)="onSearchInput($event)"
-                  placeholder="Ejem: OSN-XXXXXX"
-                  class="w-full py-4.5 px-6 rounded-xl bg-matte-black/60 border border-white/10 text-white font-mono text-center text-sm tracking-widest focus:outline-none focus:border-gold-aged/50 transition-all duration-300"
-                  maxlength="10"
+                  (keyup.enter)="executeSearch()"
+                  class="w-full px-5 py-4 bg-matte-black/40 border border-white/5 focus:border-gold-aged/40 rounded-xl text-white font-mono text-center tracking-widest uppercase placeholder:text-neutral-700 focus:outline-none transition-all duration-300 shadow-inner"
                 />
-              </div>
-              
-              @if (searchError()) {
-                <span class="text-xs text-red-400 font-semibold tracking-wide block max-w-sm mx-auto leading-relaxed animate-pulse">
-                  {{ searchError() }}
-                </span>
-              }
-
-              <button 
-                (click)="executeSearch()"
-                [disabled]="searchLoading() || !searchQuery()"
-                class="w-full py-4 rounded-xl bg-gold-aged hover:bg-gold-light disabled:bg-neutral-800 text-matte-black disabled:text-neutral-500 font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-[0_4px_20px_rgba(197,168,84,0.15)] disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
-              >
-                @if (searchLoading()) {
-                  <div class="w-4 h-4 border-2 border-matte-black border-t-transparent rounded-full animate-spin"></div>
-                  <span>Buscando...</span>
-                } @else {
-                  <span>Consultar Pedido</span>
+                @if (searchError()) {
+                  <span class="text-[10px] text-red-400 font-semibold tracking-wide block max-w-sm mx-auto leading-relaxed animate-pulse font-sans">
+                    {{ searchError() }}
+                  </span>
                 }
-              </button>
+              </div>
+
+              <div class="flex flex-col gap-3 font-sans">
+                <button 
+                  (click)="executeSearch()"
+                  [disabled]="searchLoading() || !searchQuery()"
+                  class="w-full py-4 rounded-xl bg-gold-aged hover:bg-gold-light disabled:bg-neutral-800 text-matte-black disabled:text-neutral-500 font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-[0_4px_20px_rgba(197,168,84,0.15)] disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
+                >
+                  @if (searchLoading()) {
+                    <div class="w-4 h-4 border-2 border-matte-black border-t-transparent rounded-full animate-spin"></div>
+                    <span>Buscando...</span>
+                  } @else {
+                    <span>Consultar Pedido</span>
+                  }
+                </button>
+
+                <button 
+                  (click)="goToHome()"
+                  class="text-xs text-neutral-500 font-bold font-sans tracking-wide hover:text-gold-aged uppercase transition-colors duration-300 cursor-pointer mt-2"
+                >
+                  ← Regresar al Inicio
+                </button>
+              </div>
             </div>
 
-            <button 
-              (click)="goToHome()"
-              class="text-xs text-neutral-500 font-bold font-sans tracking-wide hover:text-gold-aged uppercase transition-colors duration-300 cursor-pointer mt-2"
-            >
-              ← Regresar al Inicio
-            </button>
           </div>
         } 
         
@@ -93,97 +99,116 @@ import { gsap } from 'gsap';
             <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border-2 border-gold-aged/40 shadow-[0_0_50px_rgba(197,168,84,0.15)] animate-reveal">
               
               <div class="w-16 h-16 rounded-full bg-gold-aged/10 flex items-center justify-center border-2 border-gold-aged/50 animate-pulse">
-                <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 -960 960 960" width="32" fill="#C5A854"><path d="m382-354 278-278-56-56-222 222-114-114-56 56 170 170ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 -960 960 960" width="32" fill="#C5A854"><path d="m382-354 278-278-56-56-222 222-114-114-56 56 170 170ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Z"/></svg>
               </div>
 
               <div class="flex flex-col gap-2">
                 <span class="text-xs font-bold text-gold-aged tracking-[0.2em] uppercase font-sans">RESERVA CONFIRMADA</span>
                 <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">¡Eres Dueño del Oro!</h3>
-                <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto">
-                  Tu pieza exclusiva está reservada con éxito. Tu pago ha sido liquidado correctamente. A continuación tienes tu ticket holográfico serializado.
+                <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto font-sans">
+                  Tu reserva está confirmada y tu pago ha sido liquidado correctamente. A continuación tienes tu ticket holográfico serializado por cada prenda.
                 </p>
               </div>
 
+              <!-- Ticket Navigator for Multi-Item Orders -->
+              @if (order.items && order.items.length > 1) {
+                <div class="flex flex-wrap justify-center gap-2 mb-2 font-sans w-full">
+                  @for (it of order.items; track it; let idx = $index) {
+                    <button 
+                      (click)="selectedItemIndex.set(idx)"
+                      class="px-3 py-1.5 rounded-lg border text-[10px] font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer flex items-center gap-1.5"
+                      [class.bg-gold-aged]="selectedItemIndex() === idx"
+                      [class.text-matte-black]="selectedItemIndex() === idx"
+                      [class.border-gold-aged]="selectedItemIndex() === idx"
+                      [class.border-white/10]="selectedItemIndex() !== idx"
+                      [class.text-neutral-400]="selectedItemIndex() !== idx"
+                      [class.bg-white/5]="selectedItemIndex() !== idx"
+                    >
+                      Prenda {{ idx + 1 }}: {{ it.version === 'oro_vivo' ? 'Oro' : 'Negra' }} ({{ it.size }})
+                    </button>
+                  }
+                </div>
+              }
+
               <!-- Ticket Visual Layout -->
-              <div class="perspective-1000 w-full max-w-md mx-auto py-2">
-                <div 
-                  class="ticket-card relative w-full rounded-2xl bg-neutral-900 border border-gold-aged/40 p-6 flex flex-col gap-6 text-left shadow-2xl overflow-hidden cursor-crosshair"
-                  (mousemove)="onMouseMoveTicket($event)"
-                  (mouseleave)="onMouseLeaveTicket($event)"
-                >
-                  <div class="holographic-glare absolute inset-0 pointer-events-none mix-blend-color-dodge opacity-0 transition-opacity duration-300" style="background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(244, 223, 138, 0.25) 0%, rgba(197, 168, 84, 0.15) 30%, rgba(18, 42, 58, 0.3) 60%, rgba(138, 37, 37, 0.2) 100%);"></div>
-                  <div class="absolute inset-0 bg-radial-gradient from-gold-aged/5 via-transparent to-transparent pointer-events-none"></div>
+              @if (activeItem(); as item) {
+                <div class="perspective-1000 w-full max-w-md mx-auto py-2">
+                  <div 
+                    class="ticket-card relative w-full rounded-2xl bg-neutral-900 border p-6 flex flex-col gap-6 text-left shadow-2xl overflow-hidden cursor-crosshair"
+                    [class.border-gold-aged/40]="item.version === 'oro_vivo'"
+                    [class.border-neutral-700/60]="item.version === 'edicion_secreta'"
+                    (mousemove)="onMouseMoveTicket($event)"
+                    (mouseleave)="onMouseLeaveTicket($event)"
+                  >
+                    <div class="holographic-glare absolute inset-0 pointer-events-none mix-blend-color-dodge opacity-0 transition-opacity duration-300" style="background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(244, 223, 138, 0.25) 0%, rgba(197, 168, 84, 0.15) 30%, rgba(18, 42, 58, 0.3) 60%, rgba(138, 37, 37, 0.2) 100%);"></div>
+                    <div class="absolute inset-0 bg-radial-gradient from-gold-aged/5 via-transparent to-transparent pointer-events-none"></div>
 
-                  <!-- Header -->
-                  <div class="flex justify-between items-center border-b border-white/5 pb-4 relative z-10">
-                    <img src="/logo.png" alt="OSANELI" class="h-4 w-auto object-contain brightness-90 invert" />
-                    <span class="font-mono text-[10px] tracking-widest text-neutral-400 font-bold uppercase">
-                      DROP 01: ORO VIVO
-                    </span>
-                  </div>
-
-                  <!-- Info Grid -->
-                  <div class="grid grid-cols-2 gap-4 text-xs font-sans relative z-10">
-                    <div class="flex flex-col gap-0.5">
-                      <span class="text-[10px] text-neutral-500 uppercase tracking-wider">PROPIETARIO</span>
-                      <span class="text-white font-bold font-serif tracking-wide truncate">{{ order.fullName }}</span>
-                    </div>
-                    <div class="flex flex-col gap-0.5">
-                      <span class="text-[10px] text-neutral-500 uppercase tracking-wider">EMAIL</span>
-                      <span class="text-white font-bold tracking-wide truncate">{{ order.email }}</span>
-                    </div>
-                    <div class="flex flex-col gap-0.5">
-                      <span class="text-[10px] text-neutral-500 uppercase tracking-wider">VERSIÓN</span>
-                      <span class="text-white font-bold font-serif tracking-wide">
-                        {{ order.version === 'oro_vivo' ? 'Oro Vivo (Oro)' : 'Edición Secreta (Negra)' }}
+                    <!-- Header -->
+                    <div class="flex justify-between items-center border-b border-white/5 pb-4 relative z-10">
+                      <img src="/logo.png" alt="OSANELI" class="h-4 w-auto object-contain brightness-90 invert" />
+                      <span class="font-mono text-[10px] tracking-widest text-neutral-400 font-bold uppercase">
+                        DROP 01: ORO VIVO
                       </span>
                     </div>
-                    <div class="flex flex-col gap-0.5">
-                      <span class="text-[10px] text-neutral-500 uppercase tracking-wider">GÉNERO</span>
-                      <span class="text-white font-bold tracking-wide uppercase">{{ order.gender || 'Unisex' }}</span>
-                    </div>
-                    <div class="flex flex-col gap-0.5">
-                      <span class="text-[10px] text-neutral-500 uppercase tracking-wider">TALLA (BOXY)</span>
-                      <span class="text-gold-aged font-extrabold tracking-widest text-sm">{{ order.size }}</span>
-                    </div>
-                    <div class="flex flex-col gap-0.5">
-                      <span class="text-[10px] text-neutral-500 uppercase tracking-wider">CANTIDAD</span>
-                      <span class="text-white font-bold tracking-widest font-sans">{{ order.quantity }} {{ order.quantity === 1 ? 'Unidad' : 'Unidades' }}</span>
-                    </div>
-                    <div class="flex flex-col gap-0.5">
-                      <span class="text-[10px] text-neutral-500 uppercase tracking-wider">VALOR TOTAL</span>
-                      <span class="text-gold-aged font-extrabold tracking-wide font-serif">{{ totalAmountFormatted() }}</span>
-                    </div>
-                    <div></div> <!-- Spacer -->
-                    <div class="flex flex-col gap-0.5 col-span-2">
-                      <span class="text-[10px] text-neutral-500 uppercase tracking-wider">DIRECCIÓN DE ENVÍO</span>
-                      <span class="text-neutral-300 font-medium tracking-wide truncate" [title]="order.address">{{ order.address || 'No especificada' }}</span>
-                    </div>
-                  </div>
 
-                  <!-- Barcode & Serial -->
-                  <div class="flex flex-col items-center gap-2 pt-4 border-t border-white/5 text-center relative z-10">
-                    <div class="flex gap-[2px] h-8 items-center bg-white/10 px-4 py-1.5 rounded opacity-60">
-                      <div class="w-[2px] h-full bg-white"></div>
-                      <div class="w-[1px] h-full bg-white"></div>
-                      <div class="w-[3px] h-full bg-white"></div>
-                      <div class="w-[1px] h-full bg-white"></div>
-                      <div class="w-[2px] h-full bg-white"></div>
-                      <div class="w-[4px] h-full bg-white"></div>
-                      <div class="w-[1px] h-full bg-white"></div>
-                      <div class="w-[2px] h-full bg-white"></div>
-                      <div class="w-[3px] h-full bg-white"></div>
-                      <div class="w-[1px] h-full bg-white"></div>
+                    <!-- Info Grid -->
+                    <div class="grid grid-cols-2 gap-4 text-xs font-sans relative z-10">
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">PROPIETARIO</span>
+                        <span class="text-white font-bold font-serif tracking-wide truncate">{{ order.fullName }}</span>
+                      </div>
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">EMAIL</span>
+                        <span class="text-white font-bold tracking-wide truncate">{{ order.email }}</span>
+                      </div>
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">EDICIÓN</span>
+                        <span class="text-white font-bold font-serif tracking-wide">
+                          {{ item.version === 'oro_vivo' ? 'Oro Vivo (Oro)' : 'Edición Negra (Negra)' }}
+                        </span>
+                      </div>
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">GÉNERO</span>
+                        <span class="text-white font-bold tracking-wide uppercase">{{ item.gender || 'Unisex' }}</span>
+                      </div>
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">TALLA (BOXY)</span>
+                        <span class="text-gold-aged font-extrabold tracking-widest text-sm">{{ item.size }}</span>
+                      </div>
+                      <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">CANTIDAD EN ÍTEM</span>
+                        <span class="text-white font-bold tracking-widest font-sans">x{{ item.quantity }}</span>
+                      </div>
+                      <div class="flex flex-col gap-0.5 col-span-2">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">DIRECCIÓN DE ENVÍO</span>
+                        <span class="text-neutral-300 font-medium tracking-wide truncate" [title]="order.address">{{ order.address || 'No especificada' }}</span>
+                      </div>
                     </div>
-                    <span class="font-mono text-sm font-black text-gold-aged tracking-[0.2em]">
-                      {{ order.serialNumber || 'PENDIENTE DE ASIGNAR' }}
-                    </span>
-                  </div>
 
+                    <!-- Barcode & Serial -->
+                    <div class="flex flex-col items-center gap-2 pt-4 border-t border-white/5 text-center relative z-10">
+                      <div class="flex gap-[2px] h-8 items-center bg-white/10 px-4 py-1.5 rounded opacity-60">
+                        <div class="w-[2px] h-full bg-white"></div>
+                        <div class="w-[1px] h-full bg-white"></div>
+                        <div class="w-[3px] h-full bg-white"></div>
+                        <div class="w-[1px] h-full bg-white"></div>
+                        <div class="w-[2px] h-full bg-white"></div>
+                        <div class="w-[4px] h-full bg-white"></div>
+                        <div class="w-[1px] h-full bg-white"></div>
+                        <div class="w-[2px] h-full bg-white"></div>
+                        <div class="w-[3px] h-full bg-white"></div>
+                        <div class="w-[1px] h-full bg-white"></div>
+                      </div>
+                      <span class="font-mono text-sm font-black text-gold-aged tracking-[0.2em] uppercase">
+                        {{ getActiveItemSerialText(item, order) }}
+                      </span>
+                    </div>
+
+                  </div>
                 </div>
-              </div>
+              }
 
-              <!-- Payment confirmation badge or Shipped Tracking Details -->
+              <!-- Shipping Info or Logistics tracker Details -->
               @if (order.isShipped) {
                 <!-- Tracker badge: gold style -->
                 <div class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-gold-aged/10 border border-gold-aged/30 max-w-sm mx-auto text-gold-aged font-sans text-xs font-bold tracking-wider select-none mt-2">
@@ -228,7 +253,7 @@ import { gsap } from 'gsap';
                 </div>
               }
 
-              <div class="flex gap-4 mt-2">
+              <div class="flex gap-4 mt-2 font-sans">
                 <button 
                   (click)="clearActive()"
                   class="px-6 py-3 rounded-xl border border-white/10 hover:border-gold-aged/40 bg-white/5 hover:bg-gold-aged/5 text-white hover:text-gold-aged font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer"
@@ -244,6 +269,7 @@ import { gsap } from 'gsap';
               </div>
             </div>
           }
+          
           <!-- STATE B & C: CREATED (Ready to Pay) & PENDING (Procesando Pago) -->
           @else if (order.status === 'CREATED' || order.status === 'PENDING') {
             
@@ -253,63 +279,54 @@ import { gsap } from 'gsap';
               <!-- Left Column: Order Summary -->
               <div class="glass-effect rounded-3xl p-6 sm:p-8 border border-white/5 flex flex-col gap-6">
                 <div>
-                  <span class="text-[10px] font-bold text-gold-aged tracking-[0.2em] uppercase">RESUMEN DE RESERVA</span>
-                  <h3 class="font-serif text-2xl font-black text-white mt-1">Tu Camiseta Coleccionista</h3>
+                  <span class="text-[10px] font-bold text-gold-aged tracking-[0.2em] uppercase font-sans">RESUMEN DE RESERVA</span>
+                  <h3 class="font-serif text-2xl font-black text-white mt-1">Prendas Reservadas</h3>
                 </div>
 
                 <div class="flex flex-col gap-4 border-b border-white/5 pb-5">
-                  <div class="flex justify-between items-center text-xs">
-                    <span class="text-neutral-400 font-sans">Producto</span>
-                    <span class="text-white font-serif font-bold">Camiseta Osaneli "ORO VIVO"</span>
-                  </div>
-                  <div class="flex justify-between items-center text-xs">
-                    <span class="text-neutral-400 font-sans">Edición</span>
-                    <span class="text-white font-sans font-semibold">
-                      {{ order.version === 'oro_vivo' ? 'Oro Vivo (Oro)' : 'Edición Secreta (Negra)' }}
-                    </span>
-                  </div>
-                  <div class="flex justify-between items-center text-xs">
-                    <span class="text-neutral-400 font-sans">Talla Asignada</span>
-                    <span class="text-gold-aged font-extrabold text-sm tracking-wider">{{ order.size }}</span>
-                  </div>
-                  <div class="flex justify-between items-center text-xs">
-                    <span class="text-neutral-400 font-sans">Género</span>
-                    <span class="text-white font-sans font-semibold">{{ order.gender || 'Unisex' }}</span>
-                  </div>
-                  <div class="flex justify-between items-center text-xs">
-                    <span class="text-neutral-400 font-sans">Cantidad</span>
-                    <span class="text-white font-sans font-bold">{{ order.quantity }} {{ order.quantity === 1 ? 'unidad' : 'unidades' }}</span>
+                  <div class="flex flex-col gap-2 mt-1">
+                    @for (it of order.items; track it) {
+                      <div class="flex justify-between text-neutral-300 bg-white/5 p-3 rounded-lg border border-white/5 text-left">
+                        <div class="flex flex-col gap-0.5">
+                          <span class="font-bold text-white uppercase text-xs">
+                            {{ it.version === 'oro_vivo' ? 'Oro Vivo' : 'Edición Negra' }}
+                          </span>
+                          <span class="text-[10px] text-neutral-400 font-sans">Talla: {{ it.size }} | Género: {{ it.gender }}</span>
+                        </div>
+                        <span class="font-bold text-gold-aged text-xs self-center">x{{ it.quantity }}</span>
+                      </div>
+                    }
                   </div>
                   <div class="flex justify-between items-center text-xs">
                     <span class="text-neutral-400 font-sans">Dirección de Envío</span>
                     <span class="text-white font-sans font-medium truncate max-w-[180px]" [title]="order.address">{{ order.address || 'No especificada' }}</span>
                   </div>
-                  <div class="flex justify-between items-center text-xs">
-                    <span class="text-neutral-400 font-sans">Código de Orden</span>
+                  <div class="flex justify-between items-center text-xs font-sans">
+                    <span class="text-neutral-400">Código de Orden</span>
                     <span class="text-gold-aged font-mono font-bold tracking-widest bg-white/5 px-2.5 py-1 rounded">{{ order.id }}</span>
                   </div>
                 </div>
 
                 <div class="flex justify-between items-center border-b border-white/5 pb-5">
-                  <div class="flex flex-col gap-0.5">
-                    <span class="text-[10px] text-neutral-500 uppercase tracking-wide">COMPRADOR</span>
-                    <span class="text-xs text-white font-bold truncate max-w-[180px]">{{ order.fullName }}</span>
+                  <div class="flex flex-col gap-0.5 text-left">
+                    <span class="text-[10px] text-neutral-500 uppercase tracking-wide font-sans">COMPRADOR</span>
+                    <span class="text-xs text-white font-bold truncate max-w-[180px] font-sans">{{ order.fullName }}</span>
                   </div>
-                  <div class="flex flex-col gap-0.5 text-right">
+                  <div class="flex flex-col gap-0.5 text-right font-sans">
                     <span class="text-[10px] text-neutral-500 uppercase tracking-wide">VALOR TOTAL</span>
-                    <span class="text-base text-gold-aged font-editorial font-bold tracking-wide">{{ totalAmountFormatted() }}</span>
+                    <span class="text-base text-gold-aged font-editorial font-bold tracking-wide font-serif">{{ totalAmountFormatted() }}</span>
                   </div>
                 </div>
 
-                <div class="rounded-xl bg-gold-aged/5 border border-gold-aged/20 p-4 text-[10px] sm:text-xs text-neutral-400 leading-relaxed">
+                <div class="rounded-xl bg-gold-aged/5 border border-gold-aged/20 p-4 text-[10px] sm:text-xs text-neutral-400 leading-relaxed font-serif text-left">
                   <strong class="text-gold-aged font-sans uppercase tracking-wider block mb-1">Pasarela Segura</strong>
                   Para completar tu reserva, presiona el botón de pago seguro de Bold a la derecha. Tu pieza se garantizará con número de serie tan pronto se confirme la venta.
                 </div>
 
-                <div class="w-full flex flex-col gap-3 pt-3 border-t border-white/5">
+                <div class="w-full flex flex-col gap-3 pt-3 border-t border-white/5 font-sans">
                   <div class="flex justify-between items-center text-[10px] text-neutral-500">
-                    <button (click)="clearActive()" class="hover:text-gold-aged transition-colors duration-200">← Consultar otro código</button>
-                    <button (click)="goToHome()" class="hover:text-gold-aged transition-colors duration-200">Volver a Tienda</button>
+                    <button (click)="clearActive()" class="hover:text-gold-aged transition-colors duration-200 cursor-pointer">← Rastrear otro código</button>
+                    <button (click)="goToHome()" class="hover:text-gold-aged transition-colors duration-200 cursor-pointer">Volver a Tienda</button>
                   </div>
                   <button 
                     (click)="editActiveOrder()" 
@@ -324,7 +341,7 @@ import { gsap } from 'gsap';
               <!-- Right Column: Bold payment Button -->
               <div class="glass-effect rounded-3xl p-6 sm:p-8 border border-gold-aged/20 shadow-[0_0_40px_rgba(197,168,84,0.06)] flex flex-col gap-6 text-center items-center justify-center min-h-[300px]">
                 
-                <div class="flex flex-col gap-1 items-center">
+                <div class="flex flex-col gap-1 items-center font-sans">
                   <span class="text-[10px] font-sans font-semibold tracking-[0.2em] text-gold-aged uppercase flex items-center gap-1.5 select-none animate-pulse">
                     <span class="w-1.5 h-1.5 rounded-full bg-gold-aged"></span>
                     Caja de Pago Seguro Bold
@@ -343,11 +360,12 @@ import { gsap } from 'gsap';
                 </div>
 
 
+
               </div>
               
             </div>
 
-            <!-- PENDING panel: Premium Holographic Charging Ticket (luxury styling similar to APPROVED) -->
+            <!-- PENDING panel: Premium Holographic Charging Ticket -->
             <div [class.hidden]="order.status !== 'PENDING'" class="w-full animate-reveal">
               <div class="glass-effect rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 max-w-xl mx-auto border-2 border-gold-aged/40 shadow-[0_0_50px_rgba(197,168,84,0.15)]">
                 
@@ -362,123 +380,28 @@ import { gsap } from 'gsap';
                 <div class="flex flex-col gap-2">
                   <span class="text-xs font-bold text-gold-aged tracking-[0.2em] uppercase font-sans">PAGO EN PROCESO</span>
                   <h3 class="font-serif text-2xl sm:text-3xl font-black text-white font-bold">Procesando Tu Reserva</h3>
-                  <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto">
+                  <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto font-sans">
                     La pasarela de pago Bold está verificando tu transacción. Esto puede tomar unos segundos. Tu ticket holográfico serializado definitivo se generará al instante.
                   </p>
                 </div>
 
-                <!-- Ticket Visual Layout -->
-                <div class="perspective-1000 w-full max-w-md mx-auto py-2 animate-reveal">
-                  <div 
-                    class="ticket-card relative w-full rounded-2xl bg-neutral-900 border border-gold-aged/30 p-6 flex flex-col gap-6 text-left shadow-2xl overflow-hidden cursor-crosshair"
-                    (mousemove)="onMouseMoveTicket($event)"
-                    (mouseleave)="onMouseLeaveTicket($event)"
-                  >
-                    <div class="holographic-glare absolute inset-0 pointer-events-none mix-blend-color-dodge opacity-0 transition-opacity duration-300" style="background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(244, 223, 138, 0.25) 0%, rgba(197, 168, 84, 0.15) 30%, rgba(18, 42, 58, 0.3) 60%, rgba(138, 37, 37, 0.2) 100%);"></div>
-                    <div class="absolute inset-0 bg-radial-gradient from-gold-aged/5 via-transparent to-transparent pointer-events-none"></div>
-
-                    <!-- Header -->
-                    <div class="flex justify-between items-center border-b border-white/5 pb-4 relative z-10">
-                      <img src="/logo.png" alt="OSANELI" class="h-4 w-auto object-contain brightness-90 invert" />
-                      <span class="font-mono text-[10px] tracking-widest text-neutral-400 font-bold uppercase">
-                        DROP 01: ORO VIVO
-                      </span>
-                    </div>
-
-                    <!-- Info Grid -->
-                    <div class="grid grid-cols-2 gap-4 text-xs font-sans relative z-10">
-                      <div class="flex flex-col gap-0.5">
-                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">PROPIETARIO</span>
-                        <span class="text-white font-bold font-serif tracking-wide truncate">{{ order.fullName }}</span>
-                      </div>
-                      <div class="flex flex-col gap-0.5">
-                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">EMAIL</span>
-                        <span class="text-white font-bold tracking-wide truncate">{{ order.email }}</span>
-                      </div>
-                      <div class="flex flex-col gap-0.5">
-                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">VERSIÓN</span>
-                        <span class="text-white font-bold font-serif tracking-wide">
-                          {{ order.version === 'oro_vivo' ? 'Oro Vivo (Oro)' : 'Edición Secreta (Negra)' }}
-                        </span>
-                      </div>
-                      <div class="flex flex-col gap-0.5">
-                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">GÉNERO</span>
-                        <span class="text-white font-bold tracking-wide uppercase">{{ order.gender || 'Unisex' }}</span>
-                      </div>
-                      <div class="flex flex-col gap-0.5">
-                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">TALLA (BOXY)</span>
-                        <span class="text-gold-aged font-extrabold tracking-widest text-sm">{{ order.size }}</span>
-                      </div>
-                      <div class="flex flex-col gap-0.5">
-                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">CANTIDAD</span>
-                        <span class="text-white font-bold tracking-widest font-sans">{{ order.quantity }} {{ order.quantity === 1 ? 'Unidad' : 'Unidades' }}</span>
-                      </div>
-                      <div class="flex flex-col gap-0.5">
-                        <span class="text-[10px] text-neutral-500 uppercase tracking-wider">VALOR TOTAL</span>
-                        <span class="text-gold-aged font-extrabold tracking-wide font-serif">{{ totalAmountFormatted() }}</span>
-                      </div>
-                      <div></div> <!-- Spacer -->
-                    </div>
-
-                    <!-- Barcode & Serial -->
-                    <div class="flex flex-col items-center gap-2 pt-4 border-t border-white/5 text-center relative z-10">
-                      <div class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gold-aged/5 border border-gold-aged/20 text-gold-aged font-sans text-[10px] font-bold tracking-widest uppercase animate-pulse">
-                        <span>ESPERANDO CONFIRMACIÓN...</span>
-                      </div>
-                      <span class="font-mono text-xs text-neutral-500 tracking-wider">
-                        ORDEN: {{ order.id }}
-                      </span>
-                    </div>
-
+                <!-- Info summary -->
+                <div class="w-full border border-white/5 bg-white/[0.01] p-4 rounded-2xl text-left flex flex-col gap-2 text-xs font-sans">
+                  <div class="flex justify-between items-center text-neutral-400">
+                    <span>Código de Reserva</span>
+                    <span class="text-white font-mono font-bold">{{ order.id }}</span>
+                  </div>
+                  <div class="flex justify-between items-center text-neutral-400">
+                    <span>Comprador</span>
+                    <span class="text-white font-medium">{{ order.fullName }}</span>
+                  </div>
+                  <div class="flex justify-between items-center text-neutral-400">
+                    <span>Total a Pagar</span>
+                    <span class="text-gold-aged font-bold font-serif">{{ totalAmountFormatted() }}</span>
                   </div>
                 </div>
 
-                <!-- Payment confirmation badge pending or Shipped Tracking Details -->
-                @if (order.isShipped) {
-                  <!-- Tracker badge: gold style -->
-                  <div class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-gold-aged/10 border border-gold-aged/30 max-w-sm mx-auto text-gold-aged font-sans text-xs font-bold tracking-wider select-none mt-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor" class="shrink-0"><path d="M240-160q-33 0-56.5-23.5T160-240v-200h80v200h480v-200h80v200q0 33-23.5 56.5T720-160H240Zm240-160L280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200Z"/></svg>
-                    <span>✓ PEDIDO DESPACHADO</span>
-                  </div>
-
-                  <!-- Elegant Tracking Details Card -->
-                  <div class="w-full max-w-md mx-auto p-6 rounded-2xl bg-white/[0.02] border border-gold-aged/20 flex flex-col gap-3.5 text-left font-sans text-xs mt-2 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-24 h-24 bg-gold-aged/5 rounded-full blur-2xl pointer-events-none"></div>
-                    
-                    <div class="flex justify-between items-center pb-2.5 border-b border-white/5">
-                      <span class="text-neutral-400">Transportadora</span>
-                      <span class="text-white font-bold tracking-wide">{{ order.carrier || 'No especificada' }}</span>
-                    </div>
-                    
-                    <div class="flex justify-between items-center pb-2.5 border-b border-white/5">
-                      <span class="text-neutral-400">Número de Guía</span>
-                      @if (order.trackingNumber) {
-                        @if (getCarrierTrackingUrl(order.carrier, order.trackingNumber); as trackingUrl) {
-                          <a [href]="trackingUrl" target="_blank" class="text-gold-aged hover:text-gold-light font-mono font-bold tracking-wider underline flex items-center gap-1">
-                            {{ order.trackingNumber }}
-                            <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-244-56-56 372-372H560v-80h280v280h-80v-144L388-364Z"/></svg>
-                          </a>
-                        } @else {
-                          <span class="text-white font-mono font-bold tracking-wider">{{ order.trackingNumber }}</span>
-                        }
-                      } @else {
-                        <span class="text-neutral-500 italic">No disponible</span>
-                      }
-                    </div>
-                    
-                    <div class="flex justify-between items-center">
-                      <span class="text-neutral-400">Fecha de Despacho</span>
-                      <span class="text-white font-medium">{{ formatShippingDate(order.shippedAt) || 'Recién despachado' }}</span>
-                    </div>
-                  </div>
-                } @else {
-                  <!-- Payment confirmation badge pending -->
-                  <div class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-gold-aged/10 border border-gold-aged/20 max-w-sm mx-auto text-gold-aged font-sans text-xs font-bold tracking-wider select-none mt-2 animate-pulse">
-                    <span>VERIFICANDO MEDIO DE PAGO EN BOLD</span>
-                  </div>
-                }
-
-                <div class="text-[10px] text-neutral-500 mt-2 select-none italic animate-reveal">
+                <div class="text-[10px] text-neutral-500 mt-2 select-none italic animate-reveal font-sans">
                   No recargues ni cierres esta pestaña. El ticket se actualizará automáticamente en tiempo real.
                 </div>
               </div>
@@ -496,7 +419,7 @@ import { gsap } from 'gsap';
               <div class="flex flex-col gap-2">
                 <span class="text-xs font-bold text-red-500 tracking-[0.2em] uppercase font-sans">TRANSACCIÓN DECLINADA</span>
                 <h3 class="font-serif text-2xl sm:text-3xl font-black text-white font-bold">No Pudimos Procesar Tu Pago</h3>
-                <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto">
+                <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto font-sans">
                   La pasarela de pago Bold reportó que la transacción fue rechazada, cancelada o no pudo completarse. Tu cupo de reserva no se ha asignado aún.
                 </p>
               </div>
@@ -521,7 +444,7 @@ import { gsap } from 'gsap';
                 </div>
               </div>
 
-              <div class="flex flex-col sm:flex-row gap-3 w-full justify-center mt-2">
+              <div class="flex flex-col sm:flex-row gap-3 w-full justify-center mt-2 font-sans">
                 <button 
                   (click)="retryPayment()"
                   class="px-6 py-3.5 rounded-xl bg-gold-aged hover:bg-gold-light text-matte-black font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer w-full sm:w-auto shadow-[0_4px_20px_rgba(197,168,84,0.2)] hover:scale-[1.02] active:scale-98"
@@ -548,7 +471,7 @@ import { gsap } from 'gsap';
               <div class="flex flex-col gap-2">
                 <span class="text-xs font-bold text-neutral-400 tracking-[0.2em] uppercase font-sans">PRE-ORDEN ANULADA</span>
                 <h3 class="font-serif text-2xl sm:text-3xl font-black text-white font-bold">Reserva Anulada / Reembolsada</h3>
-                <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto">
+                <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto font-sans">
                   Este pedido fue anulado o reembolsado oficialmente mediante la pasarela de pagos Bold. El cupo y el ticket holográfico han perdido validez.
                 </p>
               </div>
@@ -556,15 +479,15 @@ import { gsap } from 'gsap';
               <!-- Anullment Details Breakdown -->
               <div class="w-full rounded-2xl bg-white/5 border border-white/10 p-5 text-left text-xs flex flex-col gap-3 font-sans">
                 <div class="flex justify-between items-center pb-2 border-b border-white/5">
-                  <span class="text-neutral-400">Orden Asocida</span>
+                  <span class="text-neutral-400">Orden Asociada</span>
                   <span class="text-white font-mono font-bold">{{ order.id }}</span>
                 </div>
                 <div class="flex justify-between items-center pb-2 border-b border-white/5">
                   <span class="text-neutral-400">Comprador</span>
                   <span class="text-white font-bold">{{ order.fullName }}</span>
                 </div>
-                <div class="flex justify-between items-center pb-2 border-b border-white/5">
-                  <span class="text-neutral-300 font-bold font-serif">{{ totalAmountFormatted() }}</span>
+                <div class="flex justify-between items-center pb-2 border-b border-white/5 font-serif text-neutral-300 font-bold">
+                  <span>{{ totalAmountFormatted() }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-neutral-400">Estado</span>
@@ -572,7 +495,7 @@ import { gsap } from 'gsap';
                 </div>
               </div>
 
-              <div class="flex gap-4 mt-2">
+              <div class="flex gap-4 mt-2 font-sans">
                 <button 
                   (click)="clearActive()"
                   class="px-6 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer"
@@ -605,38 +528,38 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
 
   // States
   readonly orderIdQuery = signal<string | null>(null);
+  readonly selectedItemIndex = signal<number>(0);
 
   // Computes the active order reactively in real-time from the synced preorders list
   readonly activeOrder = computed(() => {
     const queryId = this.orderIdQuery();
     if (!queryId) return null;
-    
-    // Check if the order is inside the real-time synchronized list
     return this.preOrderService.preorders().find(o => o.id === queryId) || null;
+  });
+
+  // Computes the active selected OrderItem to render inside the interactive holographic ticket
+  readonly activeItem = computed(() => {
+    const order = this.activeOrder();
+    if (!order) return null;
+    const items = order.items || [];
+    const idx = Math.min(this.selectedItemIndex(), items.length - 1);
+    return items[idx >= 0 ? idx : 0] || null;
   });
 
   // Loading state reactively computed to prevent hydration mismatch and async wait blocks
   readonly isLoading = computed(() => {
     const queryId = this.orderIdQuery();
-    if (!queryId) return false; // Show search box immediately if no order is requested
-    
-    // We are loading if sync hasn't completed yet
+    if (!queryId) return false;
     if (!this.preOrderService.isInitialSyncCompleted()) return true;
-    
     return false;
   });
   
   // Search parameters
   readonly searchQuery = signal<string>('');
   readonly searchLoading = signal<boolean>(false);
-  
-  // Local error warnings for imperative flows (e.g. network failure)
   readonly localSearchError = signal<string>('');
-  
-  // Local state to track if user has requested to retry a payment for a REJECTED order
   readonly isRetrying = signal<boolean>(false);
   
-  // Computed warning if query ID is loaded but not present in Firebase or local error is set
   readonly searchError = computed(() => {
     const local = this.localSearchError();
     if (local) return local;
@@ -743,33 +666,31 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
 
   // Side-effect to automatically animate data-reveal elements whenever the page view state changes
   private readonly revealAnimationEffect = effect(() => {
-    // Read activeOrder, isLoading, and isRetrying to react to view state transitions
     this.activeOrder();
     this.isLoading();
     this.isRetrying();
     
     if (!isPlatformBrowser(this.platformId)) return;
-    
-    // Trigger GSAP reveal for newly rendered data-reveal elements
     setTimeout(() => {
-      const reveals = document.querySelectorAll('[data-reveal]');
-      reveals.forEach(el => {
-        gsap.to(el, {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          ease: 'power3.out',
-          overwrite: 'auto'
-        });
-      });
-    }, 100); // Wait 100ms to allow route navigation and Angular change detection to fully settle the DOM
+      const reveals = document.querySelectorAll('.animate-reveal, [data-reveal]');
+      if (reveals.length > 0) {
+        gsap.fromTo(reveals, 
+          { opacity: 0, y: 15, scale: 0.99 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power2.out', stagger: 0.08 }
+        );
+      }
+    }, 100);
   });
 
   ngOnInit(): void {
-    this.queryParamsSubscription = this.route.queryParams.subscribe((params) => {
-      const orderId = params['id'] || params['bold-order-id'];
-      this.orderIdQuery.set(orderId ? orderId.toUpperCase() : null);
+    this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
+      const queryId = params['id'];
+      if (queryId) {
+        this.orderIdQuery.set(String(queryId).trim().toUpperCase());
+      } else {
+        this.orderIdQuery.set(null);
+      }
+      this.selectedItemIndex.set(0); // Reset item index on navigation
     });
   }
 
@@ -777,25 +698,6 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
     if (this.queryParamsSubscription) {
       this.queryParamsSubscription.unsubscribe();
     }
-  }
-
-  goToHome(): void {
-    this.router.navigate(['/']);
-  }
-
-  editActiveOrder(): void {
-    const order = this.activeOrder();
-    if (!order) return;
-    this.router.navigate(['/'], { queryParams: { edit: order.id } });
-  }
-
-  clearActive(): void {
-    // We do NOT set orderIdQuery to null here to prevent race conditions during async navigation.
-    // Instead, we let the router queryParams subscription reactively handle clearing the ID after navigation finishes.
-    this.searchQuery.set('');
-    this.localSearchError.set('');
-    this.isRetrying.set(false);
-    this.router.navigate(['/order']);
   }
 
   onSearchInput(event: Event): void {
@@ -807,84 +709,72 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
   async executeSearch(): Promise<void> {
     const q = this.searchQuery();
     if (!q) return;
-    
+
     this.searchLoading.set(true);
     this.localSearchError.set('');
-    
+
     try {
-      const result = await this.preOrderService.queryOrder(q);
-      if (result) {
-        this.router.navigate(['/order'], { queryParams: { id: result.id } });
+      const exists = await this.preOrderService.queryOrder(q);
+      if (exists) {
+        this.router.navigate(['/order'], { queryParams: { id: exists.id } });
+        this.searchQuery.set('');
       } else {
-        this.localSearchError.set('No se encontró ninguna reserva activa con este número de orden. Verifica el código e intenta nuevamente.');
+        this.localSearchError.set('No se encontró ningún pedido con el código especificado. Verifica el código e intenta nuevamente.');
       }
-    } catch (err) {
-      console.error('Error querying order:', err);
-      this.localSearchError.set('Ocurrió un error de red al consultar tu reserva. Intenta de nuevo.');
+    } catch (e) {
+      console.error(e);
+      this.localSearchError.set('Ocurrió un error de red al intentar consultar tu reserva. Intenta de nuevo.');
     } finally {
       this.searchLoading.set(false);
     }
   }
 
-  retryPayment(): void {
-    const order = this.activeOrder();
-    if (order) {
-      this.isRetrying.set(false);
-      this.preOrderService.updateOrderStatus(order.id, 'CREATED')
-        .then(() => {
-          console.log('Order status reset back to CREATED for retry.');
-        })
-        .catch(err => {
-          console.error('Failed to reset order status back to CREATED:', err);
-        });
-    }
+  goToHome(): void {
+    this.router.navigate(['/']);
   }
 
-  onBoldContainerClick(): void {
+  clearActive(): void {
+    this.localSearchError.set('');
+    this.searchQuery.set('');
+    this.router.navigate(['/order']);
+  }
+
+  editActiveOrder(): void {
     const order = this.activeOrder();
     if (order && order.status === 'CREATED') {
-      // 250ms delay to let the Bold SDK safely handle the initial click and launch overlay
-      setTimeout(() => {
-        this.preOrderService.updateOrderStatus(order.id, 'PENDING')
-          .then(() => {
-            console.log('Order status updated to PENDING (processing payment)');
-          })
-          .catch(err => {
-            console.error('Failed to update status to PENDING:', err);
-          });
-      }, 250);
+      this.router.navigate(['/'], { queryParams: { edit: order.id } });
     }
   }
 
-  readonly totalAmountFormatted = computed(() => {
+  totalAmountFormatted(): string {
     const order = this.activeOrder();
-    if (!order) return '';
+    if (!order) return '$0 COP';
     const total = order.quantity * environment.productPrice;
     return `$${total.toLocaleString('es-CO')} COP`;
-  });
+  }
 
-  getCarrierTrackingUrl(carrier: string | undefined, trackingNumber: string | undefined): string {
-    const c = (carrier || '').toLowerCase();
-    const guide = trackingNumber || '';
-    if (c.includes('servientrega')) {
-      return `https://www.servientrega.com/wps/portal/portal-nacional/transacciones/rastreo-envios?id=${guide}`;
+  getCarrierTrackingUrl(carrier?: string, trackingNumber?: string): string {
+    if (!carrier || !trackingNumber) return '';
+    const norm = carrier.toLowerCase();
+    if (norm.includes('servientrega')) {
+      return `https://www.servientrega.com/wps/portal/portal-corporativo/rastreo-envios?id=${trackingNumber}`;
     }
-    if (c.includes('coordinadora')) {
-      return `https://www.coordinadora.com/portafolio-de-servicios/servicios-en-linea/rastreo-de-guias/?guia=${guide}`;
+    if (norm.includes('coordinadora')) {
+      return `https://www.coordinadora.com/portafolio-de-servicios/servicios-en-linea/rastreo-de-guias/?guia=${trackingNumber}`;
     }
-    if (c.includes('interrapidisimo') || c.includes('inter')) {
-      return `https://www.interrapidisimo.com/sigue-tu-envio/?guia=${guide}`;
+    if (norm.includes('interrapidisimo') || norm.includes('inter')) {
+      return `https://www.interrapidisimo.com/sigue-tu-envio/?guia=${trackingNumber}`;
     }
-    if (c.includes('envia') || c.includes('envía')) {
+    if (norm.includes('envia')) {
       return `https://envia.co/`;
     }
     return '';
   }
 
-  formatShippingDate(shippedAt: string | undefined): string {
-    if (!shippedAt) return '';
+  formatShippingDate(isoString?: string): string {
+    if (!isoString) return '';
     try {
-      const date = new Date(shippedAt);
+      const date = new Date(isoString);
       return date.toLocaleDateString('es-CO', {
         day: '2-digit',
         month: 'long',
@@ -893,16 +783,28 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
         minute: '2-digit'
       });
     } catch (e) {
-      return shippedAt;
+      return '';
     }
   }
 
-  private cleanUrlParams(): void {
-    const cleanUrl = window.location.origin + window.location.pathname + `?id=${this.activeOrder()?.id}`;
-    window.history.replaceState({}, document.title, cleanUrl);
+  async retryPayment(): Promise<void> {
+    const order = this.activeOrder();
+    if (!order) return;
+    
+    this.isRetrying.set(true);
+    try {
+      // Revert status to CREATED in Firebase and re-inject Bold button
+      await this.preOrderService.updateOrderStatus(order.id, 'CREATED');
+    } catch (e) {
+      console.error('Failed to retry payment:', e);
+    } finally {
+      this.isRetrying.set(false);
+    }
   }
 
-  // Tilt and Interactive light effect copied perfectly for visual parity
+
+
+  // 3D Tilt Ticket Physics
   onMouseMoveTicket(event: MouseEvent): void {
     if (!isPlatformBrowser(this.platformId)) return;
     const card = event.currentTarget as HTMLElement;
@@ -962,7 +864,7 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Robust Script injection of Bold Payment gateway on Landing page
+  // Bold Payment Button Injection Logic on Landing Checkouts
   private async injectBoldButtonOnLanding(order: Order, retries = 8): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) return;
     
@@ -996,7 +898,16 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       const btnScript = document.createElement('script');
       btnScript.setAttribute('data-bold-button', 'dark-L');
       btnScript.setAttribute('data-api-key', environment.boldApiKey);
-      btnScript.setAttribute('data-description', `Camiseta Osaneli Oro Vivo - ${qty}x Talla ${order.size} (${order.version === 'oro_vivo' ? 'Oro' : 'Negra'})`);
+      
+      // Dynamic details list in payment button description
+      let desc = 'Reserva Osaneli: ';
+      if (order.items && order.items.length > 0) {
+        desc += order.items.map(it => `${it.quantity}x ${it.version === 'oro_vivo' ? 'Oro' : 'Negra'} (${it.size})`).join(', ');
+      } else {
+        desc += `${qty}x Talla ${order.size} (${order.version === 'oro_vivo' ? 'Oro' : 'Negra'})`;
+      }
+
+      btnScript.setAttribute('data-description', desc);
       btnScript.setAttribute('data-amount', totalAmount.toString());
       btnScript.setAttribute('data-currency', 'COP');
       btnScript.setAttribute('data-order-id', order.id);
@@ -1016,9 +927,8 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       btnScript.setAttribute('data-customer-data', JSON.stringify(customerObj));
       btnScript.setAttribute('data-render-mode', 'embedded');
       
-      // Construct dynamic redirection URL for the specific order page to receive transaction state
-      let redirectUrl = 'https://orovivo-osaneli.vercel.app' + '/order?id=' + order.id;
-      // Bold library strictly requires the redirection URL to start with https://, so we replace http:// for local dev
+      // rediect URL dynamic structure
+      let redirectUrl = window.location.origin + '/order?id=' + order.id;
       if (redirectUrl.startsWith('http://')) {
         redirectUrl = redirectUrl.replace('http://', 'https://');
       }
@@ -1029,10 +939,28 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       container.appendChild(btnScript);
     };
     
-    setTimeout(tryInject, 100);
+    tryInject();
   }
 
+  // Intercept container click to transition order status to PENDING
+  async onBoldContainerClick(): Promise<void> {
+    const order = this.activeOrder();
+    if (!order || order.status !== 'CREATED') return;
+    
+    try {
+      // Small buffer to let Bold checkout modal open fully
+      setTimeout(async () => {
+        await this.preOrderService.updateOrderStatus(order.id, 'PENDING');
+      }, 250);
+    } catch (e) {
+      console.error('Failed to update status to PENDING on checkout button click:', e);
+    }
+  }
 
+  private cleanUrlParams(): void {
+    const cleanUrl = window.location.origin + window.location.pathname + `?id=${this.activeOrder()?.id}`;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
 
   private async generateSHA256OnLanding(message: string): Promise<string> {
     const msgBuffer = new TextEncoder().encode(message);
@@ -1040,4 +968,17 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
+
+  getActiveItemSerialText(item: OrderItem, order: Order): string {
+    if (item.version === 'edicion_secreta') {
+      return 'EDICIÓN NEGRA';
+    }
+    if (item.serialNumbers && item.serialNumbers.length > 0) {
+      return item.serialNumbers.join(' | ');
+    }
+    return order.serialNumber || 'PENDIENTE';
+  }
+
+  // Import dynamic check properties
+  readonly checkoutLoading = signal<boolean>(false);
 }

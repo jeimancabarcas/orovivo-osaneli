@@ -4,6 +4,14 @@ import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getDatabase, ref, set, onValue, get, child, Database } from 'firebase/database';
 import { environment } from '../../environments/environment';
 
+export interface OrderItem {
+  version: 'oro_vivo' | 'edicion_secreta';
+  size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
+  gender: string;
+  quantity: number;
+  serialNumbers?: string[];
+}
+
 export interface Order {
   id: string;
   fullName: string;
@@ -14,6 +22,7 @@ export interface Order {
   size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
   gender?: string;
   quantity: number;
+  items?: OrderItem[];
   status: 'CREATED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'VOIDED' | 'VOID_REJECTED';
   serialNumber?: string;
   createdAt: Date;
@@ -81,6 +90,23 @@ export class FirebaseService {
         const parsedList: Order[] = [];
         Object.keys(data).forEach((key) => {
           const item = data[key];
+          const parsedItems: OrderItem[] = Array.isArray(item.items)
+            ? item.items.map((it: any) => ({
+                version: it.version || 'oro_vivo',
+                size: it.size || 'M',
+                gender: it.gender || 'Unisex',
+                quantity: Number(it.quantity || 1),
+                serialNumbers: it.serialNumbers || []
+              }))
+            : [
+                {
+                  version: item.version || 'oro_vivo',
+                  size: item.size || 'M',
+                  gender: item.gender || 'Unisex',
+                  quantity: Number(item.quantity || 1),
+                  serialNumbers: item.serialNumber ? [item.serialNumber] : []
+                }
+              ];
           parsedList.push({
             id: item.id || key,
             fullName: item.fullName || '',
@@ -91,6 +117,7 @@ export class FirebaseService {
             size: item.size || 'M',
             gender: item.gender || 'Unisex',
             quantity: Number(item.quantity || 1),
+            items: parsedItems,
             status: item.status || 'CREATED',
             serialNumber: item.serialNumber || '',
             createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
@@ -159,10 +186,11 @@ export class FirebaseService {
         email: formValue.email,
         phone: formValue.phone,
         address: formValue.address,
-        version: formValue.version,
-        size: formValue.size,
-        gender: formValue.gender || 'Unisex',
+        version: formValue.version || (formValue.items?.[0]?.version || 'oro_vivo'),
+        size: formValue.size || (formValue.items?.[0]?.size || 'M'),
+        gender: formValue.gender || (formValue.items?.[0]?.gender || 'Unisex'),
         quantity: Number(formValue.quantity || 1),
+        items: formValue.items || [],
         status: 'CREATED',
         createdAt: new Date().toISOString()
       });
@@ -238,6 +266,23 @@ export class FirebaseService {
       const snapshot = await get(orderRef);
       if (snapshot.exists()) {
         const item = snapshot.val();
+        const parsedItems: OrderItem[] = Array.isArray(item.items)
+          ? item.items.map((it: any) => ({
+              version: it.version || 'oro_vivo',
+              size: it.size || 'M',
+              gender: it.gender || 'Unisex',
+              quantity: Number(it.quantity || 1),
+              serialNumbers: it.serialNumbers || []
+            }))
+          : [
+              {
+                version: item.version || 'oro_vivo',
+                size: item.size || 'M',
+                gender: item.gender || 'Unisex',
+                quantity: Number(item.quantity || 1),
+                serialNumbers: item.serialNumber ? [item.serialNumber] : []
+              }
+            ];
         return {
           id: item.id || id,
           fullName: item.fullName || '',
@@ -248,6 +293,7 @@ export class FirebaseService {
           size: item.size || 'M',
           gender: item.gender || 'Unisex',
           quantity: Number(item.quantity || 1),
+          items: parsedItems,
           status: item.status || 'CREATED',
           serialNumber: item.serialNumber || '',
           createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),

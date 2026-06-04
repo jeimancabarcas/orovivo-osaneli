@@ -29,7 +29,14 @@ export class PreOrderService {
   // Derived stock count (limit 100, decreases with every APPROVED order in real-time database)
   readonly remainingInventory = computed(() => {
     const approvedOrders = this.preorders().filter(po => po.status === 'APPROVED' && po.id?.toUpperCase().startsWith('OSN'));
-    const reservedCount = approvedOrders.reduce((sum, po) => sum + (po.quantity || 1), 0);
+    let reservedCount = 0;
+    approvedOrders.forEach(po => {
+      if (po.items && po.items.length > 0) {
+        reservedCount += po.items.reduce((sum, it) => sum + (it.quantity || 1), 0);
+      } else {
+        reservedCount += (po.quantity || 1);
+      }
+    });
     const currentRemaining = this.TOTAL_EDITION_LIMIT - reservedCount;
     return currentRemaining > 0 ? currentRemaining : 0;
   });
