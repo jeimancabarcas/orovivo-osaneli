@@ -631,14 +631,35 @@ import { environment } from '../../environments/environment';
                   <!-- Phone -->
                   <div class="flex flex-col gap-2">
                     <label for="phone" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Teléfono (WhatsApp)</label>
-                    <input 
-                      type="tel" 
-                      id="phone" 
-                      formControlName="phone"
-                      placeholder="300 123 4567"
-                      class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white placeholder-neutral-600 focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner"
-                      [class.border-red-500]="isFieldInvalid('phone')"
-                    />
+                    <div class="flex gap-2">
+                      <select 
+                        formControlName="countryCode"
+                        class="px-3 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner cursor-pointer appearance-none shrink-0"
+                        style="width: 85px;"
+                      >
+                        <option value="+57">🇨🇴 +57</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+34">🇪🇸 +34</option>
+                        <option value="+52">🇲🇽 +52</option>
+                        <option value="+58">🇻🇪 +58</option>
+                        <option value="+593">🇪🇨 +593</option>
+                        <option value="+507">🇵🇦 +507</option>
+                        <option value="+51">🇵🇪 +51</option>
+                        <option value="+56">🇨🇱 +56</option>
+                        <option value="+54">🇦🇷 +54</option>
+                        <option value="+591">🇧🇴 +591</option>
+                        <option value="+55">🇧🇷 +55</option>
+                        <option value="+506">🇨🇷 +506</option>
+                      </select>
+                      <input 
+                        type="tel" 
+                        id="phone" 
+                        formControlName="phone"
+                        placeholder="300 123 4567"
+                        class="flex-1 px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white placeholder-neutral-600 focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner"
+                        [class.border-red-500]="isFieldInvalid('phone')"
+                      />
+                    </div>
                     @if (isFieldInvalid('phone')) {
                       <span class="text-[10px] text-red-400 font-semibold tracking-wide">El teléfono es requerido</span>
                     }
@@ -776,6 +797,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   readonly preOrderForm = this.fb.group({
     fullName: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
+    countryCode: ['+57', [Validators.required]],
     phone: ['', [Validators.required]],
     address: ['', [Validators.required]]
   });
@@ -832,10 +854,27 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
           if (order && order.status === 'CREATED') {
             this.editingOrderId.set(order.id);
             // Populate the form fields with existing order details
+            let parsedPhone = order.phone || '';
+            let parsedCountryCode = '+57';
+            if (parsedPhone.startsWith('+')) {
+              const firstSpace = parsedPhone.indexOf(' ');
+              if (firstSpace > -1) {
+                parsedCountryCode = parsedPhone.substring(0, firstSpace);
+                parsedPhone = parsedPhone.substring(firstSpace + 1);
+              } else {
+                const commonCodes = ['+593', '+507', '+591', '+506', '+34', '+52', '+58', '+51', '+56', '+54', '+55', '+57', '+1'];
+                const matchingCode = commonCodes.find(code => parsedPhone.startsWith(code));
+                if (matchingCode) {
+                  parsedCountryCode = matchingCode;
+                  parsedPhone = parsedPhone.substring(matchingCode.length).trim();
+                }
+              }
+            }
             this.preOrderForm.patchValue({
               fullName: order.fullName,
               email: order.email,
-              phone: order.phone,
+              countryCode: parsedCountryCode,
+              phone: parsedPhone,
               address: order.address
             });
             // Load items into the cart
@@ -867,7 +906,9 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
 
   cancelEditing(): void {
     this.editingOrderId.set(null);
-    this.preOrderForm.reset();
+    this.preOrderForm.reset({
+      countryCode: '+57'
+    });
     this.cart.set([]);
     // Navigate back to home page without query params to clean URL
     this.router.navigate(['/']);
@@ -1060,8 +1101,12 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
       const orderId = this.editingOrderId() || this.preOrderService.generateUniqueOrderId();
       
       const cartItems = this.cart();
+      const combinedPhone = `${formValue.countryCode || '+57'} ${formValue.phone || ''}`.trim();
       const payload = {
-        ...formValue,
+        fullName: formValue.fullName,
+        email: formValue.email,
+        phone: combinedPhone,
+        address: formValue.address,
         version: cartItems[0].version,
         size: cartItems[0].size,
         gender: cartItems[0].gender,

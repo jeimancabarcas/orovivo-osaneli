@@ -404,6 +404,50 @@ import { environment } from '../../environments/environment';
                 <div class="text-[10px] text-neutral-500 mt-2 select-none italic animate-reveal font-sans">
                   No recargues ni cierres esta pestaña. El ticket se actualizará automáticamente en tiempo real.
                 </div>
+
+                <!-- Action / Help Box -->
+                <div class="w-full border-t border-white/5 pt-6 mt-4 flex flex-col gap-6 font-sans">
+                  
+                  <!-- Option 1: Retry -->
+                  <div class="flex flex-col gap-2 items-center">
+                    <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">¿Tuviste problemas con la transacción?</span>
+                    <p class="text-[11px] text-neutral-400/80 leading-normal max-w-sm">
+                      Si no lograste completar el pago en Bold o cerraste la pasarela de pago por error, puedes restablecer tu orden para intentar de nuevo.
+                    </p>
+                    <button 
+                      type="button"
+                      (click)="retryPayment()"
+                      [disabled]="isRetrying()"
+                      class="mt-2 px-6 py-2.5 rounded-xl border border-white/10 hover:border-gold-aged bg-white/5 hover:bg-gold-aged/10 text-white hover:text-gold-aged font-sans font-bold text-[10px] tracking-wider uppercase transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                    >
+                      @if (isRetrying()) {
+                        <span class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        Procesando...
+                      } @else {
+                        Reintentar Pago
+                      }
+                    </button>
+                  </div>
+
+                  <div class="h-[1px] bg-white/5 w-1/2 mx-auto"></div>
+
+                  <!-- Option 2: Support WhatsApp -->
+                  <div class="flex flex-col gap-2 items-center">
+                    <span class="text-[10px] font-bold text-green-400 uppercase tracking-widest">¿Ya realizaste el pago?</span>
+                    <p class="text-[11px] text-neutral-400/80 leading-normal max-w-sm">
+                      Si ya realizaste el pago y se debitó de tu cuenta, por favor <strong>no reintentes</strong> el pago. Escríbenos por WhatsApp adjuntando tu comprobante para confirmar tu orden de inmediato.
+                    </p>
+                    <a 
+                      [href]="getSupportWhatsAppLink()"
+                      target="_blank"
+                      class="mt-2 px-6 py-2.5 rounded-xl border border-green-500/20 hover:border-green-500 bg-green-500/5 hover:bg-green-500/10 text-green-400 font-sans font-bold text-[10px] tracking-wider uppercase transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <span class="material-symbols-outlined select-none text-[15px] leading-none">chat</span>
+                      Soporte WhatsApp
+                    </a>
+                  </div>
+
+                </div>
               </div>
             </div>
             
@@ -800,6 +844,13 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
     } finally {
       this.isRetrying.set(false);
     }
+  }
+
+  getSupportWhatsAppLink(): string {
+    const order = this.activeOrder();
+    const orderId = order ? order.id : '';
+    const text = `Hola, realicé el pago de mi reserva con código ${orderId} en Osaneli, pero mi ticket sigue apareciendo en proceso. Adjunto el comprobante de mi pago para confirmación.`;
+    return `https://api.whatsapp.com/send?phone=573015279993&text=${encodeURIComponent(text)}`;
   }
 
 
