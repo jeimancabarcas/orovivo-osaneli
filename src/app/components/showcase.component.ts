@@ -242,7 +242,7 @@ export class ShowcaseComponent implements AfterViewInit {
       if (view === 'collar') {
         return '/oro_vivo_collar.png';
       }
-      return view === 'front' ? '/oro_vivo_front.png' : '/oro_vivo_back.png';
+      return view === 'front' ? '/oro_vivo_front.jpeg' : '/oro_vivo_back.png';
     } else {
       if (view === 'collar') {
         return '/oro_vivo_black_collar.jpeg';

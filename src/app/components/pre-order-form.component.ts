@@ -350,7 +350,7 @@ import { environment } from '../../environments/environment';
                         <!-- Image Preview Frame -->
                         <div class="w-16 h-16 rounded-xl bg-black/40 border border-white/5 p-1 flex items-center justify-center overflow-hidden">
                           <img 
-                            src="/oro_vivo_front.png" 
+                            src="/oro_vivo_front.jpeg" 
                             alt="Edición Oro Vivo" 
                             class="max-w-full max-h-full object-contain transition-transform duration-300 hover:scale-110"
                           />
@@ -651,7 +651,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     const view = this.selectedPreviewView();
     if (version === 'oro_vivo') {
       if (view === 'collar') return '/oro_vivo_collar.png';
-      return view === 'front' ? '/oro_vivo_front.png' : '/oro_vivo_back.png';
+      return view === 'front' ? '/oro_vivo_front.jpeg' : '/oro_vivo_back.png';
     } else {
       if (view === 'collar') return '/oro_vivo_black_collar.jpeg';
       return view === 'front' ? '/oro_vivo_black_front.jpeg' : '/oro_vivo_black_back.jpeg';
