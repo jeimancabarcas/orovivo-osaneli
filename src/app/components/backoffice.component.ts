@@ -143,6 +143,33 @@ type TabMode = 'dashboard' | 'orders';
                 </div>
               </div>
 
+              <!-- Financial Metrics Row -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                <!-- Card: Bold Commission -->
+                <div class="glass-effect rounded-2xl p-6 border border-white/5 shadow flex flex-col gap-2 relative overflow-hidden animate-reveal">
+                  <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none"></div>
+                  <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">COSTO PASARELA BOLD</span>
+                  <span class="text-2xl sm:text-3xl font-serif font-black text-red-400 leading-none">$ {{ stats().boldCommissionFormatted }} COP</span>
+                  <span class="text-[10px] text-neutral-500 italic mt-2">Tarifa: {{ stats().boldCommissionRate }}% + $300 por transacción</span>
+                </div>
+
+                <!-- Card: Production Cost (COGS) -->
+                <div class="glass-effect rounded-2xl p-6 border border-white/5 shadow flex flex-col gap-2 relative overflow-hidden animate-reveal">
+                  <div class="absolute inset-0 bg-gradient-to-br from-neutral-500/5 to-transparent pointer-events-none"></div>
+                  <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">COSTO DE PRODUCCIÓN (COGS)</span>
+                  <span class="text-2xl sm:text-3xl font-serif font-black text-white leading-none">$ {{ stats().productionCostFormatted }} COP</span>
+                  <span class="text-[10px] text-neutral-500 italic mt-2">Calculado a $100.000 COP por prenda</span>
+                </div>
+
+                <!-- Card: Utility / Profit -->
+                <div class="glass-effect rounded-2xl p-6 border border-white/5 shadow flex flex-col gap-2 relative overflow-hidden animate-reveal">
+                  <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none"></div>
+                  <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">UTILIDAD NETAS ESTIMADA</span>
+                  <span class="text-2xl sm:text-3xl font-serif font-black text-green-400 leading-none">$ {{ stats().utilityFormatted }} COP</span>
+                  <span class="text-[10px] text-neutral-500 italic mt-2">Ventas - Costo Bold - Producción</span>
+                </div>
+              </div>
+
               <!-- Visual Breakdowns -->
               <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
@@ -885,6 +912,33 @@ export class BackofficeComponent implements OnInit {
     
     const totalSales = totalItemsSold * environment.productPrice;
     
+    // Bold Commission calculations
+    // Commission rate changes based on totalSales tier:
+    // - between 0 and 10M: 3.29% + $300
+    // - between 10M and 20M: 2.99% + $300
+    // - above 20M: let's default to 2.99% + $300
+    let rate = 0.0329;
+    if (totalSales > 10000000) {
+      rate = 0.0299;
+    }
+    const boldRatePercentage = (rate * 100).toFixed(2);
+
+    let boldCommissionBase = 0;
+    approvedOsnOrders.forEach(o => {
+      const items = o.items || [];
+      const orderQty = items.reduce((sum, it) => sum + Number(it.quantity || 1), 0) || Number(o.quantity || 1);
+      const orderAmount = orderQty * environment.productPrice;
+      boldCommissionBase += (orderAmount * rate) + 300;
+    });
+
+    const totalBoldCommission = boldCommissionBase;
+
+    // Production Cost: $100.000 COP per shirt
+    const productionCost = totalItemsSold * 100000;
+
+    // Utility: Total Sales - Total Bold Commission - Production Cost
+    const utility = totalSales - totalBoldCommission - productionCost;
+
     // Total drafts (borradores)
     const totalDrafts = orders.filter(o => o.status === 'CREATED' || o.status === 'PENDING').length;
 
@@ -895,6 +949,12 @@ export class BackofficeComponent implements OnInit {
       totalItemsSold,
       remainingStock: Math.max(0, environment.dropLimit - totalItemsSold),
       totalDrafts,
+      
+      // New Financial Fields
+      boldCommissionRate: boldRatePercentage,
+      boldCommissionFormatted: Math.round(totalBoldCommission).toLocaleString('es-CO'),
+      productionCostFormatted: productionCost.toLocaleString('es-CO'),
+      utilityFormatted: Math.round(utility).toLocaleString('es-CO'),
       editions: {
         oroVivo,
         edicionSecreta,
