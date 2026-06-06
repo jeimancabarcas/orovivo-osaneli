@@ -789,7 +789,7 @@ export class BackofficeComponent implements OnInit {
   ngOnInit(): void {
     // Check if there is an active session stored in the browser
     if (isPlatformBrowser(this.platformId)) {
-      const storedToken = sessionStorage.getItem('osaneli_admin_token');
+      const storedToken = localStorage.getItem('osaneli_admin_token');
       if (storedToken) {
         try {
           const decoded = Buffer.from(storedToken, 'base64').toString('ascii');
@@ -797,7 +797,7 @@ export class BackofficeComponent implements OnInit {
             this.isAuthenticated.set(true);
           }
         } catch (e) {
-          sessionStorage.removeItem('osaneli_admin_token');
+          localStorage.removeItem('osaneli_admin_token');
         }
       }
     }
@@ -849,7 +849,7 @@ export class BackofficeComponent implements OnInit {
       const data = await response.json();
       if (response.ok && data.success && data.token) {
         if (isPlatformBrowser(this.platformId)) {
-          sessionStorage.setItem('osaneli_admin_token', data.token);
+          localStorage.setItem('osaneli_admin_token', data.token);
         }
         this.isAuthenticated.set(true);
         this.password.set('');
@@ -866,7 +866,7 @@ export class BackofficeComponent implements OnInit {
 
   logout(): void {
     if (isPlatformBrowser(this.platformId)) {
-      sessionStorage.removeItem('osaneli_admin_token');
+      localStorage.removeItem('osaneli_admin_token');
     }
     this.isAuthenticated.set(false);
     this.activeTab.set('dashboard');
@@ -1154,7 +1154,7 @@ export class BackofficeComponent implements OnInit {
     this.emailSuccess.set(false);
 
     if (!isPlatformBrowser(this.platformId)) return;
-    const token = sessionStorage.getItem('osaneli_admin_token');
+    const token = localStorage.getItem('osaneli_admin_token');
 
     if (!token) {
       this.emailError.set('No autorizado. Vuelve a ingresar.');
