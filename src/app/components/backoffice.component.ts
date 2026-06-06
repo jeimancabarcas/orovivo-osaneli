@@ -792,7 +792,7 @@ export class BackofficeComponent implements OnInit {
       const storedToken = localStorage.getItem('osaneli_admin_token');
       if (storedToken) {
         try {
-          const decoded = Buffer.from(storedToken, 'base64').toString('ascii');
+          const decoded = atob(storedToken);
           if (decoded.startsWith('OSANELI-ADMIN-SESSION-')) {
             this.isAuthenticated.set(true);
           }
