@@ -18,6 +18,8 @@ export interface Order {
   email: string;
   phone: string;
   address: string;
+  city?: string;
+  country?: string;
   version: 'oro_vivo' | 'edicion_secreta';
   size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
   gender?: string;
@@ -120,6 +122,8 @@ export class FirebaseService {
             email: item.email || '',
             phone: item.phone || '',
             address: item.address || '',
+            city: item.city || '',
+            country: item.country || '',
             version: item.version || 'oro_vivo',
             size: item.size || 'M',
             gender: item.gender || 'Unisex',
@@ -200,6 +204,8 @@ export class FirebaseService {
         email: formValue.email,
         phone: formValue.phone,
         address: formValue.address,
+        city: formValue.city || '',
+        country: formValue.country || '',
         version: formValue.version || (formValue.items?.[0]?.version || 'oro_vivo'),
         size: formValue.size || (formValue.items?.[0]?.size || 'M'),
         gender: formValue.gender || (formValue.items?.[0]?.gender || 'Unisex'),

@@ -591,7 +591,7 @@ type TabMode = 'dashboard' | 'orders';
               </div>
             </div>
 
-            <!-- Address and details config -->
+            <!-- Address config -->
             <div class="flex flex-col gap-1.5">
               <label for="address" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Dirección de Envío</label>
               <input 
@@ -600,6 +600,28 @@ type TabMode = 'dashboard' | 'orders';
                 formControlName="address"
                 class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs"
               />
+            </div>
+
+            <!-- City and Country config -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="flex flex-col gap-1.5">
+                <label for="city" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Ciudad / Municipio</label>
+                <input 
+                  type="text" 
+                  id="city"
+                  formControlName="city"
+                  class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs"
+                />
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <label for="country" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">País</label>
+                <input 
+                  type="text" 
+                  id="country"
+                  formControlName="country"
+                  class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs"
+                />
+              </div>
             </div>
 
             @if (ord.items && ord.items.length > 1) {
@@ -830,6 +852,8 @@ export class BackofficeComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     phone: ['', [Validators.required]],
     address: ['', [Validators.required]],
+    city: ['', [Validators.required]],
+    country: ['', [Validators.required]],
     version: ['oro_vivo', [Validators.required]],
     size: ['M', [Validators.required]],
     gender: ['Unisex', [Validators.required]],
@@ -1146,6 +1170,8 @@ export class BackofficeComponent implements OnInit {
       email: order.email,
       phone: order.phone,
       address: order.address,
+      city: order.city || '',
+      country: order.country || '',
       version: order.version,
       size: order.size,
       gender: order.gender || 'Unisex',
@@ -1175,6 +1201,8 @@ export class BackofficeComponent implements OnInit {
       email: formVal.email || '',
       phone: formVal.phone || '',
       address: formVal.address || '',
+      city: formVal.city || '',
+      country: formVal.country || '',
       version: formVal.version as Order['version'],
       size: formVal.size as Order['size'],
       gender: formVal.gender || 'Unisex',
@@ -1251,6 +1279,8 @@ export class BackofficeComponent implements OnInit {
       'Correo',
       'Teléfono',
       'Dirección de Envío',
+      'Ciudad',
+      'País',
       'Prenda Edición',
       'Talla',
       'Género',
@@ -1271,6 +1301,8 @@ export class BackofficeComponent implements OnInit {
       o.email,
       `"${o.phone}"`,
       `"${(o.address || '').replace(/"/g, '""')}"`,
+      `"${(o.city || '').replace(/"/g, '""')}"`,
+      `"${(o.country || '').replace(/"/g, '""')}"`,
       o.version === 'oro_vivo' ? 'Oro Vivo' : 'Edición Negra',
       o.size,
       o.gender || 'Unisex',

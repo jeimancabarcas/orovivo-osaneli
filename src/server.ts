@@ -389,7 +389,7 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
             <tr>
               <td class="ticket-cell" style="padding-top: 15px;">
                 <div class="ticket-label">Dirección de Envío</div>
-                <div class="ticket-value" style="color: #e2e8f0; font-size: 13px;">${order.address || 'No especificada'}</div>
+                <div class="ticket-value" style="color: #e2e8f0; font-size: 13px;">${order.address || 'No especificada'}${order.city ? ' - ' + order.city : ''}${order.country ? ', ' + order.country : ''}</div>
               </td>
               <td class="ticket-cell" style="padding-top: 15px; text-align: right;">
                 <div class="ticket-label">Valor Total</div>
@@ -463,7 +463,7 @@ async function sendOrderEmail(order: any, status: string): Promise<void> {
   
   const textContent = isShipped 
     ? `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\n\nPrendas:\n${itemsTxt}\nTotal: ${totalFormatted}\nTransportadora: ${order.carrier || 'No especificada'}\nNúmero de Guía: ${order.trackingNumber}\nRastrear envío: ${getCarrierTrackingUrl(order.carrier, order.trackingNumber)}`
-    : `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\n\nPrendas:\n${itemsTxt}\nTotal: ${totalFormatted}\nDirección de Envío: ${order.address || 'No especificada'}\n\nVer detalles y gestionar: ${paymentLink}`;
+    : `${subject}\n\nCódigo: ${order.id}\nCliente: ${order.fullName}\n\nPrendas:\n${itemsTxt}\nTotal: ${totalFormatted}\nDirección de Envío: ${order.address || 'No especificada'}${order.city ? ' - ' + order.city : ''}${order.country ? ', ' + order.country : ''}\n\nVer detalles y gestionar: ${paymentLink}`;
 
   const mailOptions = {
     from: process.env['SMTP_FROM'] || '"OSANELI" <admin@osaneli.com>',
@@ -611,6 +611,8 @@ app.post('/api/bold-webhook', async (req, res) => {
       email: existing.email || data?.customer?.email || data?.customer_data?.email || '',
       phone: existing.phone || data?.customer?.phone || data?.customer_data?.phone || '',
       address: existing.address || data?.customer?.address || data?.customer_data?.address || '',
+      city: existing.city || data?.customer?.city || data?.customer_data?.city || '',
+      country: existing.country || data?.customer?.country || data?.customer_data?.country || '',
       version: updatedItems[0]?.version || existing.version || 'oro_vivo',
       size: updatedItems[0]?.size || existing.size || 'M',
       gender: updatedItems[0]?.gender || existing.gender || 'Unisex',

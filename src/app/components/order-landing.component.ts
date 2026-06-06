@@ -181,7 +181,9 @@ import { environment } from '../../environments/environment';
                       </div>
                       <div class="flex flex-col gap-0.5 col-span-2">
                         <span class="text-[10px] text-neutral-500 uppercase tracking-wider">DIRECCIÓN DE ENVÍO</span>
-                        <span class="text-neutral-300 font-medium tracking-wide truncate" [title]="order.address">{{ order.address || 'No especificada' }}</span>
+                        <span class="text-neutral-300 font-medium tracking-wide truncate" [title]="order.address + (order.city ? ' - ' + order.city : '') + (order.country ? ', ' + order.country : '')">
+                          {{ order.address || 'No especificada' }}{{ order.city ? ' - ' + order.city : '' }}{{ order.country ? ', ' + order.country : '' }}
+                        </span>
                       </div>
                     </div>
 
@@ -299,7 +301,9 @@ import { environment } from '../../environments/environment';
                   </div>
                   <div class="flex justify-between items-center text-xs">
                     <span class="text-neutral-400 font-sans">Dirección de Envío</span>
-                    <span class="text-white font-sans font-medium truncate max-w-[180px]" [title]="order.address">{{ order.address || 'No especificada' }}</span>
+                    <span class="text-white font-sans font-medium truncate max-w-[180px]" [title]="order.address + (order.city ? ' - ' + order.city : '') + (order.country ? ', ' + order.country : '')">
+                      {{ order.address || 'No especificada' }}{{ order.city ? ' - ' + order.city : '' }}{{ order.country ? ', ' + order.country : '' }}
+                    </span>
                   </div>
                   <div class="flex justify-between items-center text-xs font-sans">
                     <span class="text-neutral-400">Código de Orden</span>

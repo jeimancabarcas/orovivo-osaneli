@@ -667,12 +667,12 @@ import { environment } from '../../environments/environment';
 
                   <!-- Shipping Address -->
                   <div class="flex flex-col gap-2">
-                    <label for="address" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Dirección de Envío (Calle, Ciudad, Departamento)</label>
+                    <label for="address" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Dirección de Envío (Calle, Carrera, Apto, etc.)</label>
                     <input 
                       type="text" 
                       id="address" 
                       formControlName="address"
-                      placeholder="Ej: Calle 10 # 5-20, Apto 301, Cartagena, Bolívar"
+                      placeholder="Ej: Calle 10 # 5-20, Apto 301"
                       class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white placeholder-neutral-600 focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner"
                       [class.border-red-500]="isFieldInvalid('address')"
                     />
@@ -681,15 +681,69 @@ import { environment } from '../../environments/environment';
                     }
                   </div>
 
+                  <!-- Shipping City & Country -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-2">
+                      <label for="city" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Ciudad / Municipio</label>
+                      <input 
+                        type="text" 
+                        id="city" 
+                        formControlName="city"
+                        placeholder="Ej: Cartagena, Medellín, Bogotá..."
+                        class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white placeholder-neutral-600 focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner"
+                        [class.border-red-500]="isFieldInvalid('city')"
+                      />
+                      @if (isFieldInvalid('city')) {
+                        <span class="text-[10px] text-red-400 font-semibold tracking-wide">La ciudad/municipio es requerida</span>
+                      }
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                      <label for="country" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">País</label>
+                      <input 
+                        type="text" 
+                        id="country" 
+                        formControlName="country"
+                        placeholder="Ej: Colombia, España..."
+                        class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white placeholder-neutral-600 focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner"
+                        [class.border-red-500]="isFieldInvalid('country')"
+                      />
+                      @if (isFieldInvalid('country')) {
+                        <span class="text-[10px] text-red-400 font-semibold tracking-wide">El país es requerido</span>
+                      }
+                    </div>
+                  </div>
+
                 </div>
 
                 <!-- Disclaimer of payments -->
                 <div class="p-4 rounded-xl bg-gold-aged/5 border border-gold-aged/20 flex gap-3 items-start max-w-2xl mx-auto text-left select-none mt-4">
                   <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="#C5A854" class="mt-0.5 shrink-0"><path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Z"/></svg>
-                  <p class="text-[10px] sm:text-xs text-neutral-400 leading-relaxed font-serif text-left">
-                    <strong class="text-gold-aged font-sans font-bold uppercase tracking-wider block mb-0.5">Disclaimer de Reserva</strong>
-                    La reserva de tu pieza exclusiva se completará y confirmará de forma definitiva **únicamente una vez que el pago correspondiente de tu pre-orden sea procesado con éxito** a través de la pasarela segura de Bold.
-                  </p>
+                  <div class="flex flex-col gap-2 text-[10px] sm:text-xs text-neutral-400 leading-relaxed font-serif text-left">
+                    <p>
+                      <strong class="text-gold-aged font-sans font-bold uppercase tracking-wider block mb-0.5">Disclaimer de Reserva</strong>
+                      La reserva de tu pieza exclusiva se completará y confirmará de forma definitiva **únicamente una vez que el pago correspondiente de tu pre-orden sea procesado con éxito** a través de la pasarela segura de Bold.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Terms and Data treatment acceptance Checkbox -->
+                <div class="p-4 rounded-xl bg-white/[0.01] border border-white/5 flex flex-col gap-2 max-w-2xl mx-auto text-left mt-4 select-none">
+                  <div class="flex items-start gap-3">
+                    <input 
+                      type="checkbox" 
+                      id="acceptTerms"
+                      formControlName="acceptTerms"
+                      class="w-4 h-4 mt-0.5 rounded border-white/10 bg-neutral-900 text-gold-aged focus:ring-0 focus:outline-none cursor-pointer shrink-0"
+                      [class.border-red-500]="isFieldInvalid('acceptTerms')"
+                    />
+                    <label for="acceptTerms" class="text-[10px] sm:text-xs text-neutral-400 leading-relaxed font-sans cursor-pointer">
+                      Autorizo el tratamiento de mis datos personales de acuerdo con las políticas y leyes de tratamiento de datos vigentes en Colombia, con el fin de gestionar mi pedido y envío, así como para recibir notificaciones, recordatorios y novedades comerciales a través de los medios registrados.
+                    </label>
+                  </div>
+                  @if (isFieldInvalid('acceptTerms')) {
+                    <span class="text-[10px] text-red-400 font-semibold tracking-wide">Es obligatorio aceptar la política de tratamiento de datos personales para continuar.</span>
+                  }
                 </div>
 
                 <div class="h-[1px] bg-white/5 my-2"></div>
@@ -799,7 +853,10 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     email: ['', [Validators.required, Validators.email]],
     countryCode: ['+57', [Validators.required]],
     phone: ['', [Validators.required]],
-    address: ['', [Validators.required]]
+    address: ['', [Validators.required]],
+    city: ['', [Validators.required]],
+    country: ['', [Validators.required]],
+    acceptTerms: [false, [Validators.requiredTrue]]
   });
 
   readonly previewImage = computed(() => {
@@ -875,7 +932,10 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
               email: order.email,
               countryCode: parsedCountryCode,
               phone: parsedPhone,
-              address: order.address
+              address: order.address,
+              city: order.city || '',
+              country: order.country || '',
+              acceptTerms: true
             });
             // Load items into the cart
             if (order.items && order.items.length > 0) {
@@ -1107,6 +1167,8 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
         email: formValue.email,
         phone: combinedPhone,
         address: formValue.address,
+        city: formValue.city,
+        country: formValue.country,
         version: cartItems[0].version,
         size: cartItems[0].size,
         gender: cartItems[0].gender,
