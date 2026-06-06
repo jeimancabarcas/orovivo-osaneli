@@ -309,6 +309,8 @@ export class FirebaseService {
           email: item.email || '',
           phone: item.phone || '',
           address: item.address || '',
+          city: item.city || '',
+          country: item.country || '',
           version: item.version || 'oro_vivo',
           size: item.size || 'M',
           gender: item.gender || 'Unisex',
@@ -321,7 +323,14 @@ export class FirebaseService {
           shippedAt: item.shippedAt || '',
           trackingNumber: item.trackingNumber || '',
           carrier: item.carrier || '',
-          adminNotes: item.adminNotes || ''
+          adminNotes: item.adminNotes || '',
+          boldUpdatedAt: item.boldUpdatedAt || '',
+          bold_code: item.bold_code || '',
+          payment_id: item.payment_id || '',
+          payment_method: item.payment_method || '',
+          merchant_id: item.merchant_id || '',
+          integration: item.integration || '',
+          card: item.card || null
         };
       }
       return null;
