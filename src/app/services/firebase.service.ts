@@ -31,6 +31,13 @@ export interface Order {
   trackingNumber?: string;
   carrier?: string;
   adminNotes?: string;
+  boldUpdatedAt?: string;
+  bold_code?: string;
+  payment_id?: string;
+  payment_method?: string;
+  merchant_id?: string;
+  integration?: string;
+  card?: any;
 }
 
 // Retain PreOrder as a type alias for compatibility in other files if needed
@@ -125,7 +132,14 @@ export class FirebaseService {
             shippedAt: item.shippedAt || '',
             trackingNumber: item.trackingNumber || '',
             carrier: item.carrier || '',
-            adminNotes: item.adminNotes || ''
+            adminNotes: item.adminNotes || '',
+            boldUpdatedAt: item.boldUpdatedAt || '',
+            bold_code: item.bold_code || '',
+            payment_id: item.payment_id || '',
+            payment_method: item.payment_method || '',
+            merchant_id: item.merchant_id || '',
+            integration: item.integration || '',
+            card: item.card || null
           });
         });
 

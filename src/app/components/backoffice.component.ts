@@ -665,6 +665,60 @@ type TabMode = 'dashboard' | 'orders';
               </div>
             }
 
+            <!-- Bold Transaction details if available -->
+            @if (ord.payment_id) {
+              <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-3 text-xs">
+                <span class="text-[10px] font-bold text-gold-aged tracking-wider uppercase block">Detalle de Transacción Bold</span>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-neutral-400">
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[9px] uppercase tracking-wider block text-neutral-500">ID de Pago (Bold)</span>
+                    <span class="font-mono text-white select-all">{{ ord.payment_id }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[9px] uppercase tracking-wider block text-neutral-500">Método de Pago</span>
+                    <span class="text-white">{{ ord.payment_method || 'N/A' }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[9px] uppercase tracking-wider block text-neutral-500">Código de Respuesta</span>
+                    <span class="font-mono text-white">{{ ord.bold_code || 'N/A' }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[9px] uppercase tracking-wider block text-neutral-500">Fecha de Pago</span>
+                    <span class="text-white">{{ ord.boldUpdatedAt ? (ord.boldUpdatedAt | date:'medium') : 'N/A' }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[9px] uppercase tracking-wider block text-neutral-500">ID de Comercio</span>
+                    <span class="font-mono text-white">{{ ord.merchant_id || 'N/A' }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[9px] uppercase tracking-wider block text-neutral-500">Integración</span>
+                    <span class="text-white">{{ ord.integration || 'N/A' }}</span>
+                  </div>
+                </div>
+
+                @if (ord.card) {
+                  <div class="mt-2 pt-2 border-t border-white/5 flex flex-col gap-1">
+                    <span class="text-[9px] uppercase tracking-wider block text-neutral-500">Tarjeta Utilizada</span>
+                    <div class="text-[11px] text-white font-mono flex flex-wrap gap-x-4 gap-y-1">
+                      @if (ord.card.brand) {
+                        <span><strong class="text-neutral-500">Franquicia:</strong> {{ ord.card.brand }}</span>
+                      }
+                      @if (ord.card.last4 || ord.card.number) {
+                        <span><strong class="text-neutral-500">Número:</strong> **** {{ ord.card.last4 || ord.card.number }}</span>
+                      }
+                      @if (ord.card.holder_name || ord.card.holderName) {
+                        <span><strong class="text-neutral-500">Titular:</strong> {{ ord.card.holder_name || ord.card.holderName }}</span>
+                      }
+                      @if (ord.card.card_type || ord.card.cardType) {
+                        <span><strong class="text-neutral-500">Tipo:</strong> {{ ord.card.card_type || ord.card.cardType }}</span>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
             <!-- Notes -->
             <div class="flex flex-col gap-1.5">
               <label for="adminNotes" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Notas Administrativas Internas</label>
