@@ -789,7 +789,12 @@ app.post('/api/admin/sync-bold', async (req, res) => {
 
     // Query Bold notifications API
     console.log(`[Sync Bold] Fetching notifications for payment: ${paymentId}`);
-    const boldResponse = await fetch(`https://integrations.api.bold.co/payments/webhook/notifications/${paymentId}`);
+    const boldApiKey = process.env['BOLD_API_KEY'] || environment.boldApiKey || 'zLDLlEmrn3wSGbG-u6VojBWXnMfJyZtRICAutPNDCF0';
+    const boldResponse = await fetch(`https://integrations.api.bold.co/payments/webhook/notifications/${paymentId}`, {
+      headers: {
+        'Authorization': `x-api-key ${boldApiKey}`
+      }
+    });
     if (!boldResponse.ok) {
       const errorText = await boldResponse.text();
       console.error(`[Sync Bold] Bold API error: ${boldResponse.status} - ${errorText}`);
