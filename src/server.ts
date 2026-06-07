@@ -755,6 +755,88 @@ app.post('/api/admin/notify-shipment', async (req, res) => {
 });
 
 /**
+ * Endpoint to synchronize transaction details with Bold API by paymentId
+ */
+app.post('/api/admin/sync-bold', async (req, res) => {
+  try {
+    // Validate session token
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No autorizado. Token inexistente.' });
+    }
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = Buffer.from(token, 'base64').toString('ascii');
+      if (!decoded.startsWith('OSANELI-ADMIN-SESSION-')) {
+        return res.status(401).json({ error: 'Sesión inválida o expirada.' });
+      }
+    } catch (e) {
+      return res.status(401).json({ error: 'Token malformado.' });
+    }
+
+    const { orderId, paymentId } = req.body;
+    if (!orderId || !paymentId) {
+      return res.status(400).json({ error: 'Faltan parámetros requeridos (orderId o paymentId)' });
+    }
+
+    const orderRef = child(ref(db, 'orders'), orderId);
+    const snapshot = await get(orderRef);
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: 'Orden no encontrada en base de datos.' });
+    }
+
+    const order = snapshot.val();
+
+    // Query Bold notifications API
+    console.log(`[Sync Bold] Fetching notifications for payment: ${paymentId}`);
+    const boldResponse = await fetch(`https://integrations.api.bold.co/payments/webhook/notifications/${paymentId}`);
+    if (!boldResponse.ok) {
+      const errorText = await boldResponse.text();
+      console.error(`[Sync Bold] Bold API error: ${boldResponse.status} - ${errorText}`);
+      return res.status(502).json({ error: `Error de la API de Bold: ${boldResponse.status}` });
+    }
+
+    const boldData = await boldResponse.json() as any;
+    console.log(`[Sync Bold] Received response:`, JSON.stringify(boldData, null, 2));
+
+    if (!boldData.notifications || !Array.isArray(boldData.notifications) || boldData.notifications.length === 0) {
+      return res.status(404).json({ error: 'No se encontraron notificaciones en Bold para este ID de pago.' });
+    }
+
+    // Grab first notification
+    const notification = boldData.notifications[0];
+    const nData = notification.data || {};
+
+    // Update order with bold_metadata and sync any fields if missing
+    const updatedOrder = {
+      ...order,
+      bold_metadata: notification,
+      bold_code: nData.bold_code || order.bold_code || 'B000',
+      payment_method: nData.payment_method || order.payment_method || '',
+      merchant_id: nData.merchant_id || order.merchant_id || '',
+      boldUpdatedAt: nData.created_at || order.boldUpdatedAt || new Date().toISOString()
+    };
+
+    // If card object exists in notification, merge it
+    if (nData.card) {
+      updatedOrder.card = {
+        ...order.card,
+        ...nData.card
+      };
+    }
+
+    // Write updated order back to Firebase
+    await set(orderRef, updatedOrder);
+    console.log(`[Sync Bold] Order ${orderId} synced successfully with Bold metadata.`);
+
+    return res.status(200).json({ success: true, bold_metadata: notification });
+  } catch (error) {
+    console.error('Error synchronizing Bold transaction details:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
  * Serve static files from /browser
  */
 app.use(

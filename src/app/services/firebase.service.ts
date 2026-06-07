@@ -40,6 +40,7 @@ export interface Order {
   merchant_id?: string;
   integration?: string;
   card?: any;
+  bold_metadata?: any;
 }
 
 // Retain PreOrder as a type alias for compatibility in other files if needed
@@ -143,7 +144,8 @@ export class FirebaseService {
             payment_method: item.payment_method || '',
             merchant_id: item.merchant_id || '',
             integration: item.integration || '',
-            card: item.card || null
+            card: item.card || null,
+            bold_metadata: item.bold_metadata || null
           });
         });
 
@@ -330,7 +332,8 @@ export class FirebaseService {
           payment_method: item.payment_method || '',
           merchant_id: item.merchant_id || '',
           integration: item.integration || '',
-          card: item.card || null
+          card: item.card || null,
+          bold_metadata: item.bold_metadata || null
         };
       }
       return null;

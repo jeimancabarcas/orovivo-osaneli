@@ -690,8 +690,33 @@ type TabMode = 'dashboard' | 'orders';
             <!-- Bold Transaction details if available -->
             @if (ord.payment_id) {
               <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-3 text-xs">
-                <span class="text-[10px] font-bold text-gold-aged tracking-wider uppercase block">Detalle de Transacción Bold</span>
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold text-gold-aged tracking-wider uppercase block">Detalle de Transacción Bold</span>
+                  @if (ord.status === 'APPROVED') {
+                    <button 
+                      type="button"
+                      (click)="syncBoldTransaction(ord.id, ord.payment_id)"
+                      [disabled]="syncBoldLoading()"
+                      class="px-3 py-1 rounded bg-gold-aged/10 border border-gold-aged/20 hover:border-gold-aged text-gold-aged font-bold text-[9px] uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center gap-1.5"
+                    >
+                      @if (syncBoldLoading()) {
+                        <div class="w-2.5 h-2.5 border-2 border-gold-aged border-t-transparent rounded-full animate-spin"></div>
+                        <span>Sincronizando...</span>
+                      } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" height="10" viewBox="0 -960 960 960" width="10" fill="currentColor"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 126.5 27T710-696v-104h80v240H550v-80h124q-32-46-82-73t-112-27q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 108-115.5 176T480-160Z"/></svg>
+                        <span>Sincronizar</span>
+                      }
+                    </button>
+                  }
+                </div>
                 
+                @if (syncSuccess()) {
+                  <span class="text-[10px] text-green-400 font-bold block">✓ Sincronizado exitosamente con Bold.</span>
+                }
+                @if (syncError()) {
+                  <span class="text-[10px] text-red-400 font-bold block">⚠ {{ syncError() }}</span>
+                }
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-neutral-400">
                   <div class="flex flex-col gap-0.5">
                     <span class="text-[9px] uppercase tracking-wider block text-neutral-500">ID de Pago (Bold)</span>
@@ -736,6 +761,18 @@ type TabMode = 'dashboard' | 'orders';
                         <span><strong class="text-neutral-500">Tipo:</strong> {{ ord.card.card_type || ord.card.cardType }}</span>
                       }
                     </div>
+                  </div>
+                }
+
+                @if (ord.bold_metadata) {
+                  <div class="mt-2 pt-2 border-t border-white/5 flex flex-col gap-1">
+                    <div class="flex justify-between items-center cursor-pointer select-none" (click)="toggleMetadataCollapsed()">
+                      <span class="text-[9px] uppercase tracking-wider block text-neutral-500">Metadata de Bold (Notificación)</span>
+                      <span class="text-[9px] text-gold-aged font-bold uppercase tracking-wider hover:text-gold-light">{{ showMetadata() ? 'Ocultar' : 'Ver Detalle' }}</span>
+                    </div>
+                    @if (showMetadata()) {
+                      <pre class="bg-black/40 border border-white/5 p-3 rounded-xl text-[9px] font-mono text-neutral-400 overflow-x-auto max-h-48 leading-relaxed mt-1 select-text">{{ ord.bold_metadata | json }}</pre>
+                    }
                   </div>
                 }
               </div>
@@ -845,6 +882,12 @@ export class BackofficeComponent implements OnInit {
   readonly emailSending = signal<boolean>(false);
   readonly emailSuccess = signal<boolean>(false);
   readonly emailError = signal<string>('');
+
+  // Bold sync state
+  readonly syncBoldLoading = signal<boolean>(false);
+  readonly syncSuccess = signal<boolean>(false);
+  readonly syncError = signal<string>('');
+  readonly showMetadata = signal<boolean>(false);
 
   // Admin Reactive Form
   readonly adminForm = this.fb.group({
@@ -1164,6 +1207,9 @@ export class BackofficeComponent implements OnInit {
     this.selectedOrder.set(order);
     this.emailSuccess.set(false);
     this.emailError.set('');
+    this.syncSuccess.set(false);
+    this.syncError.set('');
+    this.showMetadata.set(false);
     
     this.adminForm.patchValue({
       fullName: order.fullName,
@@ -1187,6 +1233,9 @@ export class BackofficeComponent implements OnInit {
     this.selectedOrder.set(null);
     this.emailSuccess.set(false);
     this.emailError.set('');
+    this.syncSuccess.set(false);
+    this.syncError.set('');
+    this.showMetadata.set(false);
   }
 
   async saveChanges(): Promise<void> {
@@ -1264,6 +1313,60 @@ export class BackofficeComponent implements OnInit {
       this.emailError.set('Error de red al conectar con el servidor.');
     } finally {
       this.emailSending.set(false);
+    }
+  }
+
+  toggleMetadataCollapsed(): void {
+    this.showMetadata.update(v => !v);
+  }
+
+  async syncBoldTransaction(orderId: string, paymentId: string): Promise<void> {
+    this.syncBoldLoading.set(true);
+    this.syncSuccess.set(false);
+    this.syncError.set('');
+
+    if (!isPlatformBrowser(this.platformId)) return;
+    const token = localStorage.getItem('osaneli_admin_token');
+
+    if (!token) {
+      this.syncError.set('No autorizado. Vuelve a ingresar.');
+      this.syncBoldLoading.set(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/sync-bold', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ orderId, paymentId })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        this.syncSuccess.set(true);
+        // Update local order reference so template updates reactively with bold_metadata
+        const currentOrder = this.selectedOrder();
+        if (currentOrder && currentOrder.id === orderId) {
+          this.selectedOrder.set({
+            ...currentOrder,
+            bold_metadata: data.bold_metadata,
+            bold_code: data.bold_metadata?.data?.bold_code || currentOrder.bold_code,
+            payment_method: data.bold_metadata?.data?.payment_method || currentOrder.payment_method,
+            merchant_id: data.bold_metadata?.data?.merchant_id || currentOrder.merchant_id,
+            boldUpdatedAt: data.bold_metadata?.data?.created_at || currentOrder.boldUpdatedAt,
+            card: data.bold_metadata?.data?.card ? { ...currentOrder.card, ...data.bold_metadata.data.card } : currentOrder.card
+          });
+        }
+      } else {
+        this.syncError.set(data.error || 'Falla al sincronizar la transacción con Bold.');
+      }
+    } catch (err) {
+      console.error('Network error during Bold synchronization:', err);
+      this.syncError.set('Error de red al intentar sincronizar con el servidor.');
+    } finally {
+      this.syncBoldLoading.set(false);
     }
   }
 
