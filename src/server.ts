@@ -623,7 +623,8 @@ app.post('/api/bold-webhook', async (req, res) => {
       id: orderId,
       status: newStatus,
       boldEventType: type,
-      boldUpdatedAt: new Date().toISOString()
+      boldUpdatedAt: new Date().toISOString(),
+      bold_metadata: req.body
     };
 
     console.log(`[Webhook] Escribiendo datos actualizados en Firebase para el pedido "${orderId}"...`);
@@ -787,9 +788,9 @@ app.post('/api/admin/sync-bold', async (req, res) => {
 
     const order = snapshot.val();
 
-    // Query Bold payment-voucher API
-    console.log(`[Sync Bold] Fetching voucher for payment: ${paymentId}`);
-    const boldResponse = await fetch(`https://payments.api.bold.co/v2/payment-voucher/${paymentId}`, {
+    // Query Bold notifications API
+    console.log(`[Sync Bold] Fetching notifications for payment: ${paymentId}`);
+    const boldResponse = await fetch(`https://integrations.api.bold.co/payments/webhook/notifications/${paymentId}`, {
       headers: {
         'Authorization': `x-api-key ${environment.boldApiKey}`
       }
@@ -803,18 +804,15 @@ app.post('/api/admin/sync-bold', async (req, res) => {
     const boldData = await boldResponse.json() as any;
     console.log(`[Sync Bold] Received response:`, JSON.stringify(boldData, null, 2));
 
-    // Update order with bold_metadata and sync any fields if missing
+    // Update order with bold_metadata only
     const updatedOrder = {
       ...order,
-      bold_metadata: boldData,
-      bold_code: boldData.payment_status === 'APPROVED' ? 'B000' : (boldData.payment_status || order.bold_code || 'B000'),
-      payment_method: boldData.payment_method || order.payment_method || '',
-      boldUpdatedAt: boldData.transaction_date || order.boldUpdatedAt || new Date().toISOString()
+      bold_metadata: boldData
     };
 
     // Write updated order back to Firebase
     await set(orderRef, updatedOrder);
-    console.log(`[Sync Bold] Order ${orderId} synced successfully with Bold voucher metadata.`);
+    console.log(`[Sync Bold] Order ${orderId} synced successfully with Bold metadata.`);
 
     return res.status(200).json({ success: true, bold_metadata: boldData });
   } catch (error) {

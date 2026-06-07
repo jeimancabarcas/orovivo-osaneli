@@ -1349,27 +1349,9 @@ export class BackofficeComponent implements OnInit {
         // Update local order reference so template updates reactively with bold_metadata
         const currentOrder = this.selectedOrder();
         if (currentOrder && currentOrder.id === orderId) {
-          const meta = data.bold_metadata;
-          const isVoucher = meta && !meta.data;
-          
           this.selectedOrder.set({
             ...currentOrder,
-            bold_metadata: meta,
-            bold_code: isVoucher
-              ? (meta.payment_status === 'APPROVED' ? 'B000' : (meta.payment_status || currentOrder.bold_code))
-              : (meta?.data?.bold_code || currentOrder.bold_code),
-            payment_method: isVoucher
-              ? (meta.payment_method || currentOrder.payment_method)
-              : (meta?.data?.payment_method || currentOrder.payment_method),
-            boldUpdatedAt: isVoucher
-              ? (meta.transaction_date || currentOrder.boldUpdatedAt)
-              : (meta?.data?.created_at || currentOrder.boldUpdatedAt),
-            merchant_id: isVoucher
-              ? (meta.merchant_id || currentOrder.merchant_id)
-              : (meta?.data?.merchant_id || currentOrder.merchant_id),
-            card: (!isVoucher && meta?.data?.card)
-              ? { ...currentOrder.card, ...meta.data.card }
-              : currentOrder.card
+            bold_metadata: data.bold_metadata
           });
         }
       } else {
