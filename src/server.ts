@@ -604,6 +604,14 @@ app.post('/api/bold-webhook', async (req, res) => {
 
     const serialNumber = assignedFirstOroVivoSerial || (newStatus === 'APPROVED' ? 'OSN-CONFIRMED' : '');
 
+    let taxes = existing.taxes || null;
+    if (data?.amount?.taxes && Array.isArray(data.amount.taxes)) {
+      taxes = data.amount.taxes.map((t: any) => ({
+        type: t.type || 'VAT',
+        value: Number(t.value || 0)
+      }));
+    }
+
     const updatedOrder = {
       ...existing,
       ...data,
@@ -619,6 +627,7 @@ app.post('/api/bold-webhook', async (req, res) => {
       quantity: Number(existing.quantity || data?.quantity || updatedItems.reduce((sum: number, it: any) => sum + (it.quantity || 1), 0) || 1),
       serialNumber: serialNumber,
       items: updatedItems,
+      taxes: taxes,
       
       id: orderId,
       status: newStatus,
@@ -804,10 +813,19 @@ app.post('/api/admin/sync-bold', async (req, res) => {
     const boldData = await boldResponse.json() as any;
     console.log(`[Sync Bold] Received response:`, JSON.stringify(boldData, null, 2));
 
-    // Update order with bold_metadata only
+    let taxes = order.taxes || null;
+    if (boldData?.data?.amount?.taxes && Array.isArray(boldData.data.amount.taxes)) {
+      taxes = boldData.data.amount.taxes.map((t: any) => ({
+        type: t.type || 'VAT',
+        value: Number(t.value || 0)
+      }));
+    }
+
+    // Update order with bold_metadata and taxes if present
     const updatedOrder = {
       ...order,
-      bold_metadata: boldData
+      bold_metadata: boldData,
+      ...(taxes ? { taxes } : {})
     };
 
     // Write updated order back to Firebase

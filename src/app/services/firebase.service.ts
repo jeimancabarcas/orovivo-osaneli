@@ -12,6 +12,11 @@ export interface OrderItem {
   serialNumbers?: string[];
 }
 
+export interface TaxItem {
+  type: string;
+  value: number;
+}
+
 export interface Order {
   id: string;
   fullName: string;
@@ -25,6 +30,7 @@ export interface Order {
   gender?: string;
   quantity: number;
   items?: OrderItem[];
+  taxes?: TaxItem[];
   status: 'CREATED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'VOIDED' | 'VOID_REJECTED';
   serialNumber?: string;
   createdAt: Date;
@@ -145,7 +151,8 @@ export class FirebaseService {
             merchant_id: item.merchant_id || '',
             integration: item.integration || '',
             card: item.card || null,
-            bold_metadata: item.bold_metadata || null
+            bold_metadata: item.bold_metadata || null,
+            taxes: item.taxes || null
           });
         });
 
@@ -333,7 +340,8 @@ export class FirebaseService {
           merchant_id: item.merchant_id || '',
           integration: item.integration || '',
           card: item.card || null,
-          bold_metadata: item.bold_metadata || null
+          bold_metadata: item.bold_metadata || null,
+          taxes: item.taxes || null
         };
       }
       return null;
