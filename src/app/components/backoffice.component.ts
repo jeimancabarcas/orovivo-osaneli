@@ -144,7 +144,7 @@ type TabMode = 'dashboard' | 'orders';
               </div>
 
               <!-- Financial Metrics Row -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                 <!-- Card: Bold Commission -->
                 <div class="glass-effect rounded-2xl p-6 border border-white/5 shadow flex flex-col gap-2 relative overflow-hidden animate-reveal">
                   <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none"></div>
@@ -161,12 +161,20 @@ type TabMode = 'dashboard' | 'orders';
                   <span class="text-[10px] text-neutral-500 italic mt-2">Calculado a $100.000 COP por prenda</span>
                 </div>
 
+                <!-- Card: GMF Tax (4x1000) -->
+                <div class="glass-effect rounded-2xl p-6 border border-white/5 shadow flex flex-col gap-2 relative overflow-hidden animate-reveal">
+                  <div class="absolute inset-0 bg-gradient-to-br from-yellow-600/5 to-transparent pointer-events-none"></div>
+                  <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">IMPUESTO 4x1000 (GMF)</span>
+                  <span class="text-2xl sm:text-3xl font-serif font-black text-yellow-500 leading-none">$ {{ stats().gmfFormatted }} COP</span>
+                  <span class="text-[10px] text-neutral-500 italic mt-2">Calculado como el 0.4% de los ingresos aprobados</span>
+                </div>
+
                 <!-- Card: Utility / Profit -->
                 <div class="glass-effect rounded-2xl p-6 border border-white/5 shadow flex flex-col gap-2 relative overflow-hidden animate-reveal">
                   <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none"></div>
                   <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">UTILIDAD NETAS ESTIMADA</span>
                   <span class="text-2xl sm:text-3xl font-serif font-black text-green-400 leading-none">$ {{ stats().utilityFormatted }} COP</span>
-                  <span class="text-[10px] text-neutral-500 italic mt-2">Ventas - Costo Bold - Producción</span>
+                  <span class="text-[10px] text-neutral-500 italic mt-2">Ventas - Costo Bold - Producción - 4x1000</span>
                 </div>
               </div>
 
@@ -1855,8 +1863,11 @@ export class BackofficeComponent implements OnInit {
     // Production Cost: $100.000 COP per shirt
     const productionCost = totalItemsSold * 100000;
 
-    // Utility: Total Sales - Total Bold Commission - Production Cost
-    const utility = totalSales - totalBoldCommission - productionCost;
+    // 4x1000 GMF: 0.4% of total sales
+    const gmf = totalSales * 0.004;
+
+    // Utility: Total Sales - Total Bold Commission - Production Cost - GMF
+    const utility = totalSales - totalBoldCommission - productionCost - gmf;
 
     // Total drafts (borradores)
     const totalDrafts = orders.filter(o => o.status === 'CREATED' || o.status === 'PENDING').length;
@@ -1872,6 +1883,7 @@ export class BackofficeComponent implements OnInit {
       // New Financial Fields
       boldCommissionRate: boldRatePercentage,
       boldCommissionFormatted: Math.round(totalBoldCommission).toLocaleString('es-CO'),
+      gmfFormatted: Math.round(gmf).toLocaleString('es-CO'),
       productionCostFormatted: productionCost.toLocaleString('es-CO'),
       utilityFormatted: Math.round(utility).toLocaleString('es-CO'),
       editions: {
