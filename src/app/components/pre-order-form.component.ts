@@ -706,7 +706,8 @@ import { environment } from '../../environments/environment';
                       <label for="city" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Ciudad / Municipio</label>
                       <select 
                         id="city" 
-                        formControlName="city"
+                        [value]="selectedCitySelect()"
+                        (change)="onCitySelectChange($event)"
                         class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner cursor-pointer w-full"
                         [class.border-red-500]="isFieldInvalid('city')"
                       >
@@ -716,7 +717,20 @@ import { environment } from '../../environments/environment';
                         @for (ct of availableCities(); track ct) {
                           <option [value]="ct">{{ ct }}</option>
                         }
+                        @if (selectedCountry()) {
+                          <option value="Otro">Otro (Escribir ciudad)</option>
+                        }
                       </select>
+                      @if (showCustomCityInput()) {
+                        <input 
+                          type="text" 
+                          id="city-custom"
+                          formControlName="city"
+                          placeholder="Escriba su ciudad..." 
+                          class="mt-2 px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white placeholder-neutral-600 focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner"
+                          [class.border-red-500]="isFieldInvalid('city')"
+                        />
+                      }
                       @if (isFieldInvalid('city')) {
                         <span class="text-[10px] text-red-400 font-semibold tracking-wide">La ciudad/municipio es requerida</span>
                       }
@@ -897,6 +911,9 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     return this.citiesMap[country] || [];
   });
 
+  readonly selectedCitySelect = signal<string>('');
+  readonly showCustomCityInput = signal<boolean>(false);
+
   readonly previewImage = computed(() => {
     const version = this.selectedVersion();
     const view = this.selectedPreviewView();
@@ -965,14 +982,31 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
                 }
               }
             }
+            const loadedCountry = order.country || '';
+            const loadedCity = order.city || '';
+            const standardCities = this.citiesMap[loadedCountry] || [];
+            
+            if (loadedCity) {
+              if (standardCities.includes(loadedCity)) {
+                this.selectedCitySelect.set(loadedCity);
+                this.showCustomCityInput.set(false);
+              } else {
+                this.selectedCitySelect.set('Otro');
+                this.showCustomCityInput.set(true);
+              }
+            } else {
+              this.selectedCitySelect.set('');
+              this.showCustomCityInput.set(false);
+            }
+
             this.preOrderForm.patchValue({
               fullName: order.fullName,
               email: order.email,
               countryCode: parsedCountryCode,
               phone: parsedPhone,
               address: order.address,
-              city: order.city || '',
-              country: order.country || '',
+              city: loadedCity,
+              country: loadedCountry,
               acceptTerms: true
             });
             // Load items into the cart
@@ -1007,6 +1041,8 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     this.preOrderForm.reset({
       countryCode: '+57'
     });
+    this.selectedCitySelect.set('');
+    this.showCustomCityInput.set(false);
     this.cart.set([]);
     // Navigate back to home page without query params to clean URL
     this.router.navigate(['/']);
@@ -1100,7 +1136,33 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   }
 
   onCountryChange(): void {
-    this.preOrderForm.patchValue({ city: '' });
+    const cityCtrl = this.preOrderForm.get('city');
+    if (cityCtrl) {
+      cityCtrl.setValue('');
+      cityCtrl.markAsPristine();
+      cityCtrl.markAsUntouched();
+    }
+    this.selectedCitySelect.set('');
+    this.showCustomCityInput.set(false);
+  }
+
+  onCitySelectChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const value = select.value;
+    this.selectedCitySelect.set(value);
+    
+    const cityCtrl = this.preOrderForm.get('city');
+    if (cityCtrl) {
+      cityCtrl.markAsDirty();
+      cityCtrl.markAsTouched();
+      if (value === 'Otro') {
+        this.showCustomCityInput.set(true);
+        cityCtrl.setValue('');
+      } else {
+        this.showCustomCityInput.set(false);
+        cityCtrl.setValue(value);
+      }
+    }
   }
 
   private startCountdown(): void {
