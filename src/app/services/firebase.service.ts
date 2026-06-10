@@ -6,7 +6,7 @@ import { environment } from '../../environments/environment';
 
 export interface OrderItem {
   version: 'oro_vivo' | 'edicion_secreta';
-  size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
+  size: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
   gender: string;
   quantity: number;
   serialNumbers?: string[];
@@ -26,7 +26,7 @@ export interface Order {
   city?: string;
   country?: string;
   version: 'oro_vivo' | 'edicion_secreta';
-  size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
+  size: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
   gender?: string;
   quantity: number;
   items?: OrderItem[];

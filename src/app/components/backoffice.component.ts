@@ -202,7 +202,7 @@ type TabMode = 'dashboard' | 'orders';
                 <div class="glass-effect rounded-2xl p-6 border border-white/5 flex flex-col gap-5">
                   <h3 class="text-xs font-bold text-neutral-400 tracking-widest uppercase border-b border-white/5 pb-2">Distribución por Tallas</h3>
                   <div class="flex flex-col gap-4 py-2">
-                    @for (sz of ['S', 'M', 'L', 'XL', 'XXL']; track sz) {
+                    @for (sz of ['XS', 'S', 'M', 'L', 'XL', 'XXL']; track sz) {
                       <div class="flex flex-col gap-1.5">
                         <div class="flex justify-between text-xs font-medium">
                           <span>Talla {{ sz }}</span>
@@ -263,7 +263,7 @@ type TabMode = 'dashboard' | 'orders';
                           </tr>
                         </thead>
                         <tbody>
-                          @for (sz of ['S', 'M', 'L', 'XL', 'XXL']; track sz) {
+                          @for (sz of ['XS', 'S', 'M', 'L', 'XL', 'XXL']; track sz) {
                             <tr class="border-b border-white/5 hover:bg-white/[0.01] transition-colors cursor-default">
                               <td class="py-2.5 font-bold text-white text-xs">Talla {{ sz }}</td>
                               <td class="py-2.5 text-right font-mono text-neutral-300">
@@ -324,7 +324,7 @@ type TabMode = 'dashboard' | 'orders';
                           </tr>
                         </thead>
                         <tbody>
-                          @for (sz of ['S', 'M', 'L', 'XL', 'XXL']; track sz) {
+                          @for (sz of ['XS', 'S', 'M', 'L', 'XL', 'XXL']; track sz) {
                             <tr class="border-b border-white/5 hover:bg-white/[0.01] transition-colors cursor-default">
                               <td class="py-2.5 font-bold text-white text-xs">Talla {{ sz }}</td>
                               <td class="py-2.5 text-right font-mono text-neutral-300">
@@ -823,6 +823,7 @@ type TabMode = 'dashboard' | 'orders';
                         (change)="onEditItemSizeChange($event)"
                         class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs cursor-pointer font-serif"
                       >
+                        <option value="XS">XS</option>
                         <option value="S">S</option>
                         <option value="M">M</option>
                         <option value="L">L</option>
@@ -904,6 +905,7 @@ type TabMode = 'dashboard' | 'orders';
                                 (change)="updateEditItemField($index, 'size', $event)"
                                 class="px-2 py-1.5 bg-neutral-955 border border-white/10 rounded-lg text-white text-[10px] font-serif focus:outline-none focus:border-gold-aged/40 cursor-pointer"
                               >
+                                <option value="XS">XS</option>
                                 <option value="S">S</option>
                                 <option value="M">M</option>
                                 <option value="L">L</option>
@@ -1426,6 +1428,7 @@ type TabMode = 'dashboard' | 'orders';
                     (change)="onManualItemSizeChange($event)"
                     class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs cursor-pointer"
                   >
+                    <option value="XS">XS</option>
                     <option value="S">S</option>
                     <option value="M">M</option>
                     <option value="L">L</option>
@@ -1598,7 +1601,7 @@ export class BackofficeComponent implements OnInit {
   readonly selectedOrderMode = signal<'edit' | 'shipping' | 'bold' | null>(null);
   readonly editOrderItems = signal<OrderItem[]>([]);
   readonly currentEditItemVersion = signal<'oro_vivo' | 'edicion_secreta'>('oro_vivo');
-  readonly currentEditItemSize = signal<'S' | 'M' | 'L' | 'XL' | 'XXL'>('M');
+  readonly currentEditItemSize = signal<'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'>('M');
   readonly currentEditItemGender = signal<string>('Unisex');
   readonly currentEditItemQuantity = signal<number>(1);
   readonly saveLoading = signal<boolean>(false);
@@ -1647,7 +1650,7 @@ export class BackofficeComponent implements OnInit {
 
   // Current item being configured in manual order modal
   readonly currentManualItemVersion = signal<'oro_vivo' | 'edicion_secreta'>('oro_vivo');
-  readonly currentManualItemSize = signal<'S' | 'M' | 'L' | 'XL' | 'XXL'>('M');
+  readonly currentManualItemSize = signal<'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'>('M');
   readonly currentManualItemGender = signal<string>('Unisex');
   readonly currentManualItemQuantity = signal<number>(1);
 
@@ -1759,22 +1762,23 @@ export class BackofficeComponent implements OnInit {
     let oroVivo = 0;
     let edicionSecreta = 0;
     
-    const sizes: Record<string, number> = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
+    const sizes: Record<string, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
     const genders: Record<string, number> = { Hombre: 0, Mujer: 0, Unisex: 0 };
 
     const editionsBreakdown = {
       oro_vivo: {
-        sizes: { S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>,
+        sizes: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>,
         genders: { Hombre: 0, Mujer: 0, Unisex: 0 } as Record<string, number>
       },
       edicion_secreta: {
-        sizes: { S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>,
+        sizes: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>,
         genders: { Hombre: 0, Mujer: 0, Unisex: 0 } as Record<string, number>
       }
     };
 
     const sizeGenderBreakdown = {
       oro_vivo: {
+        XS: { Hombre: 0, Mujer: 0, Unisex: 0 },
         S: { Hombre: 0, Mujer: 0, Unisex: 0 },
         M: { Hombre: 0, Mujer: 0, Unisex: 0 },
         L: { Hombre: 0, Mujer: 0, Unisex: 0 },
@@ -1782,6 +1786,7 @@ export class BackofficeComponent implements OnInit {
         XXL: { Hombre: 0, Mujer: 0, Unisex: 0 }
       } as Record<string, Record<string, number>>,
       edicion_secreta: {
+        XS: { Hombre: 0, Mujer: 0, Unisex: 0 },
         S: { Hombre: 0, Mujer: 0, Unisex: 0 },
         M: { Hombre: 0, Mujer: 0, Unisex: 0 },
         L: { Hombre: 0, Mujer: 0, Unisex: 0 },
@@ -2058,7 +2063,7 @@ export class BackofficeComponent implements OnInit {
 
   onEditItemSizeChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    this.currentEditItemSize.set(select.value as 'S' | 'M' | 'L' | 'XL' | 'XXL');
+    this.currentEditItemSize.set(select.value as 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL');
   }
 
   onEditItemGenderChange(event: Event): void {
@@ -2147,7 +2152,7 @@ export class BackofficeComponent implements OnInit {
 
   onManualItemSizeChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    this.currentManualItemSize.set(select.value as 'S' | 'M' | 'L' | 'XL' | 'XXL');
+    this.currentManualItemSize.set(select.value as 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL');
   }
 
   onManualItemGenderChange(event: Event): void {

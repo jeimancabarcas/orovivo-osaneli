@@ -439,7 +439,7 @@ import { environment } from '../../environments/environment';
                 <div class="flex flex-col gap-3">
                   <label class="text-xs font-bold tracking-widest text-neutral-400 uppercase font-sans">Talla (Boxy)</label>
                   <div class="flex gap-1.5">
-                    @for (sz of ['S', 'M', 'L', 'XL', 'XXL']; track sz) {
+                    @for (sz of ['XS', 'S', 'M', 'L', 'XL', 'XXL']; track sz) {
                       <button 
                         type="button"
                         (click)="setSize(sz)"
@@ -850,7 +850,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
 
   // Standalone Garment selection signals (signals are used directly instead of form controls to build the cart items)
   readonly selectedVersion = signal<'oro_vivo' | 'edicion_secreta'>('oro_vivo');
-  readonly selectedSize = signal<'S' | 'M' | 'L' | 'XL' | 'XXL'>('M');
+  readonly selectedSize = signal<'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'>('M');
   readonly selectedGender = signal<string>('Unisex');
   readonly selectedQuantity = signal<number>(1);
 
