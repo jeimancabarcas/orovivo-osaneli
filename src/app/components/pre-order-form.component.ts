@@ -864,7 +864,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     const view = this.selectedPreviewView();
     if (version === 'oro_vivo') {
       if (view === 'collar') return '/oro_vivo_collar.png';
-      return view === 'front' ? '/oro_vivo_front.jpeg' : '/oro_vivo_back.png';
+      return view === 'front' ? '/oro_vivo_front.jpeg' : '/oro_vivo_back.jpeg';
     } else {
       if (view === 'collar') return '/oro_vivo_black_collar.jpeg';
       return view === 'front' ? '/oro_vivo_black_front.jpeg' : '/oro_vivo_black_back.jpeg';
