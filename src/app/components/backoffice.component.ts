@@ -1788,7 +1788,11 @@ export class BackofficeComponent implements OnInit {
           sizes[sz] += qty;
         }
         
-        const g = it.gender || 'Unisex';
+        const rawGender = it.gender || 'Unisex';
+        let g = 'Unisex';
+        if (rawGender.toLowerCase() === 'hombre') g = 'Hombre';
+        else if (rawGender.toLowerCase() === 'mujer') g = 'Mujer';
+
         if (genders[g] !== undefined) {
           genders[g] += qty;
         }

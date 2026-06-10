@@ -684,32 +684,41 @@ import { environment } from '../../environments/environment';
                   <!-- Shipping City & Country -->
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="flex flex-col gap-2">
-                      <label for="city" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Ciudad / Municipio</label>
-                      <input 
-                        type="text" 
-                        id="city" 
-                        formControlName="city"
-                        placeholder="Ej: Cartagena, Medellín, Bogotá..."
-                        class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white placeholder-neutral-600 focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner"
-                        [class.border-red-500]="isFieldInvalid('city')"
-                      />
-                      @if (isFieldInvalid('city')) {
-                        <span class="text-[10px] text-red-400 font-semibold tracking-wide">La ciudad/municipio es requerida</span>
+                      <label for="country" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">País</label>
+                      <select 
+                        id="country" 
+                        formControlName="country"
+                        (change)="onCountryChange()"
+                        class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner cursor-pointer w-full"
+                        [class.border-red-500]="isFieldInvalid('country')"
+                      >
+                        <option value="" disabled selected>Seleccione un país...</option>
+                        @for (c of countries; track c) {
+                          <option [value]="c">{{ c }}</option>
+                        }
+                      </select>
+                      @if (isFieldInvalid('country')) {
+                        <span class="text-[10px] text-red-400 font-semibold tracking-wide">El país es requerido</span>
                       }
                     </div>
 
                     <div class="flex flex-col gap-2">
-                      <label for="country" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">País</label>
-                      <input 
-                        type="text" 
-                        id="country" 
-                        formControlName="country"
-                        placeholder="Ej: Colombia, España..."
-                        class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white placeholder-neutral-600 focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner"
-                        [class.border-red-500]="isFieldInvalid('country')"
-                      />
-                      @if (isFieldInvalid('country')) {
-                        <span class="text-[10px] text-red-400 font-semibold tracking-wide">El país es requerido</span>
+                      <label for="city" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Ciudad / Municipio</label>
+                      <select 
+                        id="city" 
+                        formControlName="city"
+                        class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner cursor-pointer w-full"
+                        [class.border-red-500]="isFieldInvalid('city')"
+                      >
+                        <option value="" disabled selected>
+                          {{ selectedCountry() ? 'Seleccione una ciudad...' : 'Seleccione primero un país...' }}
+                        </option>
+                        @for (ct of availableCities(); track ct) {
+                          <option [value]="ct">{{ ct }}</option>
+                        }
+                      </select>
+                      @if (isFieldInvalid('city')) {
+                        <span class="text-[10px] text-red-400 font-semibold tracking-wide">La ciudad/municipio es requerida</span>
                       }
                     </div>
                   </div>
@@ -803,7 +812,13 @@ import { environment } from '../../environments/environment';
       </div>
     }
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [`
+    select option {
+      background-color: #111111 !important;
+      color: #ffffff !important;
+    }
+  `]
 })
 export class PreOrderFormComponent implements OnInit, OnDestroy {
   protected readonly preOrderService = inject(PreOrderService);
@@ -857,6 +872,29 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     city: ['', [Validators.required]],
     country: ['', [Validators.required]],
     acceptTerms: [false, [Validators.requiredTrue]]
+  });
+
+  readonly countries = ['Colombia', 'España', 'Estados Unidos', 'México', 'Panamá', 'Ecuador', 'Perú', 'Chile'];
+
+  readonly citiesMap: Record<string, string[]> = {
+    'Colombia': ['Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Bucaramanga', 'Cúcuta', 'Pereira', 'Santa Marta', 'Ibagué', 'Manizales', 'Pasto', 'Montería', 'Neiva', 'Villavicencio', 'Valledupar', 'Armenia', 'Sincelejo', 'Popayán'],
+    'España': ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Zaragoza', 'Málaga', 'Murcia', 'Palma', 'Bilbao'],
+    'Estados Unidos': ['Miami', 'New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Diego', 'Dallas'],
+    'México': ['Ciudad de México', 'Guadalajara', 'Monterrey', 'Puebla', 'Tijuana', 'León', 'Querétaro'],
+    'Panamá': ['Panamá', 'San Miguelito', 'Tocumen', 'David', 'Las Cumbres', 'La Chorrera'],
+    'Ecuador': ['Quito', 'Guayaquil', 'Cuenca', 'Santo Domingo', 'Machala', 'Manta', 'Portoviejo'],
+    'Perú': ['Lima', 'Arequipa', 'Trujillo', 'Chiclayo', 'Piura', 'Iquitos', 'Cusco'],
+    'Chile': ['Santiago', 'Valparaíso', 'Concepción', 'La Serena', 'Antofagasta', 'Temuco']
+  };
+
+  readonly selectedCountry = toSignal(
+    this.preOrderForm.get('country')!.valueChanges,
+    { initialValue: '' }
+  );
+
+  readonly availableCities = computed(() => {
+    const country = this.selectedCountry() || '';
+    return this.citiesMap[country] || [];
   });
 
   readonly previewImage = computed(() => {
@@ -1059,6 +1097,10 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   isFieldInvalid(fieldName: string): boolean {
     const field = this.preOrderForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
+  }
+
+  onCountryChange(): void {
+    this.preOrderForm.patchValue({ city: '' });
   }
 
   private startCountdown(): void {
