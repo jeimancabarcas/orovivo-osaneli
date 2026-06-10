@@ -748,12 +748,16 @@ type TabMode = 'dashboard' | 'orders';
                 </div>
                 <div class="flex flex-col gap-1.5">
                   <label for="country" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">País</label>
-                  <input 
-                    type="text" 
+                  <select 
                     id="country"
                     formControlName="country"
-                    class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs"
-                  />
+                    class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs cursor-pointer w-full"
+                  >
+                    <option value="" disabled>Seleccione un país...</option>
+                    @for (c of countries; track c) {
+                      <option [value]="c">{{ c }}</option>
+                    }
+                  </select>
                 </div>
               </div>
 
@@ -1373,13 +1377,16 @@ type TabMode = 'dashboard' | 'orders';
                 </div>
                 <div class="flex flex-col gap-1.5">
                   <label for="manualCountry" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">País</label>
-                  <input 
-                    type="text" 
+                  <select 
                     id="manualCountry"
                     formControlName="country"
-                    class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs"
-                    placeholder="Ej. Colombia"
-                  />
+                    class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs cursor-pointer w-full"
+                  >
+                    <option value="" disabled>Seleccione un país...</option>
+                    @for (c of countries; track c) {
+                      <option [value]="c">{{ c }}</option>
+                    }
+                  </select>
                 </div>
               </div>
             </div>
@@ -1554,6 +1561,7 @@ type TabMode = 'dashboard' | 'orders';
 })
 export class BackofficeComponent implements OnInit {
   readonly dropLimit = environment.dropLimit;
+  readonly countries = ['Colombia', 'España', 'Estados Unidos', 'México', 'Panamá', 'Ecuador', 'Perú', 'Chile'];
   private readonly firebaseService = inject(FirebaseService);
   private readonly fb = inject(FormBuilder);
   private readonly platformId = inject(PLATFORM_ID);
