@@ -240,10 +240,10 @@ type TabMode = 'dashboard' | 'orders';
               <div class="glass-effect rounded-2xl p-6 border border-white/5 flex flex-col gap-6 mt-6 animate-reveal">
                 <div class="border-b border-white/5 pb-3">
                   <h3 class="text-xs font-bold text-neutral-400 tracking-widest uppercase">Inventario Detallado por Edición</h3>
-                  <p class="text-[10px] text-neutral-500 mt-1">Unidades vendidas y aprobadas discriminadas por talla y género en cada colección</p>
+                  <p class="text-[10px] text-neutral-500 mt-1">Matriz de unidades vendidas y aprobadas discriminadas por la intersección de talla y género</p>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
                   <!-- Oro Vivo Column -->
                   <div class="flex flex-col gap-4">
                     <div class="flex items-center gap-2 pb-1.5 border-b border-white/5">
@@ -251,32 +251,57 @@ type TabMode = 'dashboard' | 'orders';
                       <span class="text-xs font-bold text-gold-aged tracking-wider uppercase">Colección Oro Vivo</span>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                      <!-- Sizes Subgrid -->
-                      <div class="flex flex-col gap-2 bg-black/20 p-3.5 rounded-xl border border-white/[0.02]">
-                        <span class="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Unidades por Talla</span>
-                        <div class="flex flex-col gap-2 mt-1">
+                    <div class="overflow-x-auto bg-black/20 p-4 rounded-2xl border border-white/[0.02]">
+                      <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr class="border-b border-white/10 text-neutral-500 font-bold uppercase text-[9px] tracking-wider cursor-default">
+                            <th class="py-2.5">Talla</th>
+                            <th class="py-2.5 text-right">Hombre</th>
+                            <th class="py-2.5 text-right">Mujer</th>
+                            <th class="py-2.5 text-right">Unisex</th>
+                            <th class="py-2.5 text-right">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
                           @for (sz of ['S', 'M', 'L', 'XL', 'XXL']; track sz) {
-                            <div class="flex justify-between items-center text-xs">
-                              <span class="text-neutral-400">Talla {{ sz }}</span>
-                              <span class="font-mono font-bold text-white bg-white/5 px-2 py-0.5 rounded">{{ stats().editionsBreakdown.oro_vivo.sizes[sz] || 0 }}</span>
-                            </div>
+                            <tr class="border-b border-white/5 hover:bg-white/[0.01] transition-colors cursor-default">
+                              <td class="py-2.5 font-bold text-white text-xs">Talla {{ sz }}</td>
+                              <td class="py-2.5 text-right font-mono text-neutral-300">
+                                {{ stats().sizeGenderBreakdown.oro_vivo[sz]['Hombre'] || 0 }}
+                              </td>
+                              <td class="py-2.5 text-right font-mono text-neutral-300">
+                                {{ stats().sizeGenderBreakdown.oro_vivo[sz]['Mujer'] || 0 }}
+                              </td>
+                              <td class="py-2.5 text-right font-mono text-neutral-300">
+                                {{ stats().sizeGenderBreakdown.oro_vivo[sz]['Unisex'] || 0 }}
+                              </td>
+                              <td class="py-2.5 text-right font-mono font-bold text-gold-aged">
+                                <span class="bg-gold-aged/10 px-2 py-0.5 rounded border border-gold-aged/10">
+                                  {{ (stats().sizeGenderBreakdown.oro_vivo[sz]['Hombre'] || 0) + 
+                                     (stats().sizeGenderBreakdown.oro_vivo[sz]['Mujer'] || 0) + 
+                                     (stats().sizeGenderBreakdown.oro_vivo[sz]['Unisex'] || 0) }}
+                                </span>
+                              </td>
+                            </tr>
                           }
-                        </div>
-                      </div>
-
-                      <!-- Genders Subgrid -->
-                      <div class="flex flex-col gap-2 bg-black/20 p-3.5 rounded-xl border border-white/[0.02]">
-                        <span class="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Unidades por Género</span>
-                        <div class="flex flex-col gap-2 mt-1">
-                          @for (g of ['Hombre', 'Mujer', 'Unisex']; track g) {
-                            <div class="flex justify-between items-center text-xs">
-                              <span class="text-neutral-400">{{ g }}</span>
-                              <span class="font-mono font-bold text-white bg-white/5 px-2 py-0.5 rounded">{{ stats().editionsBreakdown.oro_vivo.genders[g] || 0 }}</span>
-                            </div>
-                          }
-                        </div>
-                      </div>
+                          <!-- Totales Columnas -->
+                          <tr class="font-bold border-t border-white/10 text-[11px] text-white cursor-default">
+                            <td class="py-3 uppercase text-neutral-400 font-bold tracking-wider text-[9px]">Total</td>
+                            <td class="py-3 text-right font-mono text-neutral-200">
+                              {{ stats().editionsBreakdown.oro_vivo.genders['Hombre'] || 0 }}
+                            </td>
+                            <td class="py-3 text-right font-mono text-neutral-200">
+                              {{ stats().editionsBreakdown.oro_vivo.genders['Mujer'] || 0 }}
+                            </td>
+                            <td class="py-3 text-right font-mono text-neutral-200">
+                              {{ stats().editionsBreakdown.oro_vivo.genders['Unisex'] || 0 }}
+                            </td>
+                            <td class="py-3 text-right font-mono font-extrabold text-gold-aged text-xs">
+                              {{ stats().editions.oroVivo }}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
 
@@ -287,32 +312,57 @@ type TabMode = 'dashboard' | 'orders';
                       <span class="text-xs font-bold text-neutral-400 tracking-wider uppercase">Colección Edición Negra</span>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                      <!-- Sizes Subgrid -->
-                      <div class="flex flex-col gap-2 bg-black/20 p-3.5 rounded-xl border border-white/[0.02]">
-                        <span class="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Unidades por Talla</span>
-                        <div class="flex flex-col gap-2 mt-1">
+                    <div class="overflow-x-auto bg-black/20 p-4 rounded-2xl border border-white/[0.02]">
+                      <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr class="border-b border-white/10 text-neutral-500 font-bold uppercase text-[9px] tracking-wider cursor-default">
+                            <th class="py-2.5">Talla</th>
+                            <th class="py-2.5 text-right">Hombre</th>
+                            <th class="py-2.5 text-right">Mujer</th>
+                            <th class="py-2.5 text-right">Unisex</th>
+                            <th class="py-2.5 text-right">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
                           @for (sz of ['S', 'M', 'L', 'XL', 'XXL']; track sz) {
-                            <div class="flex justify-between items-center text-xs">
-                              <span class="text-neutral-400">Talla {{ sz }}</span>
-                              <span class="font-mono font-bold text-white bg-white/5 px-2 py-0.5 rounded">{{ stats().editionsBreakdown.edicion_secreta.sizes[sz] || 0 }}</span>
-                            </div>
+                            <tr class="border-b border-white/5 hover:bg-white/[0.01] transition-colors cursor-default">
+                              <td class="py-2.5 font-bold text-white text-xs">Talla {{ sz }}</td>
+                              <td class="py-2.5 text-right font-mono text-neutral-300">
+                                {{ stats().sizeGenderBreakdown.edicion_secreta[sz]['Hombre'] || 0 }}
+                              </td>
+                              <td class="py-2.5 text-right font-mono text-neutral-300">
+                                {{ stats().sizeGenderBreakdown.edicion_secreta[sz]['Mujer'] || 0 }}
+                              </td>
+                              <td class="py-2.5 text-right font-mono text-neutral-300">
+                                {{ stats().sizeGenderBreakdown.edicion_secreta[sz]['Unisex'] || 0 }}
+                              </td>
+                              <td class="py-2.5 text-right font-mono font-bold text-neutral-400">
+                                <span class="bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                                  {{ (stats().sizeGenderBreakdown.edicion_secreta[sz]['Hombre'] || 0) + 
+                                     (stats().sizeGenderBreakdown.edicion_secreta[sz]['Mujer'] || 0) + 
+                                     (stats().sizeGenderBreakdown.edicion_secreta[sz]['Unisex'] || 0) }}
+                                </span>
+                              </td>
+                            </tr>
                           }
-                        </div>
-                      </div>
-
-                      <!-- Genders Subgrid -->
-                      <div class="flex flex-col gap-2 bg-black/20 p-3.5 rounded-xl border border-white/[0.02]">
-                        <span class="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Unidades por Género</span>
-                        <div class="flex flex-col gap-2 mt-1">
-                          @for (g of ['Hombre', 'Mujer', 'Unisex']; track g) {
-                            <div class="flex justify-between items-center text-xs">
-                              <span class="text-neutral-400">{{ g }}</span>
-                              <span class="font-mono font-bold text-white bg-white/5 px-2 py-0.5 rounded">{{ stats().editionsBreakdown.edicion_secreta.genders[g] || 0 }}</span>
-                            </div>
-                          }
-                        </div>
-                      </div>
+                          <!-- Totales Columnas -->
+                          <tr class="font-bold border-t border-white/10 text-[11px] text-white cursor-default">
+                            <td class="py-3 uppercase text-neutral-400 font-bold tracking-wider text-[9px]">Total</td>
+                            <td class="py-3 text-right font-mono text-neutral-200">
+                              {{ stats().editionsBreakdown.edicion_secreta.genders['Hombre'] || 0 }}
+                            </td>
+                            <td class="py-3 text-right font-mono text-neutral-200">
+                              {{ stats().editionsBreakdown.edicion_secreta.genders['Mujer'] || 0 }}
+                            </td>
+                            <td class="py-3 text-right font-mono text-neutral-200">
+                              {{ stats().editionsBreakdown.edicion_secreta.genders['Unisex'] || 0 }}
+                            </td>
+                            <td class="py-3 text-right font-mono font-extrabold text-neutral-200 text-xs">
+                              {{ stats().editions.edicionSecreta }}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
@@ -1702,6 +1752,23 @@ export class BackofficeComponent implements OnInit {
         genders: { Hombre: 0, Mujer: 0, Unisex: 0 } as Record<string, number>
       }
     };
+
+    const sizeGenderBreakdown = {
+      oro_vivo: {
+        S: { Hombre: 0, Mujer: 0, Unisex: 0 },
+        M: { Hombre: 0, Mujer: 0, Unisex: 0 },
+        L: { Hombre: 0, Mujer: 0, Unisex: 0 },
+        XL: { Hombre: 0, Mujer: 0, Unisex: 0 },
+        XXL: { Hombre: 0, Mujer: 0, Unisex: 0 }
+      } as Record<string, Record<string, number>>,
+      edicion_secreta: {
+        S: { Hombre: 0, Mujer: 0, Unisex: 0 },
+        M: { Hombre: 0, Mujer: 0, Unisex: 0 },
+        L: { Hombre: 0, Mujer: 0, Unisex: 0 },
+        XL: { Hombre: 0, Mujer: 0, Unisex: 0 },
+        XXL: { Hombre: 0, Mujer: 0, Unisex: 0 }
+      } as Record<string, Record<string, number>>
+    };
     
     approvedOsnOrders.forEach(o => {
       const items = o.items || [];
@@ -1732,6 +1799,12 @@ export class BackofficeComponent implements OnInit {
         }
         if (editionsBreakdown[edKey].genders[g] !== undefined) {
           editionsBreakdown[edKey].genders[g] += qty;
+        }
+
+        if (sizeGenderBreakdown[edKey][sz]) {
+          if (sizeGenderBreakdown[edKey][sz][g] !== undefined) {
+            sizeGenderBreakdown[edKey][sz][g] += qty;
+          }
         }
       });
     });
@@ -1792,7 +1865,8 @@ export class BackofficeComponent implements OnInit {
         Mujer: pct(genders['Mujer']),
         Unisex: pct(genders['Unisex'])
       } as Record<string, number>,
-      editionsBreakdown
+      editionsBreakdown,
+      sizeGenderBreakdown
     };
   });
 
