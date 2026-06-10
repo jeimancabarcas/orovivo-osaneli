@@ -236,6 +236,88 @@ type TabMode = 'dashboard' | 'orders';
 
               </div>
 
+              <!-- Inventory Matrix (Sizes & Genders by Edition) -->
+              <div class="glass-effect rounded-2xl p-6 border border-white/5 flex flex-col gap-6 mt-6 animate-reveal">
+                <div class="border-b border-white/5 pb-3">
+                  <h3 class="text-xs font-bold text-neutral-400 tracking-widest uppercase">Inventario Detallado por Edición</h3>
+                  <p class="text-[10px] text-neutral-500 mt-1">Unidades vendidas y aprobadas discriminadas por talla y género en cada colección</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <!-- Oro Vivo Column -->
+                  <div class="flex flex-col gap-4">
+                    <div class="flex items-center gap-2 pb-1.5 border-b border-white/5">
+                      <div class="w-2.5 h-2.5 rounded-full bg-gold-aged"></div>
+                      <span class="text-xs font-bold text-gold-aged tracking-wider uppercase">Colección Oro Vivo</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                      <!-- Sizes Subgrid -->
+                      <div class="flex flex-col gap-2 bg-black/20 p-3.5 rounded-xl border border-white/[0.02]">
+                        <span class="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Unidades por Talla</span>
+                        <div class="flex flex-col gap-2 mt-1">
+                          @for (sz of ['S', 'M', 'L', 'XL', 'XXL']; track sz) {
+                            <div class="flex justify-between items-center text-xs">
+                              <span class="text-neutral-400">Talla {{ sz }}</span>
+                              <span class="font-mono font-bold text-white bg-white/5 px-2 py-0.5 rounded">{{ stats().editionsBreakdown.oro_vivo.sizes[sz] || 0 }}</span>
+                            </div>
+                          }
+                        </div>
+                      </div>
+
+                      <!-- Genders Subgrid -->
+                      <div class="flex flex-col gap-2 bg-black/20 p-3.5 rounded-xl border border-white/[0.02]">
+                        <span class="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Unidades por Género</span>
+                        <div class="flex flex-col gap-2 mt-1">
+                          @for (g of ['Hombre', 'Mujer', 'Unisex']; track g) {
+                            <div class="flex justify-between items-center text-xs">
+                              <span class="text-neutral-400">{{ g }}</span>
+                              <span class="font-mono font-bold text-white bg-white/5 px-2 py-0.5 rounded">{{ stats().editionsBreakdown.oro_vivo.genders[g] || 0 }}</span>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Edición Negra Column -->
+                  <div class="flex flex-col gap-4">
+                    <div class="flex items-center gap-2 pb-1.5 border-b border-white/5">
+                      <div class="w-2.5 h-2.5 rounded-full bg-neutral-400"></div>
+                      <span class="text-xs font-bold text-neutral-400 tracking-wider uppercase">Colección Edición Negra</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                      <!-- Sizes Subgrid -->
+                      <div class="flex flex-col gap-2 bg-black/20 p-3.5 rounded-xl border border-white/[0.02]">
+                        <span class="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Unidades por Talla</span>
+                        <div class="flex flex-col gap-2 mt-1">
+                          @for (sz of ['S', 'M', 'L', 'XL', 'XXL']; track sz) {
+                            <div class="flex justify-between items-center text-xs">
+                              <span class="text-neutral-400">Talla {{ sz }}</span>
+                              <span class="font-mono font-bold text-white bg-white/5 px-2 py-0.5 rounded">{{ stats().editionsBreakdown.edicion_secreta.sizes[sz] || 0 }}</span>
+                            </div>
+                          }
+                        </div>
+                      </div>
+
+                      <!-- Genders Subgrid -->
+                      <div class="flex flex-col gap-2 bg-black/20 p-3.5 rounded-xl border border-white/[0.02]">
+                        <span class="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Unidades por Género</span>
+                        <div class="flex flex-col gap-2 mt-1">
+                          @for (g of ['Hombre', 'Mujer', 'Unisex']; track g) {
+                            <div class="flex justify-between items-center text-xs">
+                              <span class="text-neutral-400">{{ g }}</span>
+                              <span class="font-mono font-bold text-white bg-white/5 px-2 py-0.5 rounded">{{ stats().editionsBreakdown.edicion_secreta.genders[g] || 0 }}</span>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             } @else {
 
               <!-- TAB 2: ORDERS MANAGEMENT BOARD -->
@@ -1609,6 +1691,17 @@ export class BackofficeComponent implements OnInit {
     
     const sizes: Record<string, number> = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
     const genders: Record<string, number> = { Hombre: 0, Mujer: 0, Unisex: 0 };
+
+    const editionsBreakdown = {
+      oro_vivo: {
+        sizes: { S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>,
+        genders: { Hombre: 0, Mujer: 0, Unisex: 0 } as Record<string, number>
+      },
+      edicion_secreta: {
+        sizes: { S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>,
+        genders: { Hombre: 0, Mujer: 0, Unisex: 0 } as Record<string, number>
+      }
+    };
     
     approvedOsnOrders.forEach(o => {
       const items = o.items || [];
@@ -1616,7 +1709,8 @@ export class BackofficeComponent implements OnInit {
         const qty = Number(it.quantity || 1);
         totalItemsSold += qty;
         
-        if (it.version === 'oro_vivo') {
+        const version = it.version || 'oro_vivo';
+        if (version === 'oro_vivo') {
           oroVivo += qty;
         } else {
           edicionSecreta += qty;
@@ -1630,6 +1724,14 @@ export class BackofficeComponent implements OnInit {
         const g = it.gender || 'Unisex';
         if (genders[g] !== undefined) {
           genders[g] += qty;
+        }
+
+        const edKey = version === 'edicion_secreta' ? 'edicion_secreta' : 'oro_vivo';
+        if (editionsBreakdown[edKey].sizes[sz] !== undefined) {
+          editionsBreakdown[edKey].sizes[sz] += qty;
+        }
+        if (editionsBreakdown[edKey].genders[g] !== undefined) {
+          editionsBreakdown[edKey].genders[g] += qty;
         }
       });
     });
@@ -1689,7 +1791,8 @@ export class BackofficeComponent implements OnInit {
         Hombre: pct(genders['Hombre']),
         Mujer: pct(genders['Mujer']),
         Unisex: pct(genders['Unisex'])
-      } as Record<string, number>
+      } as Record<string, number>,
+      editionsBreakdown
     };
   });
 
