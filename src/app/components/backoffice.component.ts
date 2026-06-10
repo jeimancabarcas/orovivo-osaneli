@@ -374,7 +374,7 @@ type TabMode = 'dashboard' | 'orders';
               <div class="glass-effect rounded-2xl border border-white/5 shadow p-6 flex flex-col gap-6">
                 
                 <!-- Filter Grid Controls -->
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
                   <!-- Search bar input -->
                   <div class="md:col-span-2 relative">
                     <input 
@@ -410,7 +410,19 @@ type TabMode = 'dashboard' | 'orders';
                       class="w-full py-3 rounded-xl border border-white/10 hover:border-gold-aged/40 bg-white/5 hover:bg-gold-aged/5 text-white hover:text-gold-aged font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 shadow"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16" fill="currentColor"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
-                      Exportar Filtros CSV
+                      Filtros CSV
+                    </button>
+                  </div>
+
+                  <!-- CSV International Export action button -->
+                  <div>
+                    <button 
+                      (click)="exportInternationalApprovedToCSV()"
+                      class="w-full py-3 rounded-xl border border-white/10 hover:border-gold-aged/40 bg-white/5 hover:bg-gold-aged/5 text-white hover:text-gold-aged font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 shadow"
+                      title="Exportar pedidos APROBADOS fuera de Colombia"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16" fill="currentColor"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q30-44 49-93.5t25-106.5H386q6 57 25 106.5t49 93.5Zm-88-18q-26-42-43.5-89T322-360H200q33 55 83 94t109 46Zm176 0q59-7 109-46t83-94H638q-9 41-26.5 88T568-178ZM170-440h168q-3-29-4.5-59.5T332-560H164q-4 29-5 59.5t5 60.5Zm244 0h132q3-30 4.5-59.5T546-560H414q-3 29-4.5 59.5T414-440Zm214 0h168q4-31 5-60.5t-5-59.5H628q3 29 4.5 59.5T628-440Zm-60-200q-26-44-49-93.5T494-800H466q-6 57-25 106.5t-49 93.5Zm-282 0h122q9-41 26.5-88T432-782q-59 7-109 46t-83 94Zm496 0q-33-55-83-94t-109-46q26 42 43.5 89t26.5 89H628Z"/></svg>
+                      Aprobados Int. CSV
                     </button>
                   </div>
 
@@ -2599,6 +2611,80 @@ export class BackofficeComponent implements OnInit {
       const link = document.createElement('a');
       link.setAttribute('href', url);
       link.setAttribute('download', `OSANELI_PEDIDOS_EXPORT_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
+  exportInternationalApprovedToCSV(): void {
+    const list = this.firebaseService.orders().filter(o => 
+      o.status === 'APPROVED' && 
+      (o.country || '').trim().toLowerCase() !== 'colombia'
+    );
+    
+    if (list.length === 0) {
+      alert('No hay pedidos APROBADOS con país diferente a Colombia para exportar.');
+      return;
+    }
+
+    // Header fields
+    const headers = [
+      'Orden ID',
+      'Fecha',
+      'Cliente',
+      'Correo',
+      'Teléfono',
+      'Dirección de Envío',
+      'Ciudad',
+      'País',
+      'Prenda Edición',
+      'Talla',
+      'Género',
+      'Cantidad',
+      'Total COP',
+      'Estado Pago',
+      'Despachado',
+      'Transportadora',
+      'Número de Guía',
+      'Notas Internas'
+    ];
+
+    // Map rows
+    const rows = list.map(o => [
+      o.id,
+      this.formatDate(o.createdAt),
+      `"${o.fullName.replace(/"/g, '""')}"`,
+      o.email,
+      `"${o.phone}"`,
+      `"${(o.address || '').replace(/"/g, '""')}"`,
+      `"${(o.city || '').replace(/"/g, '""')}"`,
+      `"${(o.country || '').replace(/"/g, '""')}"`,
+      o.version === 'oro_vivo' ? 'Oro Vivo' : 'Edición Negra',
+      o.size,
+      o.gender || 'Unisex',
+      o.quantity,
+      o.quantity * environment.productPrice,
+      o.status,
+      o.isShipped ? 'SI' : 'NO',
+      o.carrier || '',
+      o.trackingNumber || '',
+      `"${(o.adminNotes || '').replace(/"/g, '""')}"`
+    ]);
+
+    // Build CSV content
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(r => r.join(','))
+    ].join('\n');
+
+    // Create download blob
+    if (isPlatformBrowser(this.platformId)) {
+      const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `OSANELI_APROBADOS_INTERNACIONAL_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
