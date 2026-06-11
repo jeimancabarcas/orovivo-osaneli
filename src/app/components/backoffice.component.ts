@@ -477,6 +477,7 @@ type TabMode = 'dashboard' | 'orders';
                         <th class="p-4 text-center">Cant.</th>
                         <th class="p-4 text-right">Total</th>
                         <th class="p-4 text-center">Estado Pago</th>
+                        <th class="p-4 text-center">Impuestos</th>
                         <th class="p-4 text-center">Despacho</th>
                         <th class="p-4 text-center">Acciones</th>
                       </tr>
@@ -537,6 +538,17 @@ type TabMode = 'dashboard' | 'orders';
                             >
                               {{ ord.status }}
                             </span>
+                          </td>
+                          <td class="p-4 text-center">
+                            @if (ord.taxes && ord.taxes.length > 0) {
+                              <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-[10px] font-bold" title="Impuestos registrados">
+                                ✓
+                              </span>
+                            } @else {
+                              <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/5 text-neutral-500 border border-white/5 text-[10px] font-bold" title="Sin impuestos">
+                                -
+                              </span>
+                            }
                           </td>
                           <td class="p-4 text-center">
                             @if (ord.isShipped) {
