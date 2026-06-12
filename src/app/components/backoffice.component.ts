@@ -382,9 +382,9 @@ type TabMode = 'dashboard' | 'orders';
               <div class="glass-effect rounded-2xl border border-white/5 shadow p-6 flex flex-col gap-6">
                 
                 <!-- Filter Grid Controls -->
-                <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4 items-center">
                   <!-- Search bar input -->
-                  <div class="md:col-span-2 relative">
+                  <div class="xl:col-span-2 relative">
                     <input 
                       type="text" 
                       placeholder="Buscar por ID, Cliente, Email o Teléfono..."
@@ -431,6 +431,25 @@ type TabMode = 'dashboard' | 'orders';
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16" fill="currentColor"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q30-44 49-93.5t25-106.5H386q6 57 25 106.5t49 93.5Zm-88-18q-26-42-43.5-89T322-360H200q33 55 83 94t109 46Zm176 0q59-7 109-46t83-94H638q-9 41-26.5 88T568-178ZM170-440h168q-3-29-4.5-59.5T332-560H164q-4 29-5 59.5t5 60.5Zm244 0h132q3-30 4.5-59.5T546-560H414q-3 29-4.5 59.5T414-440Zm214 0h168q4-31 5-60.5t-5-59.5H628q3 29 4.5 59.5T628-440Zm-60-200q-26-44-49-93.5T494-800H466q-6 57-25 106.5t-49 93.5Zm-282 0h122q9-41 26.5-88T432-782q-59 7-109 46t-83 94Zm496 0q-33-55-83-94t-109-46q26 42 43.5 89t26.5 89H628Z"/></svg>
                       Aprobados Int. CSV
+                    </button>
+                  </div>
+
+                  <!-- Sincronizar Impuestos VAT button -->
+                  <div>
+                    <button 
+                      type="button"
+                      (click)="syncVATForApprovedOrders()"
+                      [disabled]="syncVATLoading()"
+                      class="w-full py-3 rounded-xl border border-white/10 hover:border-gold-aged/40 bg-white/5 hover:bg-gold-aged/5 text-white hover:text-gold-aged disabled:bg-neutral-900/40 disabled:text-neutral-500 font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 shadow"
+                      title="Sincronizar impuestos VAT basados en método de pago"
+                    >
+                      @if (syncVATLoading()) {
+                        <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Sincronizando...</span>
+                      } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16" fill="currentColor"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 126.5 27T710-696v-104h80v240H550v-80h124q-32-46-82-73t-112-27q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 108-115.5 176T480-160Z"/></svg>
+                        Sinc. VAT
+                      }
                     </button>
                   </div>
 
@@ -1642,6 +1661,7 @@ export class BackofficeComponent implements OnInit {
   readonly taxTypeInput = signal<string>('VAT');
   readonly taxValueInput = signal<number | null>(null);
   readonly saveTaxLoading = signal<boolean>(false);
+  readonly syncVATLoading = signal<boolean>(false);
   readonly taxError = signal<string>('');
 
   // Admin Reactive Form
@@ -2577,6 +2597,68 @@ export class BackofficeComponent implements OnInit {
     this.taxTypeInput.set('VAT');
     this.taxValueInput.set(null);
     this.taxError.set('');
+  }
+
+  async syncVATForApprovedOrders(): Promise<void> {
+    const orders = this.firebaseService.orders();
+    // Filtrar pedidos aprobados que NO tengan impuestos registrados
+    const targetOrders = orders.filter(o => o.status === 'APPROVED' && (!o.taxes || o.taxes.length === 0));
+
+    if (targetOrders.length === 0) {
+      alert('No se encontraron pedidos aprobados sin impuestos.');
+      return;
+    }
+
+    const confirmSync = confirm(`¿Desea sincronizar los impuestos VAT para ${targetOrders.length} pedidos aprobados?`);
+    if (!confirmSync) return;
+
+    this.syncVATLoading.set(true);
+    let successCount = 0;
+    let errorCount = 0;
+    let skippedCount = 0;
+
+    for (const order of targetOrders) {
+      const method = (order.payment_method || '').toUpperCase().trim();
+      const country = (order.country || 'COLOMBIA').toUpperCase().trim();
+      let vatValue = 0;
+
+      if (method === 'PSE') {
+        vatValue = 6633;
+      } else if (method === 'QR') {
+        vatValue = 4896;
+      } else if (method === 'CARD_WEB') {
+        if (country === 'COLOMBIA') {
+          vatValue = 9910;
+        } else {
+          vatValue = 11610;
+        }
+      } else if (method === 'NEQUI') {
+        vatValue = 6633;
+      } else if (method === 'BOTON_BANCOLOMBIA') {
+        vatValue = 6633;
+      } else {
+        // Omitir pedidos con métodos de pago no listados o vacíos
+        skippedCount++;
+        continue;
+      }
+
+      try {
+        const vatTax = {
+          type: 'VAT',
+          value: vatValue
+        };
+        await this.firebaseService.updateOrderFields(order.id, {
+          taxes: [vatTax]
+        });
+        successCount++;
+      } catch (err) {
+        console.error(`Error syncing VAT for order ${order.id}:`, err);
+        errorCount++;
+      }
+    }
+
+    this.syncVATLoading.set(false);
+    alert(`Sincronización de VAT completada:\n- Pedidos actualizados exitosamente: ${successCount}\n- Omitidos (método de pago no soportado/vacío): ${skippedCount}\n- Errores: ${errorCount}`);
   }
 
   exportToCSV(): void {
