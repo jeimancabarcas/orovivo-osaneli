@@ -1222,17 +1222,82 @@ type TabMode = 'dashboard' | 'orders';
                   <div class="mt-2 pt-2 border-t border-white/5 flex flex-col gap-1.5">
                     <span class="text-[9px] uppercase tracking-wider block text-neutral-500">Impuestos (Taxes)</span>
                     
-                    @if (ord.taxes && ord.taxes.length > 0) {
-                      <div class="flex flex-col gap-1.5">
-                        @for (tax of ord.taxes; track $index) {
-                          <div class="flex justify-between items-center bg-white/[0.02] border border-white/5 px-3 py-2 rounded-xl text-[11px] text-white">
-                            <span>Tipo: <strong class="text-gold-aged font-bold">{{ tax.type }}</strong></span>
-                            <span>Valor: <strong class="text-white font-mono">{{ tax.value | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></span>
+                    @if (showAddTaxForm()) {
+                      <div class="flex flex-col gap-2.5 p-3 rounded-xl bg-white/[0.01] border border-white/5">
+                        <span class="text-[10px] font-bold text-white uppercase tracking-wider">
+                          {{ (ord.taxes && ord.taxes.length > 0) ? 'Editar Impuesto' : 'Configurar Impuesto' }}
+                        </span>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div class="flex flex-col gap-1">
+                            <label class="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Tipo (Type)</label>
+                            <input 
+                              type="text"
+                              [value]="taxTypeInput()"
+                              (input)="onTaxTypeInput($event)"
+                              class="px-2.5 py-1.5 bg-neutral-900 border border-white/10 rounded-lg focus:border-gold-aged/40 focus:outline-none text-white text-xs"
+                              placeholder="Ej. VAT"
+                            />
                           </div>
+                          <div class="flex flex-col gap-1">
+                            <label class="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Valor (Value)</label>
+                            <input 
+                              type="number"
+                              [value]="taxValueInput() !== null ? taxValueInput() : ''"
+                              (input)="onTaxValueInput($event)"
+                              class="px-2.5 py-1.5 bg-neutral-900 border border-white/10 rounded-lg focus:border-gold-aged/40 focus:outline-none text-white text-xs"
+                              placeholder="Ej. 4831"
+                            />
+                          </div>
+                        </div>
+
+                        @if (taxError()) {
+                          <span class="text-[10px] text-red-400 font-bold block">⚠ {{ taxError() }}</span>
                         }
+
+                        <div class="flex gap-2 justify-end mt-1">
+                          <button
+                            type="button"
+                            (click)="cancelAddTax()"
+                            class="px-2.5 py-1.5 rounded-lg border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] uppercase tracking-wider transition-colors duration-200 cursor-pointer"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            [disabled]="saveTaxLoading()"
+                            (click)="saveTax(ord.id)"
+                            class="px-2.5 py-1.5 rounded-lg bg-gold-aged hover:bg-gold-light disabled:bg-neutral-800 text-matte-black disabled:text-neutral-500 font-bold text-[9px] uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center gap-1"
+                          >
+                            @if (saveTaxLoading()) {
+                              <div class="w-2.5 h-2.5 border border-matte-black border-t-transparent rounded-full animate-spin"></div>
+                              <span>Guardando...</span>
+                            } @else {
+                              <span>Guardar Impuesto</span>
+                            }
+                          </button>
+                        </div>
                       </div>
                     } @else {
-                      @if (!showAddTaxForm()) {
+                      @if (ord.taxes && ord.taxes.length > 0) {
+                        <div class="flex flex-col gap-1.5">
+                          @for (tax of ord.taxes; track $index) {
+                            <div class="flex justify-between items-center bg-white/[0.02] border border-white/5 px-3 py-2 rounded-xl text-[11px] text-white">
+                              <div class="flex flex-col gap-0.5">
+                                <span>Tipo: <strong class="text-gold-aged font-bold">{{ tax.type }}</strong></span>
+                                <span>Valor: <strong class="text-white font-mono">{{ tax.value | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></span>
+                              </div>
+                              <button
+                                type="button"
+                                (click)="startEditTax(tax)"
+                                class="px-2.5 py-1 rounded-lg border border-white/10 hover:border-gold-aged bg-white/5 hover:bg-gold-aged hover:text-matte-black font-sans font-bold text-[9px] tracking-wider uppercase transition-all duration-200 cursor-pointer"
+                              >
+                                Editar
+                              </button>
+                            </div>
+                          }
+                        </div>
+                      } @else {
                         <div class="flex flex-col gap-2">
                           <span class="text-[10px] text-neutral-400 italic">No hay impuestos configurados.</span>
                           <button
@@ -1242,60 +1307,6 @@ type TabMode = 'dashboard' | 'orders';
                           >
                             Agregar Impuesto
                           </button>
-                        </div>
-                      } @else {
-                        <div class="flex flex-col gap-2.5 p-3 rounded-xl bg-white/[0.01] border border-white/5">
-                          <span class="text-[10px] font-bold text-white uppercase tracking-wider">Configurar Impuesto</span>
-                          
-                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                            <div class="flex flex-col gap-1">
-                              <label class="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Tipo (Type)</label>
-                              <input 
-                                type="text"
-                                [value]="taxTypeInput()"
-                                (input)="onTaxTypeInput($event)"
-                                class="px-2.5 py-1.5 bg-neutral-900 border border-white/10 rounded-lg focus:border-gold-aged/40 focus:outline-none text-white text-xs"
-                                placeholder="Ej. VAT"
-                              />
-                            </div>
-                            <div class="flex flex-col gap-1">
-                              <label class="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Valor (Value)</label>
-                              <input 
-                                type="number"
-                                [value]="taxValueInput() !== null ? taxValueInput() : ''"
-                                (input)="onTaxValueInput($event)"
-                                class="px-2.5 py-1.5 bg-neutral-900 border border-white/10 rounded-lg focus:border-gold-aged/40 focus:outline-none text-white text-xs"
-                                placeholder="Ej. 4831"
-                              />
-                            </div>
-                          </div>
-
-                          @if (taxError()) {
-                            <span class="text-[10px] text-red-400 font-bold block">⚠ {{ taxError() }}</span>
-                          }
-
-                          <div class="flex gap-2 justify-end mt-1">
-                            <button
-                              type="button"
-                              (click)="cancelAddTax()"
-                              class="px-2.5 py-1.5 rounded-lg border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] uppercase tracking-wider transition-colors duration-200 cursor-pointer"
-                            >
-                              Cancelar
-                            </button>
-                            <button
-                              type="button"
-                              [disabled]="saveTaxLoading()"
-                              (click)="saveTax(ord.id)"
-                              class="px-2.5 py-1.5 rounded-lg bg-gold-aged hover:bg-gold-light disabled:bg-neutral-800 text-matte-black disabled:text-neutral-500 font-bold text-[9px] uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center gap-1"
-                            >
-                              @if (saveTaxLoading()) {
-                                <div class="w-2.5 h-2.5 border border-matte-black border-t-transparent rounded-full animate-spin"></div>
-                                <span>Guardando...</span>
-                              } @else {
-                                <span>Guardar Impuesto</span>
-                              }
-                            </button>
-                          </div>
                         </div>
                       }
                     }
@@ -2597,6 +2608,12 @@ export class BackofficeComponent implements OnInit {
     this.taxTypeInput.set('VAT');
     this.taxValueInput.set(null);
     this.taxError.set('');
+  }
+
+  startEditTax(tax: any): void {
+    this.taxTypeInput.set(tax.type || 'VAT');
+    this.taxValueInput.set(tax.value !== undefined ? tax.value : null);
+    this.showAddTaxForm.set(true);
   }
 
   async syncVATForApprovedOrders(): Promise<void> {
