@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, PLATFORM_ID, AfterViewInit } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { gsap } from 'gsap';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-hero',
@@ -70,7 +71,7 @@ import { gsap } from 'gsap';
             (click)="scrollToPreOrder()"
             class="hero-btn-1 opacity-0 px-8 py-4 rounded-xl bg-gold-aged hover:bg-gold-light text-matte-black font-sans font-extrabold text-sm tracking-widest uppercase transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_10px_35px_rgba(197,168,84,0.4)] active:translate-y-0 shadow-[0_10px_30px_rgba(197,168,84,0.25)] cursor-pointer gold-btn-effect"
           >
-            SEPARAR PREVENTA
+            {{ dropEnded ? 'ADQUIRIR PIEZA' : 'SEPARAR PREVENTA' }}
           </button>
           
           <button
@@ -103,6 +104,7 @@ import { gsap } from 'gsap';
 })
 export class HeroComponent implements AfterViewInit {
   private readonly platformId = inject(PLATFORM_ID);
+  protected readonly dropEnded = environment.dropEnded;
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {

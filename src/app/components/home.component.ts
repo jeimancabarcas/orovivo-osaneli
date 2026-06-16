@@ -47,13 +47,13 @@ import { environment } from '../../environments/environment';
             </div>
             
             <span class="text-[10px] font-sans font-bold tracking-[0.25em] text-gold-aged uppercase mt-2 select-none">
-              Reserva Activa Detectada
+              {{ dropEnded ? 'Pedido Activo Detectado' : 'Reserva Activa Detectada' }}
             </span>
             <h3 class="font-serif text-xl font-black text-white leading-tight">
               ¿Deseas continuar con tu orden de compra pendiente?
             </h3>
             <p class="text-xs text-neutral-400 max-w-xs leading-relaxed">
-              Hemos encontrado una reserva iniciada en este navegador. Puedes proceder al pago seguro o cancelarla para iniciar una nueva.
+              {{ dropEnded ? 'Hemos encontrado un pedido iniciado en este navegador. Puedes proceder al pago seguro o cancelarlo para iniciar uno nuevo.' : 'Hemos encontrado una reserva iniciada en este navegador. Puedes proceder al pago seguro o cancelarla para iniciar una nueva.' }}
             </p>
           </div>
 
@@ -100,7 +100,7 @@ import { environment } from '../../environments/environment';
               class="w-full py-3.5 rounded-xl border border-gold-aged/20 hover:border-gold-aged/50 bg-gold-aged/5 hover:bg-gold-aged/10 text-gold-aged font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer flex justify-center items-center gap-1.5"
             >
               <svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 -960 960 960" width="14" fill="currentColor"><path d="M200-200h57l359-359-57-57-359 359v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
-              Modificar datos de la reserva
+              {{ dropEnded ? 'Modificar datos del pedido' : 'Modificar datos de la reserva' }}
             </button>
             
             <button 
@@ -110,9 +110,9 @@ import { environment } from '../../environments/environment';
             >
               @if (isCancelling()) {
                 <div class="w-4 h-4 border-2 border-neutral-600 border-t-transparent rounded-full animate-spin"></div>
-                <span>Cancelando reserva...</span>
+                <span>{{ dropEnded ? 'Cancelando pedido...' : 'Cancelando reserva...' }}</span>
               } @else {
-                <span class="text-neutral-400 hover:text-red-400">Cancelar reserva y crear nueva</span>
+                <span class="text-neutral-400 hover:text-red-400">{{ dropEnded ? 'Cancelar pedido y crear uno nuevo' : 'Cancelar reserva y crear nueva' }}</span>
               }
             </button>
           </div>
@@ -133,16 +133,21 @@ export class HomeComponent implements OnInit {
   readonly activeCreatedOrder = signal<Order | null>(null);
   readonly isCancelling = signal<boolean>(false);
   readonly getPrice = () => environment.productPrice;
+  protected readonly dropEnded = environment.dropEnded;
 
   ngOnInit(): void {
     this.titleService.setTitle('OSANELI | ORO VIVO - Edición Limitada Streetwear');
     
+    const descContent = this.dropEnded 
+      ? "No es una camiseta de fútbol. Es una declaración de identidad. Adquiere la camiseta 'ORO VIVO' de Osaneli. Corte boxy, tejido de alta densidad (333g), lujo y herencia colombiana."
+      : "No es una camiseta de fútbol. Es una declaración de identidad. Adquiere en preventa exclusiva la camiseta 'ORO VIVO' de Osaneli. Corte boxy, tejido de alta densidad (333g), lujo y herencia colombiana.";
+
     // Core description
-    this.metaService.updateTag({ name: 'description', content: "No es una camiseta de fútbol. Es una declaración de identidad. Adquiere en preventa exclusiva la camiseta 'ORO VIVO' de Osaneli. Corte boxy, tejido de alta densidad (333g), lujo y herencia colombiana." });
+    this.metaService.updateTag({ name: 'description', content: descContent });
     
     // Open Graph / Facebook
     this.metaService.updateTag({ property: 'og:title', content: 'OSANELI | ORO VIVO - Edición Limitada Streetwear' });
-    this.metaService.updateTag({ property: 'og:description', content: "No es una camiseta de fútbol. Es una declaración de identidad. Adquiere en preventa exclusiva la camiseta 'ORO VIVO' de Osaneli. Corte boxy, tejido de alta densidad (333g), lujo y herencia colombiana." });
+    this.metaService.updateTag({ property: 'og:description', content: descContent });
     this.metaService.updateTag({ property: 'og:image', content: 'https://orovivo.osaneli.com/meta-crop-og.png' });
     this.metaService.updateTag({ property: 'og:image:width', content: '1200' });
     this.metaService.updateTag({ property: 'og:image:height', content: '630' });
@@ -152,7 +157,7 @@ export class HomeComponent implements OnInit {
     // Twitter Card
     this.metaService.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
     this.metaService.updateTag({ name: 'twitter:title', content: 'OSANELI | ORO VIVO - Edición Limitada Streetwear' });
-    this.metaService.updateTag({ name: 'twitter:description', content: "No es una camiseta de fútbol. Es una declaración de identidad. Adquiere en preventa exclusiva la camiseta 'ORO VIVO' de Osaneli. Corte boxy, tejido de alta densidad (333g), lujo y herencia colombiana." });
+    this.metaService.updateTag({ name: 'twitter:description', content: descContent });
     this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/meta-crop-twitter.png' });
 
     // Detect active reservation created in this browser

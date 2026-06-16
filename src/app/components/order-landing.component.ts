@@ -21,7 +21,7 @@ import { environment } from '../../environments/environment';
         <!-- Header logo -->
         <div class="mb-10 flex flex-col items-center gap-2 select-none animate-reveal">
           <img src="/logo.png" alt="OSANELI" class="h-6 w-auto object-contain brightness-95 invert" />
-          <span class="text-[9px] font-bold text-gold-aged tracking-[0.3em] uppercase font-sans">Preventa Oficial FCF</span>
+          <span class="text-[9px] font-bold text-gold-aged tracking-[0.3em] uppercase font-sans">{{ dropEnded ? 'Colección Oficial FCF' : 'Preventa Oficial FCF' }}</span>
         </div>
 
         <!-- CASE 1: Loading state -->
@@ -31,7 +31,7 @@ import { environment } from '../../environments/environment';
               <div class="absolute inset-0 rounded-full border border-gold-aged/20 animate-ping"></div>
               <div class="w-10 h-10 rounded-full border-4 border-gold-aged/10 border-t-gold-aged animate-spin"></div>
             </div>
-            <span class="text-xs text-neutral-400 uppercase tracking-widest font-sans font-bold">Cargando reserva...</span>
+            <span class="text-xs text-neutral-400 uppercase tracking-widest font-sans font-bold">{{ dropEnded ? 'Cargando pedido...' : 'Cargando reserva...' }}</span>
           </div>
         }
 
@@ -40,7 +40,7 @@ import { environment } from '../../environments/environment';
           
           <div class="glass-effect rounded-3xl p-8 sm:p-12 shadow-2xl max-w-md mx-auto border border-white/5 animate-reveal">
             <div class="flex flex-col items-center gap-3 mb-8">
-              <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">Rastrear Mi Reserva</h3>
+              <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">{{ dropEnded ? 'Rastrear Mi Pedido' : 'Rastrear Mi Reserva' }}</h3>
               <p class="text-xs sm:text-sm text-neutral-400 max-w-sm leading-relaxed font-sans">
                 Consulta los comprobantes de pago, seriales holográficos y estado logístico del envío ingresando tu código de 6 caracteres.
               </p>
@@ -48,7 +48,7 @@ import { environment } from '../../environments/environment';
 
             <div class="flex flex-col gap-6">
               <div class="flex flex-col gap-2 text-left">
-                <label for="order-id" class="text-[10px] font-bold text-neutral-400 tracking-widest uppercase font-sans">Código de Reserva</label>
+                <label for="order-id" class="text-[10px] font-bold text-neutral-400 tracking-widest uppercase font-sans">{{ dropEnded ? 'Código de Pedido' : 'Código de Reserva' }}</label>
                 <input 
                   type="text" 
                   id="order-id"
@@ -103,10 +103,10 @@ import { environment } from '../../environments/environment';
               </div>
 
               <div class="flex flex-col gap-2">
-                <span class="text-xs font-bold text-gold-aged tracking-[0.2em] uppercase font-sans">RESERVA CONFIRMADA</span>
+                <span class="text-xs font-bold text-gold-aged tracking-[0.2em] uppercase font-sans">{{ dropEnded ? 'COMPRA CONFIRMADA' : 'RESERVA CONFIRMADA' }}</span>
                 <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">¡Eres Dueño del Oro!</h3>
                 <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto font-sans">
-                  Tu reserva está confirmada y tu pago ha sido liquidado correctamente. A continuación tienes tu ticket holográfico serializado por cada prenda.
+                  {{ dropEnded ? 'Tu compra está confirmada y tu pago ha sido liquidado correctamente. A continuación tienes tu ticket holográfico serializado por cada prenda.' : 'Tu reserva está confirmada y tu pago ha sido liquidado correctamente. A continuación tienes tu ticket holográfico serializado por cada prenda.' }}
                 </p>
               </div>
 
@@ -281,8 +281,8 @@ import { environment } from '../../environments/environment';
               <!-- Left Column: Order Summary -->
               <div class="glass-effect rounded-3xl p-6 sm:p-8 border border-white/5 flex flex-col gap-6">
                 <div>
-                  <span class="text-[10px] font-bold text-gold-aged tracking-[0.2em] uppercase font-sans">RESUMEN DE RESERVA</span>
-                  <h3 class="font-serif text-2xl font-black text-white mt-1">Prendas Reservadas</h3>
+                  <span class="text-[10px] font-bold text-gold-aged tracking-[0.2em] uppercase font-sans">{{ dropEnded ? 'RESUMEN DE COMPRA' : 'RESUMEN DE RESERVA' }}</span>
+                  <h3 class="font-serif text-2xl font-black text-white mt-1">{{ dropEnded ? 'Prendas Adquiridas' : 'Prendas Reservadas' }}</h3>
                 </div>
 
                 <div class="flex flex-col gap-4 border-b border-white/5 pb-5">
@@ -324,7 +324,7 @@ import { environment } from '../../environments/environment';
 
                 <div class="rounded-xl bg-gold-aged/5 border border-gold-aged/20 p-4 text-[10px] sm:text-xs text-neutral-400 leading-relaxed font-serif text-left">
                   <strong class="text-gold-aged font-sans uppercase tracking-wider block mb-1">Pasarela Segura</strong>
-                  Para completar tu reserva, presiona el botón de pago seguro de Bold a la derecha. Tu pieza se garantizará con número de serie tan pronto se confirme la venta.
+                  {{ dropEnded ? 'Para completar tu compra, presiona el botón de pago seguro de Bold a la derecha. Tu pieza se garantizará con número de serie tan pronto se confirme la venta.' : 'Para completar tu reserva, presiona el botón de pago seguro de Bold a la derecha. Tu pieza se garantizará con número de serie tan pronto se confirme la venta.' }}
                 </div>
 
                 <div class="w-full flex flex-col gap-3 pt-3 border-t border-white/5 font-sans">
@@ -337,7 +337,7 @@ import { environment } from '../../environments/environment';
                     class="w-full py-2.5 rounded-xl border border-gold-aged/20 hover:border-gold-aged/50 bg-gold-aged/5 hover:bg-gold-aged/10 text-gold-aged text-[10px] font-sans font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer flex justify-center items-center gap-1.5"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 -960 960 960" width="14" fill="currentColor"><path d="M200-200h57l359-359-57-57-359 359v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
-                    Modificar datos de esta reserva
+                    {{ dropEnded ? 'Modificar datos de este pedido' : 'Modificar datos de esta reserva' }}
                   </button>
                 </div>
               </div>
@@ -383,7 +383,7 @@ import { environment } from '../../environments/environment';
 
                 <div class="flex flex-col gap-2">
                   <span class="text-xs font-bold text-gold-aged tracking-[0.2em] uppercase font-sans">PAGO EN PROCESO</span>
-                  <h3 class="font-serif text-2xl sm:text-3xl font-black text-white font-bold">Procesando Tu Reserva</h3>
+                  <h3 class="font-serif text-2xl sm:text-3xl font-black text-white font-bold">{{ dropEnded ? 'Procesando Tu Compra' : 'Procesando Tu Reserva' }}</h3>
                   <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto font-sans">
                     La pasarela de pago Bold está verificando tu transacción. Esto puede tomar unos segundos. Tu ticket holográfico serializado definitivo se generará al instante.
                   </p>
@@ -392,7 +392,7 @@ import { environment } from '../../environments/environment';
                 <!-- Info summary -->
                 <div class="w-full border border-white/5 bg-white/[0.01] p-4 rounded-2xl text-left flex flex-col gap-2 text-xs font-sans">
                   <div class="flex justify-between items-center text-neutral-400">
-                    <span>Código de Reserva</span>
+                    <span>{{ dropEnded ? 'Código de Pedido' : 'Código de Reserva' }}</span>
                     <span class="text-white font-mono font-bold">{{ order.id }}</span>
                   </div>
                   <div class="flex justify-between items-center text-neutral-400">
@@ -468,7 +468,7 @@ import { environment } from '../../environments/environment';
                 <span class="text-xs font-bold text-red-500 tracking-[0.2em] uppercase font-sans">TRANSACCIÓN DECLINADA</span>
                 <h3 class="font-serif text-2xl sm:text-3xl font-black text-white font-bold">No Pudimos Procesar Tu Pago</h3>
                 <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto font-sans">
-                  La pasarela de pago Bold reportó que la transacción fue rechazada, cancelada o no pudo completarse. Tu cupo de reserva no se ha asignado aún.
+                  {{ dropEnded ? 'La pasarela de pago Bold reportó que la transacción fue rechazada, cancelada o no pudo completarse. Tu cupo no se ha asignado aún.' : 'La pasarela de pago Bold reportó que la transacción fue rechazada, cancelada o no pudo completarse. Tu cupo de reserva no se ha asignado aún.' }}
                 </p>
               </div>
 
@@ -483,7 +483,7 @@ import { environment } from '../../environments/environment';
                   <span class="text-white font-bold">{{ order.fullName }}</span>
                 </div>
                 <div class="flex justify-between items-center pb-2 border-b border-red-500/10">
-                  <span class="text-neutral-400">Total Pre-Orden</span>
+                  <span class="text-neutral-400">{{ dropEnded ? 'Total Pedido' : 'Total Pre-Orden' }}</span>
                   <span class="text-red-400 font-bold font-serif">{{ totalAmountFormatted() }}</span>
                 </div>
                 <div class="flex justify-between items-center">
@@ -517,8 +517,8 @@ import { environment } from '../../environments/environment';
               </div>
 
               <div class="flex flex-col gap-2">
-                <span class="text-xs font-bold text-neutral-400 tracking-[0.2em] uppercase font-sans">PRE-ORDEN ANULADA</span>
-                <h3 class="font-serif text-2xl sm:text-3xl font-black text-white font-bold">Reserva Anulada / Reembolsada</h3>
+                <span class="text-xs font-bold text-neutral-400 tracking-[0.2em] uppercase font-sans">{{ dropEnded ? 'COMPRA ANULADA' : 'PRE-ORDEN ANULADA' }}</span>
+                <h3 class="font-serif text-2xl sm:text-3xl font-black text-white font-bold">{{ dropEnded ? 'Compra Anulada / Reembolsada' : 'Reserva Anulada / Reembolsada' }}</h3>
                 <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto font-sans">
                   Este pedido fue anulado o reembolsado oficialmente mediante la pasarela de pagos Bold. El cupo y el ticket holográfico han perdido validez.
                 </p>
@@ -573,6 +573,7 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
   protected readonly preOrderService = inject(PreOrderService);
   private readonly titleService = inject(Title);
   private readonly metaService = inject(Meta);
+  protected readonly dropEnded = environment.dropEnded;
 
   // States
   readonly orderIdQuery = signal<string | null>(null);
@@ -628,11 +629,11 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
     const queryId = this.orderIdQuery();
     
     if (order) {
-      const titleText = `Reserva ${order.id} | OSANELI ORO VIVO`;
+      const titleText = this.dropEnded ? `Pedido ${order.id} | OSANELI ORO VIVO` : `Reserva ${order.id} | OSANELI ORO VIVO`;
       const statusText = order.status === 'APPROVED' ? 'Aprobado y Confirmado' : 
                          order.status === 'PENDING' ? 'Procesando Pago' : 
                          order.status === 'REJECTED' ? 'Rechazado' : 'Creado';
-      const descText = `Consulta el estado de tu pre-orden de la camiseta 'ORO VIVO' de Osaneli (Código: ${order.id}). Estado: ${statusText}.`;
+      const descText = this.dropEnded ? `Consulta el estado de tu pedido de la camiseta 'ORO VIVO' de Osaneli (Código: ${order.id}). Estado: ${statusText}.` : `Consulta el estado de tu pre-orden de la camiseta 'ORO VIVO' de Osaneli (Código: ${order.id}). Estado: ${statusText}.`;
       this.titleService.setTitle(titleText);
       this.metaService.updateTag({ name: 'description', content: descText });
       
@@ -647,8 +648,8 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       this.metaService.updateTag({ name: 'twitter:description', content: descText });
       this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/meta-crop-twitter.png' });
     } else if (queryId) {
-      const titleText = `Buscando Reserva ${queryId} | OSANELI ORO VIVO`;
-      const descText = `Buscando los detalles y estado del pedido con código ${queryId} en la base de datos de preventa de Osaneli.`;
+      const titleText = this.dropEnded ? `Buscando Pedido ${queryId} | OSANELI ORO VIVO` : `Buscando Reserva ${queryId} | OSANELI ORO VIVO`;
+      const descText = this.dropEnded ? `Buscando los detalles y estado del pedido con código ${queryId} en la base de datos de Osaneli.` : `Buscando los detalles y estado del pedido con código ${queryId} en la base de datos de preventa de Osaneli.`;
       this.titleService.setTitle(titleText);
       this.metaService.updateTag({ name: 'description', content: descText });
       
@@ -663,8 +664,8 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
       this.metaService.updateTag({ name: 'twitter:description', content: descText });
       this.metaService.updateTag({ name: 'twitter:image', content: 'https://orovivo.osaneli.com/meta-crop-twitter.png' });
     } else {
-      const titleText = 'Consultar Reserva | OSANELI ORO VIVO';
-      const descText = 'Ingresa tu código único para consultar el estado de tu preventa premium u obtener tu ticket holográfico 3D de Osaneli.';
+      const titleText = this.dropEnded ? 'Consultar Pedido | OSANELI ORO VIVO' : 'Consultar Reserva | OSANELI ORO VIVO';
+      const descText = this.dropEnded ? 'Ingresa tu código único para consultar el estado de tu compra u obtener tu ticket holográfico 3D de Osaneli.' : 'Ingresa tu código único para consultar el estado de tu preventa premium u obtener tu ticket holográfico 3D de Osaneli.';
       this.titleService.setTitle(titleText);
       this.metaService.updateTag({ name: 'description', content: descText });
       

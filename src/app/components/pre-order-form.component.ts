@@ -20,35 +20,37 @@ import { environment } from '../../environments/environment';
       <div class="max-w-4xl mx-auto">
         
         <!-- Interactive Countdown and Stock Header -->
-        <div class="glass-effect rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-6 mb-12 shadow-lg" data-reveal>
-          
-          <div class="flex flex-col items-center md:items-start gap-2 w-full md:w-auto">
-            <span class="text-xs font-bold text-neutral-400 tracking-widest uppercase font-sans">CIERRE DE PREVENTA</span>
-            <span class="text-xl sm:text-2xl font-serif font-black text-gold-aged tracking-wider animate-pulse">
-              {{ countdownText() }}
-            </span>
-          </div>
-
-          <div class="w-[2px] h-12 bg-white/5 hidden md:block"></div>
-
-          <!-- Stock level indicator -->
-          <div class="flex flex-col gap-2 w-full md:w-1/2">
-            <div class="flex justify-between text-xs font-bold text-neutral-400 tracking-wider font-sans">
-              <span>EDICIÓN LIMITADA: {{ preOrderService.totalLimit }} PIEZAS</span>
-              <span class="text-gold-aged">{{ preOrderService.remainingInventory() }} UNIDADES RESTANTES</span>
-            </div>
+        @if (!dropEnded) {
+          <div class="glass-effect rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-6 mb-12 shadow-lg" data-reveal>
             
-            <!-- Progress Bar -->
-            <div class="w-full h-2 bg-neutral-900 rounded-full overflow-hidden border border-white/5 p-0.5">
-              <div 
-                class="h-full rounded-full bg-gradient-to-r from-gold-aged to-gold-light transition-all duration-1000"
-                [style.width]="preOrderService.soldPercentage() + '%'"
-              ></div>
+            <div class="flex flex-col items-center md:items-start gap-2 w-full md:w-auto">
+              <span class="text-xs font-bold text-neutral-400 tracking-widest uppercase font-sans">CIERRE DE PREVENTA</span>
+              <span class="text-xl sm:text-2xl font-serif font-black text-gold-aged tracking-wider animate-pulse">
+                {{ countdownText() }}
+              </span>
             </div>
-            <span class="text-[10px] text-neutral-500 italic text-right font-sans">Pre-ventas procesadas en tiempo real</span>
-          </div>
 
-        </div>
+            <div class="w-[2px] h-12 bg-white/5 hidden md:block"></div>
+
+            <!-- Stock level indicator -->
+            <div class="flex flex-col gap-2 w-full md:w-1/2">
+              <div class="flex justify-between text-xs font-bold text-neutral-400 tracking-wider font-sans">
+                <span>EDICIÓN LIMITADA: {{ preOrderService.totalLimit }} PIEZAS</span>
+                <span class="text-gold-aged">{{ preOrderService.remainingInventory() }} UNIDADES RESTANTES</span>
+              </div>
+              
+              <!-- Progress Bar -->
+              <div class="w-full h-2 bg-neutral-900 rounded-full overflow-hidden border border-white/5 p-0.5">
+                <div 
+                  class="h-full rounded-full bg-gradient-to-r from-gold-aged to-gold-light transition-all duration-1000"
+                  [style.width]="preOrderService.soldPercentage() + '%'"
+                ></div>
+              </div>
+              <span class="text-[10px] text-neutral-500 italic text-right font-sans">Pre-ventas procesadas in tiempo real</span>
+            </div>
+
+          </div>
+        }
 
         <!-- Success Ticket Screen or Form Selection -->
         @if (preOrderService.activeTicket(); as ticket) {
@@ -61,10 +63,10 @@ import { environment } from '../../environments/environment';
             </div>
 
             <div class="flex flex-col gap-2">
-              <span class="text-xs font-bold text-gold-aged tracking-[0.2em] uppercase font-sans">RESERVA CONFIRMADA</span>
+              <span class="text-xs font-bold text-gold-aged tracking-[0.2em] uppercase font-sans">{{ dropEnded ? 'COMPRA CONFIRMADA' : 'RESERVA CONFIRMADA' }}</span>
               <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">¡Eres Dueño del Oro!</h3>
               <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-md mx-auto font-sans">
-                Tu pieza exclusiva ha sido reservada con éxito. Se te ha asignado el siguiente ticket holográfico serializado de coleccionista.
+                {{ dropEnded ? 'Tu pieza exclusiva ha sido adquirida con éxito. Se te ha asignado el siguiente ticket holográfico serializado de coleccionista.' : 'Tu pieza exclusiva ha sido reservada con éxito. Se te ha asignado el siguiente ticket holográfico serializado de coleccionista.' }}
               </p>
             </div>
 
@@ -148,7 +150,7 @@ import { environment } from '../../environments/environment';
             <!-- Successful Payment Confirmation Badge -->
             <div class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-green-500/10 border border-green-500/25 max-w-sm mx-auto text-green-400 font-sans text-xs font-bold tracking-wider select-none mt-2 animate-pulse">
               <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor" class="shrink-0"><path d="m382-354 278-278-56-56-222 222-114-114-56 56 170 170ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Z"/></svg>
-              <span>RESERVA CONFIRMADA & PAGADA VIA BOLD</span>
+              <span>{{ dropEnded ? 'COMPRA CONFIRMADA & PAGADA VIA BOLD' : 'RESERVA CONFIRMADA & PAGADA VIA BOLD' }}</span>
             </div>
 
             <div class="flex gap-4 mt-2 font-sans">
@@ -156,7 +158,7 @@ import { environment } from '../../environments/environment';
                 (click)="preOrderService.clearActiveTicket()"
                 class="px-6 py-3 rounded-xl border border-white/10 hover:border-gold-aged/40 bg-white/5 hover:bg-gold-aged/5 text-white hover:text-gold-aged font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer"
               >
-                RESERVAR OTRA PIEZA
+                {{ dropEnded ? 'ADQUIRIR OTRA PIEZA' : 'RESERVAR OTRA PIEZA' }}
               </button>
             </div>
 
@@ -167,9 +169,9 @@ import { environment } from '../../environments/environment';
           <!-- Sleek Query Section -->
           <div class="glass-effect rounded-3xl p-8 sm:p-12 shadow-2xl relative text-center">
             <div class="flex flex-col items-center gap-3 mb-8">
-              <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">Consultar Mi Reserva</h3>
+              <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">{{ dropEnded ? 'Consultar Mi Pedido' : 'Consultar Mi Reserva' }}</h3>
               <p class="text-xs sm:text-sm text-neutral-400 max-w-md font-sans">
-                Ingresa el número de orden único de 6 caracteres que recibiste tras confirmar tu reserva.
+                {{ dropEnded ? 'Ingresa el número de orden único de 6 caracteres que recibiste tras confirmar tu compra.' : 'Ingresa el número de orden único de 6 caracteres que recibiste tras confirmar tu reserva.' }}
               </p>
             </div>
             
@@ -225,7 +227,7 @@ import { environment } from '../../environments/environment';
               <div class="flex items-center justify-between p-4 mb-6 rounded-xl bg-gold-aged/10 border border-gold-aged/30 text-gold-aged text-xs font-sans font-bold tracking-wide uppercase select-none animate-reveal">
                 <div class="flex items-center gap-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-gold-aged animate-pulse"></span>
-                  <span>Modificando Reserva Activa: {{ editingOrderId() }}</span>
+                  <span>{{ dropEnded ? 'Modificando Pedido Activo' : 'Modificando Reserva Activa' }}: {{ editingOrderId() }}</span>
                 </div>
                 <button 
                   type="button"
@@ -239,17 +241,17 @@ import { environment } from '../../environments/environment';
 
             <div class="flex flex-col items-center text-center gap-3 mb-10">
               <div class="flex justify-between items-center w-full max-w-md mx-auto mb-2 border-b border-white/5 pb-2">
-                <span class="text-xs text-neutral-500 font-sans">¿Ya tienes una reserva?</span>
+                <span class="text-xs text-neutral-500 font-sans">{{ dropEnded ? '¿Ya tienes un pedido?' : '¿Ya tienes una reserva?' }}</span>
                 <button 
                   (click)="isSearching.set(true)"
                   class="text-xs text-gold-aged font-bold font-sans tracking-wide hover:text-gold-light uppercase transition-colors duration-300 cursor-pointer"
                 >
-                  Consultar reserva →
+                  {{ dropEnded ? 'Consultar pedido →' : 'Consultar reserva →' }}
                 </button>
               </div>
-              <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">Configura tu Reserva</h3>
+              <h3 class="font-serif text-2xl sm:text-3xl font-black text-white">{{ dropEnded ? 'Configura tu Compra' : 'Configura tu Reserva' }}</h3>
               <p class="text-xs sm:text-sm text-neutral-400 max-w-md font-sans">
-                Añade prendas de las diferentes tallas y ediciones a tu carrito de reserva y luego completa los datos para proceder al pago unificado.
+                {{ dropEnded ? 'Añade prendas de las diferentes tallas y ediciones a tu carrito y luego completa los datos para proceder al pago unificado.' : 'Añade prendas de las diferentes tallas y ediciones a tu carrito de reserva y luego completa los datos para proceder al pago unificado.' }}
               </p>
             </div>
 
@@ -488,13 +490,13 @@ import { environment } from '../../environments/environment';
                 </div>
 
               </div>
-              <span class="text-[9px] text-neutral-500 italic mt-1 font-serif">El corte es boxy amplio de diseñador. El límite por reserva es de 5 prendas en total.</span>
+              <span class="text-[9px] text-neutral-500 italic mt-1 font-serif">{{ dropEnded ? 'El corte es boxy amplio de diseñador. El límite de compra es de 5 prendas en total.' : 'El corte es boxy amplio de diseñador. El límite por reserva es de 5 prendas en total.' }}</span>
             </div>
 
             <!-- Paso 2: Resumen de Reserva (Carrito) -->
             <div class="flex flex-col gap-6 border-b border-white/5 pb-8 mb-8 font-sans">
               <div class="flex justify-between items-center">
-                <h4 class="text-xs font-bold tracking-[0.2em] text-gold-aged uppercase">2. Tu Carrito de Reserva</h4>
+                <h4 class="text-xs font-bold tracking-[0.2em] text-gold-aged uppercase">{{ dropEnded ? '2. Tu Carrito de Compras' : '2. Tu Carrito de Reserva' }}</h4>
                 @if (cart().length > 0) {
                   <span class="text-[10px] font-bold text-neutral-400 uppercase bg-white/5 py-1 px-2.5 rounded-full border border-white/5">
                     {{ cartTotalQuantity() }} {{ cartTotalQuantity() === 1 ? 'Prenda' : 'Prendas' }}
@@ -505,7 +507,7 @@ import { environment } from '../../environments/environment';
               @if (cart().length === 0) {
                 <div class="p-8 rounded-2xl border border-white/5 bg-matte-black/30 text-center flex flex-col gap-2 items-center">
                   <svg class="text-neutral-600" xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 -960 960 960" width="32" fill="currentColor"><path d="M280-80q-33 0-56.5-23.5T200-160q0-33 23.5-56.5T280-240q33 0 56.5 23.5T360-160q0 33-23.5 56.5T280-80Zm400 0q-33 0-56.5-23.5T600-160q0-33 23.5-56.5T680-240q33 0 56.5 23.5T760-160q0 33-23.5 56.5T680-80ZM246-720h594l-78 284q-10 38-42.5 57T640-360H324L160-720Zm-46-80h680q33 0 50 29.5t1 60.5L753-418q-17 62-67.5 90T586-300H290L198-100H80v-80h80l162-354-96-266H40v-80Zm252 80h346-346Z"/></svg>
-                  <p class="text-xs text-neutral-500">Tu carrito de reserva está vacío.</p>
+                  <p class="text-xs text-neutral-500">{{ dropEnded ? 'Tu carrito de compras está vacío.' : 'Tu carrito de reserva está vacío.' }}</p>
                   <p class="text-[10px] text-neutral-600 italic">Configura una prenda arriba y presiona "Añadir Prenda" para comenzar.</p>
                 </div>
               } @else {
@@ -572,7 +574,7 @@ import { environment } from '../../environments/environment';
                   
                   <!-- Cart Total Row -->
                   <div class="flex justify-between items-center p-5 rounded-2xl bg-gold-aged/5 border border-gold-aged/20 mt-2">
-                    <span class="text-xs font-bold text-neutral-300">VALOR TOTAL DE TU RESERVA:</span>
+                    <span class="text-xs font-bold text-neutral-300">{{ dropEnded ? 'VALOR TOTAL DE TU COMPRA:' : 'VALOR TOTAL DE TU RESERVA:' }}</span>
                     <span class="font-serif text-base sm:text-lg font-black text-gold-aged">
                       $ {{ cartTotalPrice().toLocaleString('es-CO') }} COP
                     </span>
@@ -744,8 +746,8 @@ import { environment } from '../../environments/environment';
                   <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="#C5A854" class="mt-0.5 shrink-0"><path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Z"/></svg>
                   <div class="flex flex-col gap-2 text-[10px] sm:text-xs text-neutral-400 leading-relaxed font-serif text-left">
                     <p>
-                      <strong class="text-gold-aged font-sans font-bold uppercase tracking-wider block mb-0.5">Disclaimer de Reserva</strong>
-                      La reserva de tu pieza exclusiva se completará y confirmará de forma definitiva **únicamente una vez que el pago correspondiente de tu pre-orden sea procesado con éxito** a través de la pasarela segura de Bold.
+                      <strong class="text-gold-aged font-sans font-bold uppercase tracking-wider block mb-0.5">{{ dropEnded ? 'Disclaimer de Compra' : 'Disclaimer de Reserva' }}</strong>
+                      {{ dropEnded ? 'La compra de tu pieza exclusiva se completará y confirmará de forma definitiva **únicamente una vez que el pago correspondiente de tu pedido sea procesado con éxito** a través de la pasarela segura de Bold.' : 'La reserva de tu pieza exclusiva se completará y confirmará de forma definitiva **únicamente una vez que el pago correspondiente de tu pre-orden sea procesado con éxito** a través de la pasarela segura de Bold.' }}
                     </p>
                   </div>
                 </div>
@@ -781,7 +783,7 @@ import { environment } from '../../environments/environment';
                   >
                     @if (checkoutLoading()) {
                       <div class="w-5 h-5 border-2 border-matte-black border-t-transparent rounded-full animate-spin"></div>
-                      <span>Procesando Reserva...</span>
+                      <span>{{ dropEnded ? 'Procesando Compra...' : 'Procesando Reserva...' }}</span>
                     } @else {
                       <span>{{ proceedButtonText() }}</span>
                     }
@@ -840,6 +842,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  protected readonly dropEnded = environment.dropEnded;
 
   readonly checkoutLoading = signal<boolean>(false);
   readonly unitPrice = environment.productPrice;
@@ -1069,7 +1072,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     const totalQty = currentCart.reduce((sum, item) => sum + item.quantity, 0);
     
     if (totalQty + qty > 5) {
-      alert('Por cuestiones de exclusividad del drop, el límite máximo por reserva es de 5 prendas en total por pedido.');
+      alert(this.dropEnded ? 'Por cuestiones de exclusividad del drop, el límite máximo por compra es de 5 prendas en total por pedido.' : 'Por cuestiones de exclusividad del drop, el límite máximo por reserva es de 5 prendas en total por pedido.');
       return;
     }
     
@@ -1109,7 +1112,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
     const totalQty = current.reduce((sum, item) => sum + item.quantity, 0);
     
     if (delta > 0 && totalQty >= 5) {
-      alert('Límite máximo de 5 prendas por reserva alcanzado.');
+      alert(this.dropEnded ? 'Límite máximo de 5 prendas por compra alcanzado.' : 'Límite máximo de 5 prendas por reserva alcanzado.');
       return;
     }
     
