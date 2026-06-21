@@ -23,6 +23,7 @@ export interface Order {
   email: string;
   phone: string;
   address: string;
+  documentId?: string;
   city?: string;
   country?: string;
   version: 'oro_vivo' | 'edicion_secreta';
@@ -129,6 +130,7 @@ export class FirebaseService {
             email: item.email || '',
             phone: item.phone || '',
             address: item.address || '',
+            documentId: item.documentId || '',
             city: item.city || '',
             country: item.country || '',
             version: item.version || 'oro_vivo',
@@ -210,6 +212,7 @@ export class FirebaseService {
       await set(orderRef, {
         id: orderId,
         fullName: formValue.fullName,
+        documentId: formValue.documentId || '',
         email: formValue.email,
         phone: formValue.phone,
         address: formValue.address,
@@ -318,6 +321,7 @@ export class FirebaseService {
           email: item.email || '',
           phone: item.phone || '',
           address: item.address || '',
+          documentId: item.documentId || '',
           city: item.city || '',
           country: item.country || '',
           version: item.version || 'oro_vivo',

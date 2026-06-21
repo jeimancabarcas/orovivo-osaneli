@@ -978,7 +978,8 @@ export class OrderLandingComponent implements OnInit, OnDestroy {
         fullName: order.fullName || '',
         phone: order.phone || '',
         dialCode: '+57',
-        documentType: 'CC'
+        documentType: 'CC',
+        documentNumber: order.documentId || ''
       };
       btnScript.setAttribute('data-customer-data', JSON.stringify(customerObj));
       btnScript.setAttribute('data-render-mode', 'embedded');

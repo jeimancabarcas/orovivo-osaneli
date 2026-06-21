@@ -621,6 +621,7 @@ app.post('/api/bold-webhook', async (req, res) => {
       address: existing.address || data?.customer?.address || data?.customer_data?.address || '',
       city: existing.city || data?.customer?.city || data?.customer_data?.city || '',
       country: existing.country || data?.customer?.country || data?.customer_data?.country || '',
+      documentId: existing.documentId || data?.customer?.documentNumber || data?.customer_data?.documentNumber || '',
       version: updatedItems[0]?.version || existing.version || 'oro_vivo',
       size: updatedItems[0]?.size || existing.size || 'M',
       gender: updatedItems[0]?.gender || existing.gender || 'Unisex',
@@ -824,6 +825,7 @@ app.post('/api/admin/sync-bold', async (req, res) => {
     // Update order with bold_metadata and taxes if present
     const updatedOrder = {
       ...order,
+      documentId: order.documentId || boldData?.data?.customer?.documentNumber || boldData?.data?.customer_data?.documentNumber || '',
       bold_metadata: boldData,
       ...(taxes ? { taxes } : {})
     };

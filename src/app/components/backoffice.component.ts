@@ -582,7 +582,7 @@ type TabMode = 'dashboard' | 'orders';
                           </td>
                           <td class="p-4 text-center">
                             <div class="flex items-center justify-center gap-1.5 flex-wrap max-w-[200px] mx-auto">
-                              @if (ord.status === 'CREATED' || ord.status === 'PENDING') {
+                              @if (ord.status === 'CREATED' || ord.status === 'PENDING' || ord.status === 'APPROVED') {
                                 <a 
                                   [href]="getWhatsAppLink(ord)" 
                                   target="_blank"
@@ -739,6 +739,15 @@ type TabMode = 'dashboard' | 'orders';
                     id="fullName"
                     formControlName="fullName"
                     class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs"
+                  />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="documentId" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Cédula / Documento de Identidad</label>
+                  <input 
+                    type="text" 
+                    id="documentId"
+                    formControlName="documentId"
+                    class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs font-mono"
                   />
                 </div>
                 <div class="flex flex-col gap-1.5">
@@ -1394,6 +1403,19 @@ type TabMode = 'dashboard' | 'orders';
                   />
                 </div>
                 <div class="flex flex-col gap-1.5">
+                  <label for="manualDocumentId" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Cédula / Documento de Identidad</label>
+                  <input 
+                    type="text" 
+                    id="manualDocumentId"
+                    formControlName="documentId"
+                    class="px-3.5 py-2.5 bg-neutral-900 border border-white/10 rounded-xl focus:border-gold-aged/40 focus:outline-none text-white text-xs font-mono"
+                    placeholder="Ej. 1098765432"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1.5">
                   <label for="manualEmail" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Correo Electrónico</label>
                   <input 
                     type="email" 
@@ -1403,9 +1425,6 @@ type TabMode = 'dashboard' | 'orders';
                     placeholder="Ej. aura@example.com"
                   />
                 </div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="flex flex-col gap-1.5">
                   <label for="manualPhone" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Teléfono de Contacto</label>
                   <input 
@@ -1416,7 +1435,10 @@ type TabMode = 'dashboard' | 'orders';
                     placeholder="Ej. 3106279792"
                   />
                 </div>
-                <div class="flex flex-col gap-1.5">
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1.5 col-span-2">
                   <label for="manualAddress" class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Dirección de Envío</label>
                   <input 
                     type="text" 
@@ -1678,6 +1700,7 @@ export class BackofficeComponent implements OnInit {
   // Admin Reactive Form
   readonly adminForm = this.fb.group({
     fullName: ['', [Validators.required]],
+    documentId: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', [Validators.required]],
     address: ['', [Validators.required]],
@@ -1707,6 +1730,7 @@ export class BackofficeComponent implements OnInit {
 
   readonly manualOrderForm = this.fb.group({
     fullName: ['', [Validators.required]],
+    documentId: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', [Validators.required]],
     address: ['', [Validators.required]],
@@ -2052,7 +2076,12 @@ export class BackofficeComponent implements OnInit {
     }
     const checkoutLink = `${originUrl}/order?id=${order.id}`;
 
-    const text = `¡Hola! 👋 Te escribimos de Osaneli.\n\nNotamos que te interesaste en nuestra camiseta de la colección Oro Vivo 🇨🇴✨ para apoyar a la Selección, pero no alcanzaste a completar tu pago.\n\nPuedes completar tu pago ingresando al siguiente enlace:\n${checkoutLink}\n\nQueremos asegurarnos de que no te quedes sin la tuya, ya que las unidades de este drop son limitadas y el próximo partido está cerca. ⚽🔥\n\n¿Tuviste algún problema con la plataforma?`;
+    let text = '';
+    if (order.status === 'APPROVED') {
+      text = `¡Hola! 👋 Te escribimos de Osaneli.\n\nQueremos agradecerte por tu compra de la colección Oro Vivo 🇨🇴✨ para apoyar a la Selección. Tu pago ha sido confirmado con éxito. 🎉\n\nPuedes consultar tu ticket digital holográfico serializado y hacer seguimiento del estado de tu envío ingresando al siguiente enlace:\n${checkoutLink}\n\n¡Muchas gracias por hacer parte de este drop! ⚽🔥`;
+    } else {
+      text = `¡Hola! 👋 Te escribimos de Osaneli.\n\nNotamos que te interesaste en nuestra camiseta de la colección Oro Vivo 🇨🇴✨ para apoyar a la Selección, pero no alcanzaste a completar tu pago.\n\nPuedes completar tu pago ingresando al siguiente enlace:\n${checkoutLink}\n\nQueremos asegurarnos de que no te quedes sin la tuya, ya que las unidades de este drop son limitadas y el próximo partido está cerca. ⚽🔥\n\n¿Tuviste algún problema con la plataforma?`;
+    }
 
     return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`;
   }
@@ -2084,6 +2113,7 @@ export class BackofficeComponent implements OnInit {
 
     this.adminForm.patchValue({
       fullName: order.fullName,
+      documentId: order.documentId || '',
       email: order.email,
       phone: order.phone,
       address: order.address,
@@ -2322,6 +2352,7 @@ export class BackofficeComponent implements OnInit {
     const newOrder: Order = {
       id: this.generateUniqueOrderId(),
       fullName: formVal.fullName || '',
+      documentId: formVal.documentId || '',
       email: formVal.email || '',
       phone: formVal.phone || '',
       address: formVal.address || '',
@@ -2423,6 +2454,7 @@ export class BackofficeComponent implements OnInit {
 
     const updates: Partial<Order> = {
       fullName: formVal.fullName || '',
+      documentId: formVal.documentId || '',
       email: formVal.email || '',
       phone: formVal.phone || '',
       address: formVal.address || '',

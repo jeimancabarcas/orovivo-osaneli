@@ -590,7 +590,7 @@ import { environment } from '../../environments/environment';
               <!-- Angular Reactive Form -->
               <form [formGroup]="preOrderForm" class="flex flex-col gap-6">
                 
-                <!-- Row 1: Name and Email -->
+                <!-- Row 1: Name and Document ID -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   <!-- Full name -->
@@ -609,6 +609,27 @@ import { environment } from '../../environments/environment';
                     }
                   </div>
 
+                  <!-- Document ID -->
+                  <div class="flex flex-col gap-2">
+                    <label for="documentId" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Cédula / Documento de Identidad</label>
+                    <input 
+                      type="text" 
+                      id="documentId" 
+                      formControlName="documentId"
+                      placeholder="Ej: 10203040"
+                      class="px-4 py-3.5 rounded-xl bg-neutral-900 border border-white/10 text-white placeholder-neutral-600 focus:border-gold-aged focus:outline-none transition-colors duration-300 text-sm shadow-inner"
+                      [class.border-red-500]="isFieldInvalid('documentId')"
+                    />
+                    @if (isFieldInvalid('documentId')) {
+                      <span class="text-[10px] text-red-400 font-semibold tracking-wide">El documento es requerido</span>
+                    }
+                  </div>
+
+                </div>
+
+                <!-- Row 2: Email and Phone -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
                   <!-- Email -->
                   <div class="flex flex-col gap-2">
                     <label for="email" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Correo Electrónico</label>
@@ -625,11 +646,6 @@ import { environment } from '../../environments/environment';
                     }
                   </div>
 
-                </div>
-
-                <!-- Row 2: Phone & Address -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
                   <!-- Phone -->
                   <div class="flex flex-col gap-2">
                     <label for="phone" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Teléfono (WhatsApp)</label>
@@ -667,6 +683,11 @@ import { environment } from '../../environments/environment';
                     }
                   </div>
 
+                </div>
+
+                <!-- Row 3: Address & Region -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
                   <!-- Shipping Address -->
                   <div class="flex flex-col gap-2">
                     <label for="address" class="text-xs font-bold tracking-widest text-neutral-400 uppercase">Dirección de Envío (Calle, Carrera, Apto, etc.)</label>
@@ -882,6 +903,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
   // Build the react form (only contact / delivery fields, garment config is managed dynamically in the cart)
   readonly preOrderForm = this.fb.group({
     fullName: ['', [Validators.required]],
+    documentId: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     countryCode: ['+57', [Validators.required]],
     phone: ['', [Validators.required]],
@@ -1004,6 +1026,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
 
             this.preOrderForm.patchValue({
               fullName: order.fullName,
+              documentId: order.documentId || '',
               email: order.email,
               countryCode: parsedCountryCode,
               phone: parsedPhone,
@@ -1271,6 +1294,7 @@ export class PreOrderFormComponent implements OnInit, OnDestroy {
       const combinedPhone = `${formValue.countryCode || '+57'} ${formValue.phone || ''}`.trim();
       const payload = {
         fullName: formValue.fullName,
+        documentId: formValue.documentId,
         email: formValue.email,
         phone: combinedPhone,
         address: formValue.address,
