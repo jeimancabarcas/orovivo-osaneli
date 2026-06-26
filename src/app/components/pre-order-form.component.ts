@@ -762,6 +762,34 @@ import { environment } from '../../environments/environment';
 
                 </div>
 
+                <!-- Shipping Info Text Box -->
+                <div class="p-5 rounded-2xl bg-neutral-900/50 border border-white/5 flex flex-col gap-3 max-w-2xl mx-auto text-left mt-2 select-none shadow-lg">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-gold-aged text-[18px]">local_shipping</span>
+                    <strong class="text-gold-aged font-sans text-xs font-bold uppercase tracking-wider">Información de Envío</strong>
+                  </div>
+                  <p class="text-xs text-neutral-400 leading-relaxed font-sans">
+                    El envío se realiza bajo la modalidad de <strong>contra entrega</strong> (pagás el valor del envío directamente al recibir tu paquete). Las tarifas estimadas son:
+                  </p>
+                  <ul class="text-xs text-neutral-300 font-sans flex flex-col gap-1.5 pl-1">
+                    <li class="flex justify-between items-center py-1 border-b border-white/5">
+                      <span>• Envíos Nacionales Costa (Interrapidísimo):</span>
+                      <span class="font-bold text-white font-mono">$10.000 COP</span>
+                    </li>
+                    <li class="flex justify-between items-center py-1 border-b border-white/5">
+                      <span>• Resto del País (Interrapidísimo):</span>
+                      <span class="font-bold text-white font-mono">$20.000 COP</span>
+                    </li>
+                    <li class="flex justify-between items-center py-1">
+                      <span>• Envío Internacional (Hasta 1.5 kg):</span>
+                      <span class="font-bold text-white font-mono">$266.000 COP</span>
+                    </li>
+                  </ul>
+                  <span class="text-[10px] text-neutral-500 italic font-sans mt-1">
+                    * Todos los despachos de envío son contra entrega. El valor del envío NO se cobra en esta transacción online.
+                  </span>
+                </div>
+
                 <!-- Disclaimer of payments -->
                 <div class="p-4 rounded-xl bg-gold-aged/5 border border-gold-aged/20 flex gap-3 items-start max-w-2xl mx-auto text-left select-none mt-4">
                   <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="#C5A854" class="mt-0.5 shrink-0"><path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Z"/></svg>
